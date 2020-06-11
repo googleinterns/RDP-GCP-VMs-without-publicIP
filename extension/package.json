@@ -1,0 +1,36 @@
+{
+  "name": "cloud-ad-vm-extension",
+  "version": "0.0.1",
+  "description": "Chrome Extension for RDP into Cloud VMs",
+  "main": "index.js",
+  "author": "Rishab Luthra",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "webpack --mode=development --watch",
+    "build": "yarn test && webpack --mode=production",
+    "test": "yarn jest",
+    "clean": "rimraf dist",
+    "check": "gts check",
+    "compile": "tsc",
+    "fix": "gts fix",
+    "prepare": "yarn run compile"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.114",
+    "@types/jest": "^26.0.0",
+    "@types/node": "^13.11.1",
+    "copy-webpack-plugin": "^6.0.2",
+    "gts": "^2.0.2",
+    "html-loader": "^1.1.0",
+    "html-webpack-plugin": "^4.3.0",
+    "jest": "^26.0.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^26.1.0",
+    "ts-loader": "^7.0.5",
+    "typescript": "^3.9.5",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-extension-reloader": "^1.1.4"
+  },
+  "dependencies": {}
+}

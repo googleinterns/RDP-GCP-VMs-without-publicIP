@@ -1,0 +1,18 @@
+{
+    "name": "Cloud AD VM Extension",
+    "version": "1.0",
+    "description": "Allows one-click RDP into Google Cloud Windows VMs using an IAP tunnel.",
+    "permissions": ["https://b.corp.google.com/*", "https://pantheon.corp.google.com/*", "activeTab", "declarativeContent", "storage", "tabs", "webNavigation", "webRequest"],
+    "background": {
+        "scripts": ["js/background.js"]
+    },
+    "page_action": {
+        "default_popup": "popup.html"
+    },
+    "content_scripts": [{
+        "js": ["js/content_script.js"],
+        "run_at": "document_end",
+        "matches": ["https://b.corp.google.com/*", "https://pantheon.corp.google.com/*"]
+      }],
+    "manifest_version": 2
+}

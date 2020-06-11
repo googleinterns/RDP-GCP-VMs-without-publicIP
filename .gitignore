@@ -1,0 +1,5 @@
+extension/npm-debug.log
+extension/yarn-error.log
+extension/node_modules/
+extension/dist/
+extension/tmp/
