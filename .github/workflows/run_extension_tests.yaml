@@ -1,9 +1,6 @@
 name: Run Chrome Extension tests
 # This workflow is triggered on pushes to the repository.
-on:
-  push:
-    paths:
-      - 'extension/*'
+on: [push]
 
 jobs:
   build:
@@ -13,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Switch to extension directory
-      run: cd extension/
     - name: Install modules
+      working-directory: ./extension
       run: yarn
     - name: Run tests
+      working-directory: ./extension
       run: yarn test
