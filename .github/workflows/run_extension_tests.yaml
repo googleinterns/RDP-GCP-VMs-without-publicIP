@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Switch to extension directory
+      run: cd extension/
     - name: Install modules
       run: yarn
     - name: Run tests
