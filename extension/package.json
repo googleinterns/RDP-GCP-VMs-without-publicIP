@@ -8,7 +8,7 @@
   "scripts": {
     "start": "webpack --mode=development --watch",
     "build": "yarn test && webpack --mode=production",
-    "test": "yarn jest",
+    "test": "yarn jest --coverage",
     "clean": "rimraf dist",
     "check": "gts check",
     "compile": "tsc",
