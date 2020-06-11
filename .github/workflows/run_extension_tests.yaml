@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-    # Job name is Greeting
     name: Run Jest tests
     # This job runs on Linux
     runs-on: ubuntu-latest
