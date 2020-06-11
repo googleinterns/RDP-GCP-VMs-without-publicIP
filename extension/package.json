@@ -1,7 +1,7 @@
 {
-  "name": "cloud-ad-vm-extension",
+  "name": "gcp-admin-extension",
   "version": "0.0.1",
-  "description": "Chrome Extension for RDP into Cloud VMs",
+  "description": "Extension for administration on GCP",
   "main": "index.js",
   "author": "Rishab Luthra",
   "license": "SEE LICENSE IN LICENSE",
