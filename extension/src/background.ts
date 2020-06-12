@@ -20,8 +20,8 @@ import { doubleNumber } from "./double_number";
 let number = 1;
 function polling() {
     number = doubleNumber(number)
-    console.log('polling 2 ' + number);
-    setTimeout(polling, 1000 * 5);
+    console.log('polling ' + number);
+    setTimeout(polling, 1000 * 10);
 }
 
 polling()
@@ -37,3 +37,21 @@ chrome.runtime.onInstalled.addListener(function() {
       }]);
     });
 });
+
+const getServerStatus = async (): Promise<string> => {
+    const statusRequest = await fetch("http://localhost:23966/health", {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+            "Content-Type": "application/json"
+        },
+    })
+
+    const response = await statusRequest.json();
+    return response
+}
+
+
+getServerStatus().then(status => {
+    console.log(status)
+}).catch(error => console.log(error))

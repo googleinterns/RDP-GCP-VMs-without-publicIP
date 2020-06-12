@@ -26,13 +26,13 @@ const getServerStatus = async (): Promise<string> => {
     })
 
     const response = await statusRequest.json();
-    return response
+    return response["status"]
 }
 
 chrome.tabs.query({'active': true,'currentWindow':true}, () => {
     const container = document.getElementById("span-status");
     container.innerText = "connecting to server";
-    getServerStatus().then(status => {
-        container.innerText = status;
-    })
+    getServerStatus().then(response => {
+        container.innerText = response;
+    }).catch(error => container.innerText = error)
 });

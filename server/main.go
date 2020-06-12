@@ -29,12 +29,21 @@ import (
 // main defines the routes of the HTTP server and starts listening on port 23966
 func main() {
 	router := mux.NewRouter()
-	router.HandleFunc("/health", Health).Methods("GET")
+	router.HandleFunc("/health", health).Methods("GET")
+	router.HandleFunc("/health", setCorsHeaders).Methods("OPTIONS")
 	log.Fatal(http.ListenAndServe(":23966", router))
 }
 
-// Health is a HTTP route that prints a simple string to check if the server is running.
-func Health(w http.ResponseWriter, _ *http.Request) {
+// setCorsHeaders is used to set the headers for CORS requests from the Chrome Extension.
+// All preflight requests are handled by this function and it is also used in the HTTP functions.
+func setCorsHeaders(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "chrome-extension://ljejdkiepkafbpnbacemjjcleckglnjl")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+
+// health is a HTTP route that prints a simple string to check if the server is running.
+func health(w http.ResponseWriter, _ *http.Request) {
 	type response struct {
 		Status string `json:"status"`
 	}
@@ -42,5 +51,6 @@ func Health(w http.ResponseWriter, _ *http.Request) {
 	resp := response{Status: "server is running"}
 
 	w.Header().Set("Content-Type", "application/json")
+	setCorsHeaders(w, nil)
 	json.NewEncoder(w).Encode(resp)
 }
