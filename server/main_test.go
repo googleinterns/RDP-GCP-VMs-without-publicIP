@@ -22,18 +22,18 @@ import (
 	"testing"
 )
 
-func TestHelloWorld(t *testing.T) {
+func TestHealthHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(HelloWorld)
+	handler := http.HandlerFunc(HealthHandler)
 
 	handler.ServeHTTP(rr, req)
 
-	expectedResponse := "Hello world!"
+	expectedResponse := "Extension for GCP Admin's server is running!"
 	if rr.Body.String() != expectedResponse {
 		t.Errorf("hello world returned unexpected body: got %v want %v",
 			rr.Body.String(), expectedResponse)

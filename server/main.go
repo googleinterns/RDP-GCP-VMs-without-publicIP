@@ -23,10 +23,10 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", HelloWorld)
+	http.HandleFunc("/health", HealthHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func HelloWorld(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello world!")
+func HealthHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Extension for GCP Admin's server is running!")
 }
