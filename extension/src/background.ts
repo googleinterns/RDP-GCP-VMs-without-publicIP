@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
+/* A script that runs in the background when the function is initialized */
+
 import { doubleNumber } from "./double_number";
 let number = 1;
 function polling() {

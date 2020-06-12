@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
+/* A package that is the script used in the pop up of the extension */
+
+
 import { doubleNumber } from "./double_number";
 
 chrome.tabs.query({'active': true,'currentWindow':true}, () => {

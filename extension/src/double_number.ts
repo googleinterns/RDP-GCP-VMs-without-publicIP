@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
+/* A file that contains a simple function that doubles the number passed in.
+Used solely for testing purposes and will be removed in the future. */
+
 const doubleNumber = (num: number): number => {
     return num*2;
 }

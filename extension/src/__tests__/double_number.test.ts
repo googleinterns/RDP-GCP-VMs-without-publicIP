@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
+/* A file that contains a test for a function that doubles the number passed in.
+Used solely for testing purposes and will be removed in the future. */
+
 import { doubleNumber } from "../double_number";
 
 test('doubles 2 to equal 4', () => {

@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
+/* A webpack config file which builds the chrome extension */
+
 const CopyPlugin = require("copy-webpack-plugin");
 const ExtensionReloader = require("webpack-extension-reloader");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
@@ -22,11 +24,13 @@ const srcDir = "./src/";
 const webpack = require("webpack");
 
 module.exports = {
+    // Entry files are the TypeScript files that are the extension.
     entry: {
         popup: path.join(__dirname, srcDir + "popup.ts"),
         background: path.join(__dirname, srcDir + "background.ts"),
         content_script: path.join(__dirname, srcDir + "content.ts")
     },
+    // Output the transpiled TS files into the /dist/js folder
     output: {
         path: path.join(__dirname, './dist/js'),
         filename: "[name].js"
@@ -49,6 +53,9 @@ module.exports = {
         ]
     },
     plugins: [
+
+        // Copies the base manifest JSON to the /dist folder.
+        // Adds the extension's key to the manifest from ENV variables.
         new CopyPlugin({
             patterns: [{
                 from: "public/manifest.json",
@@ -62,16 +69,22 @@ module.exports = {
                 }
             }]
         }),
+
+        // Initializes the automatic reloading of the chrome extension during development.
         new ExtensionReloader({
             entries: {
                 background: 'background'
             }
         }),
+
+        // Bundles the popup.html file and injects the popup script and outputs in /dist
         new HtmlWebpackPlugin({
             template: path.join(__dirname, "public", "popup.html"),
             filename: "../popup.html",
             chunks: ["popup"]
         }),
+
+        // Automatically adds LICENSE to output files
         new webpack.BannerPlugin({
             banner: `
             Copyright 2020 Google LLC
