@@ -1,0 +1,21 @@
+{
+    "_license": "SEE LICENSE IN google-apache-license",
+    "extends": "./node_modules/gts/tsconfig-google.json",
+    "compilerOptions": {
+        "rootDir": ".",
+        "outDir": "dist/js",
+        "sourceMap": false,
+        "declaration": false,
+        "lib": [
+            "dom",
+            "es6"
+        ],
+        "strictNullChecks": false,
+        "typeRoots": [
+            "node_modules/@types"
+        ]
+    },
+    "include": [
+        "src/**/*.ts",
+    ]
+}

@@ -14,19 +14,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
+// Package main implements a simple HTTP server that will take requests
+// from a Chrome Extension which is used for administration on GCP.
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
+// main defines the routes of the HTTP server and starts listening on port 23966
 func main() {
-	http.HandleFunc("/health", HealthHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	router := mux.NewRouter()
+	router.HandleFunc("/health", Health).Methods("GET")
+	log.Fatal(http.ListenAndServe(":23966", router))
 }
 
-func HealthHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Extension for GCP Admin's server is running!")
+// Health is a HTTP route that prints a simple string to check if the server is running.
+func Health(w http.ResponseWriter, _ *http.Request) {
+	type response struct {
+		Status string `json:"status"`
+	}
+
+	resp := response{Status: "server is running"}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }

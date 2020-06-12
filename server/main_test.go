@@ -17,26 +17,42 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
-func TestHealthHandler(t *testing.T) {
-	req, err := http.NewRequest("GET", "/", nil)
+// TestHealth tests the Health HTTP function.
+func TestHealth(t *testing.T) {
+	req, err := http.NewRequest("GET", "/health", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(HealthHandler)
+	handler := http.HandlerFunc(Health)
 
 	handler.ServeHTTP(rr, req)
 
-	expectedResponse := "Extension for GCP Admin's server is running!"
-	if rr.Body.String() != expectedResponse {
-		t.Errorf("hello world returned unexpected body: got %v want %v",
-			rr.Body.String(), expectedResponse)
+	reqBody, err := ioutil.ReadAll(rr.Body)
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	expectedResp := map[string]string{
+		"status": "server is running",
+	}
+
+	var gotResp map[string]string
+	err = json.Unmarshal(reqBody, &gotResp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(gotResp, expectedResp) {
+		t.Errorf("HEALTH failed, got: %v, expected: %v", gotResp, expectedResp)
+	}
 }

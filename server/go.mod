@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// This file is the module file for this package. It contains the module's path
+// as well as the dependencies this module will use.
+
 module github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server
 
 go 1.14
+
+require github.com/gorilla/mux v1.7.4
