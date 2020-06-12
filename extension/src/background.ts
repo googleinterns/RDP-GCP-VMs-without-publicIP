@@ -26,6 +26,7 @@ function polling() {
 
 polling()
 
+// Enables the popup for pages containing the pantheon host"
 chrome.runtime.onInstalled.addListener(function() {
     chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
       chrome.declarativeContent.onPageChanged.addRules([{
@@ -37,21 +38,3 @@ chrome.runtime.onInstalled.addListener(function() {
       }]);
     });
 });
-
-const getServerStatus = async (): Promise<string> => {
-    const statusRequest = await fetch("http://localhost:23966/health", {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-            "Content-Type": "application/json"
-        },
-    })
-
-    const response = await statusRequest.json();
-    return response
-}
-
-
-getServerStatus().then(status => {
-    console.log(status)
-}).catch(error => console.log(error))
