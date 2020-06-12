@@ -18,7 +18,6 @@ on: [push]
 
 jobs:
   build:
-    name: Run Jest tests
     # This job runs on Linux
     runs-on: ubuntu-latest
     steps:
