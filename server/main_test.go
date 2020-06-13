@@ -47,8 +47,7 @@ func TestHealth(t *testing.T) {
 	}
 
 	var gotResp map[string]string
-	err = json.Unmarshal(reqBody, &gotResp)
-	if err != nil {
+	if err = json.Unmarshal(reqBody, &gotResp); err != nil {
 		t.Fatal(err)
 	}
 
@@ -69,15 +68,15 @@ func TestCorsHeaders(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	if gotOrigin, expectedOrigin := rr.Header().Get("Access-Control-Allow-Origin"), "chrome-extension://ljejdkiepkafbpnbacemjjcleckglnjl"; gotOrigin != expectedOrigin {
-		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotOrigin, expectedOrigin)
+	if gotOrigin := rr.Header().Get("Access-Control-Allow-Origin"); gotOrigin != allowedOrigin {
+		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotOrigin, allowedOrigin)
 	}
 
-	if gotMethods, expectedMethods := rr.Header().Get("Access-Control-Allow-Methods"), "POST, GET, OPTIONS"; gotMethods != expectedMethods {
-		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotMethods, expectedMethods)
+	if gotMethods := rr.Header().Get("Access-Control-Allow-Methods"); gotMethods != allowedMethods {
+		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotMethods, allowedMethods)
 	}
 
-	if gotHeaders, expectedHeaders := rr.Header().Get("Access-Control-Allow-Headers"), "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"; gotHeaders != expectedHeaders {
-		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotHeaders, expectedHeaders)
+	if gotHeaders := rr.Header().Get("Access-Control-Allow-Headers"); gotHeaders != allowedHeaders {
+		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotHeaders, allowedHeaders)
 	}
 }

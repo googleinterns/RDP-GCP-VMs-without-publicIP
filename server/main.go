@@ -26,6 +26,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	allowedOrigin  string = "chrome-extension://ljejdkiepkafbpnbacemjjcleckglnjl"
+	allowedMethods string = "POST, GET, OPTIONS"
+	allowedHeaders string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
+)
+
 // main defines the routes of the HTTP server and starts listening on port 23966
 func main() {
 	router := mux.NewRouter()
@@ -37,9 +43,9 @@ func main() {
 // setCorsHeaders is used to set the headers for CORS requests from the Chrome Extension.
 // All preflight requests are handled by this function and it is also used in the HTTP functions.
 func setCorsHeaders(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "chrome-extension://ljejdkiepkafbpnbacemjjcleckglnjl")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+	w.Header().Set("Access-Control-Allow-Methods", allowedMethods)
+	w.Header().Set("Access-Control-Allow-Headers", allowedHeaders)
 }
 
 // health is a HTTP route that prints a simple string to check if the server is running.
