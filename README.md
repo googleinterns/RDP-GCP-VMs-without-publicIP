@@ -30,21 +30,21 @@ Apache header:
     limitations under the License.
 
 
-## How to get started with the Chrome Extension
-The Chrome Extension is written in TypeScript, the entire extension is bundled and transpiled using Webpack.
+## How to get started with the Chrome Extension  
+The Chrome Extension is written in TypeScript, the entire extension is bundled and transpiled using Webpack.  
 
-To get started with the extension:
+To get started with the extension:  
 
-Switch to the extension's directory
-`cd extensions`
-Use yarn or npm to install the dependencies
-`yarn` or `npm install`
-The extension requires a extension key in the environment variables, please set a key before building the extension
-`export EXTENSION_DEV_KEY = "your key"`
-To run the tests, use the `test` command
-`yarn test` or `npm test`
-To start the bundler
-`yarn start` or `npm start`
-Then load the `dist` folder as an unpacked extension in `chrome://extensions`
+Switch to the extension's directory  
+`cd extensions`  
+Use yarn or npm to install the dependencies  
+`yarn` or `npm install`  
+The extension requires a extension key in the environment variables, please set a key before building the extension  
+`export EXTENSION_DEV_KEY = "your key"`  
+To run the tests, use the `test` command  
+`yarn test` or `npm test`  
+To start the bundler  
+`yarn start` or `npm start`  
+Then load the `dist` folder as an unpacked extension in `chrome://extensions`  
 
-NOTE: Whenever an edit is made to any of the `.ts` or `.html` files, the extension will automatically reload
+NOTE: Whenever an edit is made to any of the `.ts` or `.html` files, the extension will automatically reload  

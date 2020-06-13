@@ -20,12 +20,13 @@ import { doubleNumber } from "./double_number";
 let number = 1;
 function polling() {
     number = doubleNumber(number)
-    console.log('polling 2 ' + number);
-    setTimeout(polling, 1000 * 5);
+    console.log('polling ' + number);
+    setTimeout(polling, 1000 * 10);
 }
 
 polling()
 
+// Enables the popup for pages containing the pantheon host"
 chrome.runtime.onInstalled.addListener(function() {
     chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
       chrome.declarativeContent.onPageChanged.addRules([{

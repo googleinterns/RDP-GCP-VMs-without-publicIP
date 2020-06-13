@@ -12,9 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-extension/npm-debug.log
-extension/yarn-error.log
-extension/node_modules/
-extension/dist/
-extension/tmp/
-extension/coverage/
+name: Run Go Server tests
+# This workflow is triggered on pushes to the repository.
+on: [push]
+
+jobs:
+  build:
+    # This job runs on Linux
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14.x
+    - name: Run tests
+      working-directory: ./server
+      run: go test

@@ -16,10 +16,23 @@ limitations under the License.
 
 /* A package that is the script used in the pop up of the extension */
 
+const getServerStatus = async (): Promise<string> => {
+    const statusRequest = await fetch("http://localhost:23966/health", {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+         'Content-Type': 'application/json'
+        },
+    })
 
-import { doubleNumber } from "./double_number";
+    const response = await statusRequest.json();
+    return response["status"]
+}
 
 chrome.tabs.query({'active': true,'currentWindow':true}, () => {
-    const container = document.getElementById("container");
-    container.innerText = doubleNumber(6).toString();
+    const container = document.getElementById("span-status");
+    container.innerText = "connecting to server";
+    getServerStatus().then(response => {
+        container.innerText = response;
+    }).catch(error => container.innerText = error)
 });
