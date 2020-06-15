@@ -20,9 +20,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 	"github.com/gorilla/mux"
 )
 
@@ -53,6 +55,8 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	type response struct {
 		Status string `json:"status"`
 	}
+
+	fmt.Println(string(shell.RunSimpleCmd("ls")))
 
 	resp := response{Status: "server is running"}
 

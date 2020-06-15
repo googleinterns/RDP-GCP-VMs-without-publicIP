@@ -19,4 +19,7 @@ module github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server
 
 go 1.14
 
-require github.com/gorilla/mux v1.7.4
+require (
+	github.com/gorilla/mux v1.7.4
+	github.com/mattn/go-shellwords v1.0.10 // indirect
+)
