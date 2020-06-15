@@ -15,11 +15,11 @@
 // This file is the module file for this package. It contains the module's path
 // as well as the dependencies this module will use.
 
-module github.com/googleinterns/RDP-GCP-VMs-without-publicIP
+module github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server
 
 go 1.14
 
 require (
 	github.com/gorilla/mux v1.7.4
-	github.com/mattn/go-shellwords v1.0.10 // indirect
+	github.com/mattn/go-shellwords v1.0.10
 )

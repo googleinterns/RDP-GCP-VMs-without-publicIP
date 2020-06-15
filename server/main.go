@@ -24,7 +24,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/shell"
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 	"github.com/gorilla/mux"
 )
 
@@ -56,7 +56,8 @@ func health(w http.ResponseWriter, _ *http.Request) {
 		Status string `json:"status"`
 	}
 
-	fmt.Println(string(shell.RunSimpleCmd("ls")))
+	fmt.Println(string(shell.SynchronousCmd("ls")))
+	shell.AsynchronousCmd(`bash -c "while sleep 2; do echo thinking; done"`)
 
 	resp := response{Status: "server is running"}
 
