@@ -24,7 +24,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/shell"
 	"github.com/gorilla/mux"
 )
 

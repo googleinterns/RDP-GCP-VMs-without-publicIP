@@ -12,5 +12,5 @@ func RunSimpleCmd() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return out
+	return string(out)
 }
