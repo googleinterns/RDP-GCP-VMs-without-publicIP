@@ -37,7 +37,6 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
 	router.HandleFunc("/health", setCorsHeaders).Methods("OPTIONS")
-
 	log.Fatal(http.ListenAndServe(":23966", router))
 }
 

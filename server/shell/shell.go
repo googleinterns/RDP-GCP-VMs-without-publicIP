@@ -52,8 +52,6 @@ func AsynchronousCmd(cmd string) ([]io.ReadCloser, error) {
 		return nil, err
 	}
 
-	//asyncCmd.Stderr = asyncCmd.Stdout
-
 	if err = asyncCmd.Start(); err != nil {
 		return nil, err
 	}
