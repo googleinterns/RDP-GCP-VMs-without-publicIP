@@ -20,11 +20,9 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/sockets"
 
 	"github.com/gorilla/mux"
@@ -62,7 +60,6 @@ func health(w http.ResponseWriter, _ *http.Request) {
 		Status string `json:"status"`
 	}
 
-	fmt.Println(string(shell.SynchronousCmd("ls")))
 	sockets.PrintAsync(`bash -c "while sleep 2; do echo thinking; done"`)
 
 	resp := response{Status: "server is running"}
