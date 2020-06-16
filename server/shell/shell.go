@@ -1,8 +1,8 @@
 package shell
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os/exec"
 
@@ -31,28 +31,21 @@ func SynchronousCmd(cmd string) string {
 }
 
 // AsynchronousCmd runs a shell command in the background
-func AsynchronousCmd(cmd string) {
+func AsynchronousCmd(cmd string) (io.ReadCloser, error) {
 	parsedCmd := parseCmd(cmd)
 
 	asyncCmd := exec.Command(parsedCmd[0], parsedCmd[1:]...)
 	stdout, err := asyncCmd.StdoutPipe()
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
 
 	asyncCmd.Stderr = asyncCmd.Stdout
 
 	if err = asyncCmd.Start(); err != nil {
-		log.Println(err)
+		return nil, err
 	}
 
-	scanner := bufio.NewScanner(stdout)
-	go func() {
-		for scanner.Scan() {
-			line := scanner.Text()
-			fmt.Println(line)
-		}
-	}()
-
 	fmt.Println("Stand by to read..")
+	return stdout, nil
 }

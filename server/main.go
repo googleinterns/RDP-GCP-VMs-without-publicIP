@@ -25,7 +25,10 @@ import (
 	"net/http"
 
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/sockets"
+
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -39,6 +42,9 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
 	router.HandleFunc("/health", setCorsHeaders).Methods("OPTIONS")
+
+	router.HandleFunc("/socket-test", socketTest)
+
 	log.Fatal(http.ListenAndServe(":23966", router))
 }
 
@@ -57,11 +63,24 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	fmt.Println(string(shell.SynchronousCmd("ls")))
-	shell.AsynchronousCmd(`bash -c "while sleep 2; do echo thinking; done"`)
+	sockets.PrintAsync(`bash -c "while sleep 2; do echo thinking; done"`)
 
 	resp := response{Status: "server is running"}
 
 	w.Header().Set("Content-Type", "application/json")
 	setCorsHeaders(w, nil)
 	json.NewEncoder(w).Encode(resp)
+}
+
+var upgrader = websocket.Upgrader{}
+
+func socketTest(w http.ResponseWriter, r *http.Request) {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	ws,err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+	}
+
+
+	go sockets.SendAsyncCmd(ws, `bash -c "while sleep 2; do echo hello; done"`)
 }
