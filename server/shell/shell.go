@@ -4,27 +4,12 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-
-	"github.com/mattn/go-shellwords"
+	"strings"
 )
 
-// parseCmd parses a single string and splits it into shell arguments, "ls -l" -> ["ls, -l"]
-func parseCmd(cmd string) ([]string, error) {
-	p := shellwords.NewParser()
-	args, err := p.Parse(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	return args, nil
-}
-
-// SynchronousCmd runs a shell command and waits for its output before returning the output
-func SynchronousCmd(cmd string) (string, error) {
-	parsedCmd, err := parseCmd(cmd)
-	if err != nil {
-		return "", err
-	}
+// Cmd runs a shell command and waits for its output before returning the output
+func Cmd(cmd string) (string, error) {
+	parsedCmd := strings.Fields(cmd)
 
 	out, err := exec.Command(parsedCmd[0], parsedCmd[1:]...).CombinedOutput()
 	if err != nil {
@@ -33,13 +18,9 @@ func SynchronousCmd(cmd string) (string, error) {
 	return string(out), nil
 }
 
-// AsynchronousCmd runs a shell command and pipes the stdout and stderr into a ReadCloser
-func AsynchronousCmd(cmd string) ([]io.ReadCloser, error) {
-	parsedCmd, err := parseCmd(cmd)
-	if err != nil {
-		return nil, err
-	}
-
+// CmdReader runs a shell command and pipes the stdout and stderr into ReadClosers
+func CmdReader(cmd string) ([]io.ReadCloser, error) {
+	parsedCmd := strings.Fields(cmd)
 	asyncCmd := exec.Command(parsedCmd[0], parsedCmd[1:]...)
 
 	stdout, err := asyncCmd.StdoutPipe()
