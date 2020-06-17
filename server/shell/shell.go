@@ -25,14 +25,13 @@ import (
 )
 
 // Cmd runs a shell command and waits for its output before returning the output
-func Cmd(cmd string) (string, error) {
+func Cmd(cmd string) ([]byte, error) {
 	parsedCmd := strings.Fields(cmd)
-
 	out, err := exec.Command(parsedCmd[0], parsedCmd[1:]...).CombinedOutput()
 	if err != nil {
-		return "", err
+		return out, err
 	}
-	return string(out), nil
+	return out, nil
 }
 
 // CmdReader runs a shell command and pipes the stdout and stderr into ReadClosers

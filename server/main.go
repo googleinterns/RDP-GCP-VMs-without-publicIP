@@ -20,6 +20,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -37,6 +40,9 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
 	router.HandleFunc("/health", setCorsHeaders).Methods("OPTIONS")
+	router.HandleFunc("/compute-instances", getComputeInstances).Methods("POST")
+	router.HandleFunc("/compute-instances", setCorsHeaders).Methods("OPTIONS")
+
 	log.Fatal(http.ListenAndServe(":23966", router))
 }
 
@@ -59,4 +65,45 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	setCorsHeaders(w, nil)
 	json.NewEncoder(w).Encode(resp)
+}
+
+func getComputeInstances(w http.ResponseWriter, r *http.Request) {
+	type request struct {
+		ProjectName string `json:"project"`
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Print("yo")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var reqBody request
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	fmt.Println(reqBody)
+	fmt.Println(reqBody.ProjectName)
+
+	instances, err := gcloud.GetComputeInstances(reqBody.ProjectName)
+	if err != nil {
+		log.Println(err)
+		switch err.Error() {
+		case gcloud.SdkAuthError:
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(gcloud.SdkAuthError))
+			break
+		case gcloud.SdkProjectError:
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(gcloud.SdkProjectError))
+			break
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	setCorsHeaders(w, nil)
+	json.NewEncoder(w).Encode(instances)
 }

@@ -18,6 +18,7 @@ package shell
 
 import (
 	"bufio"
+	"bytes"
 	"testing"
 )
 
@@ -29,12 +30,12 @@ const (
 
 // TestCmd tests the Cmd which runs a shell cmd and waits for it output before testing
 func TestCmd(t *testing.T) {
-	if invalidCmd, err := Cmd(invalidCmd); invalidCmd != "" && err == nil {
+	if _, err := Cmd(invalidCmd); err == nil {
 		t.Errorf("Cmd didn't error on invalid cmd")
 	}
 
-	if validCmd, err := Cmd(validCmd); validCmd == "" || err != nil {
-		t.Errorf("Cmd failed, expected %v, got %v", "hello", err)
+	if validCmd, err := Cmd(validCmd); validCmd == nil || err != nil || bytes.Equal(validCmd, []byte("hello")) {
+		t.Errorf("Cmd failed, expected %v, got %v", "hello", string(validCmd))
 	}
 }
 

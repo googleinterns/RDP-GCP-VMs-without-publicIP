@@ -17,6 +17,7 @@ limitations under the License.
 /* A script that runs in the background when the function is initialized */
 
 import { doubleNumber } from "./double_number";
+import { enablePopup } from "./helpers/background";
 let number = 1;
 function polling() {
     number = doubleNumber(number)
@@ -27,7 +28,7 @@ function polling() {
 polling()
 
 // Enables the popup for pages containing the pantheon host"
-chrome.runtime.onInstalled.addListener(function() {
+/*chrome.runtime.onInstalled.addListener(function() {
     chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
       chrome.declarativeContent.onPageChanged.addRules([{
         conditions: [new chrome.declarativeContent.PageStateMatcher({
@@ -37,4 +38,12 @@ chrome.runtime.onInstalled.addListener(function() {
             actions: [new chrome.declarativeContent.ShowPageAction()]
       }]);
     });
-});
+});*/
+
+enablePopup(["pantheon.corp.google.com", "b.corp.google.com"]);
+
+
+
+/*chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
+
+})*/
