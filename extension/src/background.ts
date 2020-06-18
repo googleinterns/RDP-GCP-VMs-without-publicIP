@@ -27,21 +27,8 @@ function polling() {
 
 polling()
 
-// Enables the popup for pages containing the pantheon host"
-/*chrome.runtime.onInstalled.addListener(function() {
-    chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-      chrome.declarativeContent.onPageChanged.addRules([{
-        conditions: [new chrome.declarativeContent.PageStateMatcher({
-          pageUrl: {hostContains: 'pantheon.corp.google.com'},
-        })
-        ],
-            actions: [new chrome.declarativeContent.ShowPageAction()]
-      }]);
-    });
-});*/
-
 enablePopup(["pantheon.corp.google.com", "b.corp.google.com"]);
-
+//getInstancesForPage()
 
 
 /*chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {

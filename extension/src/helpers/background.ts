@@ -33,4 +33,24 @@ const enablePopup = (hosts: string[]) => {
     });
 }
 
+const getServerStatus = async (projectName: string): Promise<any> => {
+    const statusRequest = await fetch("http://localhost:23966/compute-instances", {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ project: projectName })
+    });
+
+    return await statusRequest.json();
+}
+
+const getComputeInstances = (pages: string[]) => {
+    chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
+        const tab = tabs[0];
+
+    })
+}
+
 export { enablePopup }

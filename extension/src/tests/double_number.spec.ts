@@ -14,15 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-module.exports = {
-    "roots": [
-      "<rootDir>/src"
-    ],
-    "testMatch": [
-      "**/tests/**/*.+(ts|tsx|js)",
-      "**/?(*.)+(spec|test).+(ts|tsx|js)"
-    ],
-    "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
-    },
-}
+/* A file that contains a test for a function that doubles the number passed in.
+Used solely for testing purposes and will be removed in the future. */
+
+import { doubleNumber } from "../double_number";
+describe("doubleNumber tests", () => {
+    it("doubles 2 to equal 4", () => {
+        expect(doubleNumber(2)).toBe(4);
+    })
+})
