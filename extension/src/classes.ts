@@ -47,18 +47,18 @@ class Instance implements InstanceInterface {
         this.disks = instance.disks;
         this.description = instance.description
         this.NetworkInterfaces = instance.NetworkInterfaces;
-        this.setRdpDomDisplay();
+        this.displayPrivateRdpDom = this.setRdpDomDisplay();
     }
 
     setRdpDomDisplay() {
         for (let i = 0; i < this.disks.length; i++) {
             for (let j = 0; j < this.disks[i].guestOsFeatures.length; j++) {
                 if (this.disks[i].guestOsFeatures[j].type === "WINDOWS") {
-                    this.displayPrivateRdpDom = true;
-                    return;
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     NetworkInterfaces: NetworkInterface[];

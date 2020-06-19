@@ -29,76 +29,58 @@ const enablePopup = (hosts: string[]) => {
             });
         }
     });
-    chrome.runtime.onInstalled.addListener(function() {
-        chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-            for (let i = 0; i < hosts.length; i++) {
-                chrome.declarativeContent.onPageChanged.addRules([{
-                    conditions: [new chrome.declarativeContent.PageStateMatcher({
-                        pageUrl: {hostContains: hosts[i]},
-                    })
-                    ],
-                    actions: [new chrome.declarativeContent.ShowPageAction()]
-                }]);
+}
+
+const instanceFunctions = {
+    getComputeInstances: async function (projectName: string): Promise<Instance[]> {
+        try {
+            const instancesData = await this.getInstancesApi(projectName);
+            const instances = [] as Array<Instance>
+            for (let i = 0; i < instancesData.length; i++) {
+                instances.push(new Instance(<InstanceInterface> instancesData[i]));
             }
-        });
-    });
-}
 
-const getInstancesApi = async (projectName: string): Promise<any> => {
-    const instanceRequest = await fetch("http://localhost:23966/compute-instances", {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ project: projectName })
-    });
-    if (instanceRequest.status === 401) {
-        throw new Error("gCloud Auth");
-    }
-    if (!instanceRequest.ok) {
-        throw new Error("server error");
-    }
-    return await instanceRequest.json();
-}
-
-const getComputeInstances = async (projectName: string): Promise<Instance[]> => {
-    try {
-        const instancesData = await getInstancesApi(projectName);
-        const instances = [] as Array<Instance>
-        for (let i = 0; i < instancesData.length; i++) {
-            console.log(<InstanceInterface> instancesData[i]);
-            console.log(new Instance(<InstanceInterface> instancesData[i]))
-            instances.push(new Instance(<InstanceInterface> instancesData[i]));
+            return instances;
+        } catch (error) {
+            throw error;
         }
-
-        return instances;
-    } catch (error) {
-        throw error;
+    },
+    getInstancesApi: async (projectName: string): Promise<any> => {
+        const instanceRequest = await fetch("http://localhost:23966/compute-instances", {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ project: projectName })
+        });
+        if (instanceRequest.status === 401) {
+            throw new Error("gCloud Auth");
+        }
+        if (!instanceRequest.ok) {
+            throw new Error("server error");
+        }
+        return await instanceRequest.json();
     }
 }
 
 let computeInstances = [] as Instance[];
 const pantheonListener = () => {
     chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-        if (changeInfo.status === "complete" && tab.status === "complete" && tab.url) {
-            chrome.tabs.query({lastFocusedWindow: true, active: true}, (tabs) => {
-                if (tabs[0].url === tab.url && tab.url.match(pantheonPageRegex) && tab.url.indexOf("?") !== -1) {
-                    const urlParams = new URLSearchParams(tab.url.split("?")[1]);
-                    const projectName = urlParams.get("project");
-                    console.log(projectName)
-                    if (projectName) {
-                        getComputeInstances(projectName).then((instances) => {
-                            computeInstances = instances;
-                            console.log(computeInstances)
-                        }).catch(error => chrome.browserAction.setBadgeText({text: "error"}));
-                    }
+        if (changeInfo.status === "complete" && tab.status === "complete" && tab.url != undefined) {
+            if (tab.url.match(pantheonPageRegex) && tab.url.indexOf("?") !== -1) {
+                const urlParams = new URLSearchParams(tab.url.split("?")[1]);
+                const projectName = urlParams.get("project");
+                console.log(projectName)
+                if (projectName) {
+                    instanceFunctions.getComputeInstances(projectName).then((instances) => {
+                        computeInstances = instances;
+                        console.log(computeInstances)
+                    }).catch(error => chrome.browserAction.setBadgeText({text: "error"}));
                 }
-            })
+            }
         }
     })
 }
 
-
-
-export { enablePopup, pantheonListener };
+export { enablePopup, pantheonListener, instanceFunctions };
