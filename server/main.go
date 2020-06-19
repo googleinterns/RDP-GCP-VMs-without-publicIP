@@ -68,6 +68,7 @@ func health(w http.ResponseWriter, _ *http.Request) {
 }
 
 func getComputeInstances(w http.ResponseWriter, r *http.Request) {
+	setCorsHeaders(w, nil)
 	type request struct {
 		ProjectName string `json:"project"`
 	}
@@ -104,6 +105,5 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	setCorsHeaders(w, nil)
 	json.NewEncoder(w).Encode(instances)
 }

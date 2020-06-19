@@ -16,21 +16,10 @@ limitations under the License.
 
 /* A script that runs in the background when the function is initialized */
 
-import { doubleNumber } from "./double_number";
-import { enablePopup } from "./helpers/background";
-let number = 1;
-function polling() {
-    number = doubleNumber(number)
-    console.log('polling ' + number);
-    setTimeout(polling, 1000 * 10);
-}
-
-polling()
+import { enablePopup, pantheonListener } from "./helpers/background";
+import { pantheonPageRegex } from "./helpers/constants";
+import { Instance } from "./classes";
 
 enablePopup(["pantheon.corp.google.com", "b.corp.google.com"]);
-//getInstancesForPage()
+pantheonListener();
 
-
-/*chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-
-})*/

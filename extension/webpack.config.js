@@ -28,7 +28,7 @@ module.exports = {
     entry: {
         popup: path.join(__dirname, srcDir + "popup.ts"),
         background: path.join(__dirname, srcDir + "background.ts"),
-        content_script: path.join(__dirname, srcDir + "content.ts")
+        pantheon_content: path.join(__dirname, srcDir + "pantheon_content.ts")
     },
     // Output the transpiled TS files into the /dist/js folder
     output: {
