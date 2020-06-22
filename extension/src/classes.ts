@@ -43,7 +43,7 @@ interface InstanceInterface {
 
 // Class used for instances received from the server.
 class Instance implements InstanceInterface {
-    constructor(instance: InstanceInterface) {
+     constructor(instance: InstanceInterface) {
         this.name = instance.name;
         this.status = instance.status;
         this.id = instance.id;
@@ -55,7 +55,7 @@ class Instance implements InstanceInterface {
     }
 
     // Enable RDP button display for instances that are Windows.
-    setRdpDomDisplay() {
+     setRdpDomDisplay() {
         for (let i = 0; i < this.disks.length; i++) {
             for (let j = 0; j < this.disks[i].guestOsFeatures.length; j++) {
                 if (this.disks[i].guestOsFeatures[j].type === "WINDOWS") {

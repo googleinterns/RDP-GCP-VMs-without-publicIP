@@ -18,44 +18,45 @@
 
 
 import {instanceFunctions} from "../helpers/background";
-describe("background tests",  () => {
-    const instance = [
-        {
-            "id": "4",
-            "name": "test-instance",
-            "status": "RUNNING",
-            "description": "",
-            "zone": "us-west1-b",
-            "disks": [
-                {
-                    "guestOsFeatures": [
-                        {
-                            "type": "WINDOWS"
-                        }
-                    ]
-                }
-            ],
-            "NetworkInterfaces": [
-                {
-                    "name": "nic0",
-                    "network": "testNetwork",
-                    "networkIP": "ip"
-                }
-            ]
-        }
-    ]
+const instance = [
+    {
+        "id": "4",
+        "name": "test-instance",
+        "status": "RUNNING",
+        "description": "",
+        "zone": "us-west1-b",
+        "disks": [
+            {
+                "guestOsFeatures": [{}]
+            }
+        ],
+        "NetworkInterfaces": [
+            {
+                "name": "nic0",
+                "network": "testNetwork",
+                "networkIP": "ip"
+            }
+        ]
+    }
+]
+describe("background tests - creating windows instances",  () => {
     it("windows instances are created properly",  async() => {
+        let windowsInstance = instance.slice();
+        windowsInstance[0].disks[0].guestOsFeatures[0] = { type: "WINDOWS" }
         spyOn(instanceFunctions, "getInstancesApi").and.callFake(() => {
-            return Promise.resolve(instance);
+            return Promise.resolve(windowsInstance);
         });
 
         const testInstances = await instanceFunctions.getComputeInstances("test");
         expect(testInstances[0].name).toEqual("test-instance");
         expect(testInstances[0].displayPrivateRdpDom).toEqual(true);
-    })
+    });
+});
+
+describe("background tests - creating linux instances", () => {
     it("other instances are created properly", async () => {
-        let linuxInstance = instance;
-        linuxInstance[0].disks[0].guestOsFeatures[0].type = "LINUX"
+        let linuxInstance = instance.slice();
+        linuxInstance[0].disks[0].guestOsFeatures[0] = { type: "LINUX" }
         spyOn(instanceFunctions, "getInstancesApi").and.callFake(() => {
             return Promise.resolve(linuxInstance);
         });
@@ -63,5 +64,5 @@ describe("background tests",  () => {
         const testInstances = await instanceFunctions.getComputeInstances("test");
         expect(testInstances[0].name).toEqual("test-instance");
         expect(testInstances[0].displayPrivateRdpDom).toEqual(false);
-    })
-})
+    });
+});
