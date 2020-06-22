@@ -51,11 +51,11 @@ class Instance implements InstanceInterface {
     this.disks = instance.disks;
     this.description = instance.description;
     this.NetworkInterfaces = instance.NetworkInterfaces;
-    this.displayPrivateRdpDom = this.setRdpDomDisplay();
+    this.displayPrivateRdpDom = this.canDisplayRdpDom();
   }
 
   // Enable RDP button display for instances that are Windows.
-  setRdpDomDisplay() {
+  canDisplayRdpDom() {
     for (let i = 0; i < this.disks.length; i++) {
       for (let j = 0; j < this.disks[i].guestOsFeatures.length; j++) {
         if (this.disks[i].guestOsFeatures[j].type === 'WINDOWS') {

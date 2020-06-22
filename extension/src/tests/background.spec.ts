@@ -38,6 +38,8 @@ const instance = [
     ],
   },
 ];
+
+// Test to make sure windows instances are initialized properly.
 describe('background tests - creating windows instances', () => {
   it('windows instances are created properly', async () => {
     const windowsInstance = instance.slice();
@@ -52,6 +54,7 @@ describe('background tests - creating windows instances', () => {
   });
 });
 
+// Test to make sure non-windows instances are initialized properly.
 describe('background tests - creating linux instances', () => {
   it('other instances are created properly', async () => {
     const linuxInstance = instance.slice();

@@ -133,7 +133,7 @@ func TestGetComputeInstances(t *testing.T) {
 	var validInstances []Instance
 	err := json.Unmarshal(validComputeInstanceOutput, &validInstances)
 	if err != nil {
-		fmt.Println(err)
+		t.Errorf("GetComputeInstances JSON unmarshal error with test data")
 	}
 
 	g = NewCmdRunner(mockCmdComputeInstances)

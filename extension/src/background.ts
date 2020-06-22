@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-/* A script that runs in the background when the function is initialized */
+/* A script that runs in the background when the extension is initialized */
 
 import {enablePopup, pantheonListener} from './helpers/background';
 import {pantheonPageRegex} from './helpers/constants';

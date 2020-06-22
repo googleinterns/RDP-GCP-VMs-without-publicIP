@@ -14,8 +14,7 @@
  limitations under the License.
  ***/
 
-/* A file that contains a simple function that doubles the number passed in.
-Used solely for testing purposes and will be removed in the future. */
+/* A file that contains functions used in the background script */
 
 import {pantheonPageRegex} from './constants';
 import {Instance, InstanceInterface} from '../classes';
