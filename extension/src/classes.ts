@@ -17,63 +17,63 @@
 // File used to contain classes and interfaces used in the extension.
 
 interface GuestOsFeature {
-    type: string;
+  type: string;
 }
 
 interface Disk {
-    guestOsFeatures: GuestOsFeature[];
+  guestOsFeatures: GuestOsFeature[];
 }
 
 interface NetworkInterface {
-    name: string;
-    network: string;
-    networkIP: string;
+  name: string;
+  network: string;
+  networkIP: string;
 }
 
 // Interface to convert instances received from the server.
 interface InstanceInterface {
-    id: string;
-    name: string;
-    status: string;
-    description: string;
-    zone: string;
-    disks: Disk[];
-    NetworkInterfaces: NetworkInterface[];
+  id: string;
+  name: string;
+  status: string;
+  description: string;
+  zone: string;
+  disks: Disk[];
+  NetworkInterfaces: NetworkInterface[];
 }
 
 // Class used for instances received from the server.
 class Instance implements InstanceInterface {
-     constructor(instance: InstanceInterface) {
-        this.name = instance.name;
-        this.status = instance.status;
-        this.id = instance.id;
-        this.zone = instance.zone;
-        this.disks = instance.disks;
-        this.description = instance.description
-        this.NetworkInterfaces = instance.NetworkInterfaces;
-        this.displayPrivateRdpDom = this.setRdpDomDisplay();
-    }
+  constructor(instance: InstanceInterface) {
+    this.name = instance.name;
+    this.status = instance.status;
+    this.id = instance.id;
+    this.zone = instance.zone;
+    this.disks = instance.disks;
+    this.description = instance.description;
+    this.NetworkInterfaces = instance.NetworkInterfaces;
+    this.displayPrivateRdpDom = this.setRdpDomDisplay();
+  }
 
-    // Enable RDP button display for instances that are Windows.
-     setRdpDomDisplay() {
-        for (let i = 0; i < this.disks.length; i++) {
-            for (let j = 0; j < this.disks[i].guestOsFeatures.length; j++) {
-                if (this.disks[i].guestOsFeatures[j].type === "WINDOWS") {
-                    return true;
-                }
-            }
+  // Enable RDP button display for instances that are Windows.
+  setRdpDomDisplay() {
+    for (let i = 0; i < this.disks.length; i++) {
+      for (let j = 0; j < this.disks[i].guestOsFeatures.length; j++) {
+        if (this.disks[i].guestOsFeatures[j].type === 'WINDOWS') {
+          return true;
         }
-        return false;
+      }
     }
+    return false;
+  }
 
-    NetworkInterfaces: NetworkInterface[];
-    description: string;
-    disks: Disk[];
-    id: string;
-    name: string;
-    status: string;
-    zone: string;
-    displayPrivateRdpDom: boolean;
+  NetworkInterfaces: NetworkInterface[];
+  description: string;
+  disks: Disk[];
+  id: string;
+  name: string;
+  status: string;
+  zone: string;
+  displayPrivateRdpDom: boolean;
 }
 
-export { Instance, InstanceInterface };
+export {Instance, InstanceInterface};

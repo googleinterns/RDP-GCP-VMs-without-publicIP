@@ -17,24 +17,24 @@ limitations under the License.
 /* A package that is the script used in the pop up of the extension */
 
 const getServerStatus = async (): Promise<string> => {
-    const statusRequest = await fetch("http://localhost:23966/health", {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-         'Content-Type': 'application/json'
-        },
-    })
+  const statusRequest = await fetch('http://localhost:23966/health', {
+    method: 'GET',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
-    const response = await statusRequest.json();
-    return response["status"]
-}
+  const response = await statusRequest.json();
+  return response['status'];
+};
 
-chrome.tabs.query({'active': true,'currentWindow':true}, async () => {
-    const container = document.getElementById("span-status");
-    container.innerText = "connecting to server";
-    try {
-        container.innerText = await getServerStatus();
-    } catch(error) {
-        container.innerText = error
-    }
+chrome.tabs.query({active: true, currentWindow: true}, async () => {
+  const container = document.getElementById('span-status');
+  container.innerText = 'connecting to server';
+  try {
+    container.innerText = await getServerStatus();
+  } catch (error) {
+    container.innerText = error;
+  }
 });

@@ -19,4 +19,4 @@
 const pantheonInstancesListRegex = /.*pantheon.corp.google.com\/compute\/.*/;
 const pantheonPageRegex = /.*pantheon.corp.google.com\/.*/;
 
-export { pantheonInstancesListRegex, pantheonPageRegex };
+export {pantheonInstancesListRegex, pantheonPageRegex};

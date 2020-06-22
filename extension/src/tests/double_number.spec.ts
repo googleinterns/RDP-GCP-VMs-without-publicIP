@@ -17,9 +17,9 @@ limitations under the License.
 /* A file that contains a test for a function that doubles the number passed in.
 Used solely for testing purposes and will be removed in the future. */
 
-import { doubleNumber } from "../double_number";
-describe("doubleNumber tests", () => {
-    it("doubles 2 to equal 4", () => {
-        expect(doubleNumber(2)).toBe(4);
-    })
-})
+import {doubleNumber} from '../double_number';
+describe('doubleNumber tests', () => {
+  it('doubles 2 to equal 4', () => {
+    expect(doubleNumber(2)).toBe(4);
+  });
+});

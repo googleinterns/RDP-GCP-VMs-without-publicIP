@@ -18,7 +18,7 @@ limitations under the License.
 Used solely for testing purposes and will be removed in the future. */
 
 const doubleNumber = (num: number): number => {
-    return num*2;
-}
+  return num * 2;
+};
 
-export { doubleNumber }
+export {doubleNumber};
