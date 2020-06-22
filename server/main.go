@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -67,6 +68,7 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// getComputeInstances gets the current compute instances for the project passed in.
 func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 	setCorsHeaders(w, nil)
 	type request struct {
@@ -84,10 +86,9 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Println(reqBody)
-	fmt.Println(reqBody.ProjectName)
 
-	instances, err := gcloud.GetComputeInstances(reqBody.ProjectName)
+	g := gcloud.NewCmdRunner(shell.Cmd)
+	instances, err := g.GetComputeInstances(reqBody.ProjectName)
 	if err != nil {
 		log.Println(err)
 		switch err.Error() {

@@ -14,6 +14,8 @@
  limitations under the License.
  ***/
 
+// File used to contain classes and interfaces used in the extension.
+
 interface GuestOsFeature {
     type: string;
 }
@@ -28,6 +30,7 @@ interface NetworkInterface {
     networkIP: string;
 }
 
+// Interface to convert instances received from the server.
 interface InstanceInterface {
     id: string;
     name: string;
@@ -38,6 +41,7 @@ interface InstanceInterface {
     NetworkInterfaces: NetworkInterface[];
 }
 
+// Class used for instances received from the server.
 class Instance implements InstanceInterface {
     constructor(instance: InstanceInterface) {
         this.name = instance.name;
@@ -50,6 +54,7 @@ class Instance implements InstanceInterface {
         this.displayPrivateRdpDom = this.setRdpDomDisplay();
     }
 
+    // Enable RDP button display for instances that are Windows.
     setRdpDomDisplay() {
         for (let i = 0; i < this.disks.length; i++) {
             for (let j = 0; j < this.disks[i].guestOsFeatures.length; j++) {

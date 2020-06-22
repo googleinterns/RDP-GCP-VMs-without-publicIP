@@ -20,8 +20,6 @@ package gcloud
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 	"strings"
 )
 
@@ -50,8 +48,19 @@ type Instance struct {
 	}
 }
 
-func GetComputeInstances(projectName string) ([]Instance, error) {
-	instanceOutput, err := shell.Cmd("gcloud compute instances list --format=json --project=" + projectName)
+// CmdRunner is used to pass in which shell function will be used by a gCloud function for mocking.
+type CmdRunner struct {
+	cmdRunner func(cmd string) ([]byte, error)
+}
+
+// NewCmdRunner initializes a CmdRunner with the given shell function
+func NewCmdRunner(cmdRunner func(cmd string) ([]byte, error)) *CmdRunner {
+	return &CmdRunner{cmdRunner: cmdRunner}
+}
+
+// GetComputeInstances runs the gCloud instances command, parses the output to the Instances struct and returns
+func (g *CmdRunner) GetComputeInstances(projectName string) ([]Instance, error) {
+	instanceOutput, err := g.cmdRunner("gcloud compute instances list --format=json --project=" + projectName)
 	if err != nil {
 		stringOutput := strings.ToLower(string(instanceOutput))
 		if strings.Contains(stringOutput, loginCmdError) {
@@ -68,6 +77,5 @@ func GetComputeInstances(projectName string) ([]Instance, error) {
 		return nil, err
 	}
 
-	fmt.Println(instances)
 	return instances, nil
 }

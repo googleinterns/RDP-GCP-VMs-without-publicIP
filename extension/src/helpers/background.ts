@@ -20,6 +20,7 @@ Used solely for testing purposes and will be removed in the future. */
 import { pantheonPageRegex, pantheonInstancesListRegex } from "./constants";
 import { Instance, InstanceInterface } from "../classes";
 
+// Enable chrome extension popup on matching hosts.
 const enablePopup = (hosts: string[]) => {
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
         if (hosts.some(host => tab.url.includes(host))) {
@@ -31,6 +32,7 @@ const enablePopup = (hosts: string[]) => {
     });
 }
 
+// Object that contains functions used to get instances, needed for unit testing.
 const instanceFunctions = {
     getComputeInstances: async function (projectName: string): Promise<Instance[]> {
         try {
@@ -65,6 +67,7 @@ const instanceFunctions = {
 }
 
 let computeInstances = [] as Instance[];
+// Pantheon listener listens for pantheon pages and gets the GCP Compute instances to display buttons.
 const pantheonListener = () => {
     chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         if (changeInfo.status === "complete" && tab.status === "complete" && tab.url != undefined) {
