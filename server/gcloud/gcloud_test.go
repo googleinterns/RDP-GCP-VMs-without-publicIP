@@ -19,7 +19,6 @@ package gcloud
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 	"testing"
 )
