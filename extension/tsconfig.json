@@ -10,7 +10,6 @@
             "dom",
             "es6"
         ],
-        "module": "commonjs",
         "strictNullChecks": false,
         "typeRoots": [
             "node_modules/@types"

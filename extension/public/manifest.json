@@ -6,11 +6,11 @@
     "background": {
         "scripts": ["js/background.js"]
     },
-    "browser_action": {
-        "default_title": "gCloud Admin Extension"
+    "page_action": {
+        "default_popup": "popup.html"
     },
     "content_scripts": [{
-        "js": ["js/pantheon_content.js"],
+        "js": ["js/content_script.js"],
         "run_at": "document_end",
         "matches": ["https://b.corp.google.com/*", "https://pantheon.corp.google.com/*"]
       }],

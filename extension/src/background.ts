@@ -14,11 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-/* A script that runs in the background when the extension is initialized */
+/* A script that runs in the background when the function is initialized */
 
-import {enablePopup, pantheonListener} from './helpers/background';
-import {pantheonPageRegex} from './helpers/constants';
-import {Instance} from './classes';
+import { doubleNumber } from "./double_number";
+let number = 1;
+function polling() {
+    number = doubleNumber(number)
+    console.log('polling ' + number);
+    setTimeout(polling, 1000 * 10);
+}
 
-enablePopup(['pantheon.corp.google.com', 'b.corp.google.com']);
-pantheonListener();
+polling()
+
+// Enables the popup for pages containing the pantheon host"
+chrome.runtime.onInstalled.addListener(function() {
+    chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
+      chrome.declarativeContent.onPageChanged.addRules([{
+        conditions: [new chrome.declarativeContent.PageStateMatcher({
+          pageUrl: {hostContains: 'pantheon.corp.google.com'},
+        })
+        ],
+            actions: [new chrome.declarativeContent.ShowPageAction()]
+      }]);
+    });
+});
