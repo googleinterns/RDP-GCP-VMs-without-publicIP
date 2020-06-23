@@ -76,6 +76,7 @@ module.exports = {
     // Initializes the automatic reloading of the chrome extension during development.
     new ExtensionReloader({
       entries: {
+        contentScript: ['pantheon_content'],
         background: 'background',
       },
     }),
