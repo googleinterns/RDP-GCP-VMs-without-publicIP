@@ -20,47 +20,65 @@ package gcloud
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"strings"
 )
 
 const (
-	loginCmdError string = "gcloud auth login"
+	gcloudAuthError string = "There was a problem refreshing your current auth tokens"
 	projectCmdError string = "failed to find project"
+	// SdkAuthError is returned if there is an gcloud SDK auth error
 	SdkAuthError string = "gCloud SDK auth invalid"
-	SdkProjectError string = "gCloud SDK project invalid"
+	// SdkProjectError is returned if the gcloud project given is invalid
+	SdkProjectError               string = "gCloud SDK project invalid"
+	getComputeInstancesForProject string = "gcloud compute instances list --format=json --project="
 )
 
+type osFeatures struct {
+	Type string `json:"type"`
+}
+
+type disk struct {
+	OSFeatures []osFeatures `json:"guestOsFeatures"`
+}
+
+type networkInterfaces struct {
+	Name    string `json:"name"`
+	Network string `json:"network"`
+	IP      string `json:"networkIP"`
+}
+
+// Instance is used as a structure for gcloud compute instances.
 type Instance struct {
-	Id string `json:"id"`
-	Name string `json:"name"`
-	Status string `json:"status"`
-	Description string `json:"description"`
-	Zone string `json:"zone"`
-	Disk []struct {
-		OSFeatures []struct {
-			Type string `json:"type"`
-		} `json:"guestOsFeatures"`
-	} `json:"disks"`
-	NetworkInterfaces []struct {
-		Name string `json:"name"`
-		Network string `json:"network"`
-		Ip string `json:"networkIP"`
+	ID                string              `json:"id"`
+	Name              string              `json:"name"`
+	Status            string              `json:"status"`
+	Description       string              `json:"description"`
+	Zone              string              `json:"zone"`
+	Disk              []disk              `json:"disks"`
+	NetworkInterfaces []networkInterfaces `json:"networkInterfaces"`
+}
+
+type shell interface {
+	ExecuteCmd(string) ([]byte, error)
+	ExecuteCmdReader(string) ([]io.ReadCloser, error)
+}
+
+// GcloudExecutor is used to call gcloud functions with the shell passed in.
+type GcloudExecutor struct {
+	shell shell
+}
+
+// NewGcloudExecutor creates a new gcloudExecutor struct with a struct that implements shell.
+func NewGcloudExecutor(shell shell) *GcloudExecutor {
+	return &GcloudExecutor{
+		shell: shell,
 	}
 }
 
-// CmdRunner is used to pass in which shell function will be used by a gCloud function for mocking.
-type CmdRunner struct {
-	cmdRunner func(cmd string) ([]byte, error)
-}
-
-// NewCmdRunner initializes a CmdRunner with the given shell function
-func NewCmdRunner(cmdRunner func(cmd string) ([]byte, error)) *CmdRunner {
-	return &CmdRunner{cmdRunner: cmdRunner}
-}
-
 // GetComputeInstances runs the gCloud instances command, parses the output to the Instances struct and returns
-func (g *CmdRunner) GetComputeInstances(projectName string) ([]Instance, error) {
-	instanceOutput, err := g.cmdRunner("gcloud compute instances list --format=json --project=" + projectName)
+func (gcloudExecutor *GcloudExecutor) GetComputeInstances(projectName string) ([]Instance, error) {
+	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(getComputeInstancesForProject + projectName)
 	if err != nil {
 		stringOutput := strings.ToLower(string(instanceOutput))
 		if strings.Contains(stringOutput, loginCmdError) {

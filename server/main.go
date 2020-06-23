@@ -20,12 +20,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
-	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 
 	"github.com/gorilla/mux"
 )
@@ -76,7 +76,6 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 	}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Print("yo")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -87,19 +86,19 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	g := gcloud.NewCmdRunner(shell.Cmd)
-	instances, err := g.GetComputeInstances(reqBody.ProjectName)
+	shell := &shell.CmdShell{}
+	gcloudExecutor := gcloud.NewGcloudExecutor(shell)
+
+	instances, err := gcloudExecutor.GetComputeInstances(reqBody.ProjectName)
 	if err != nil {
 		log.Println(err)
 		switch err.Error() {
 		case gcloud.SdkAuthError:
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(gcloud.SdkAuthError))
-			break
 		case gcloud.SdkProjectError:
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(gcloud.SdkProjectError))
-			break
 		default:
 			w.WriteHeader(http.StatusBadRequest)
 		}

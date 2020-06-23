@@ -19,10 +19,10 @@ package gcloud
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"reflect"
 	"testing"
 )
-
 
 var invalidAuthOutput = []byte("ERROR: (gcloud.compute.instances.list)         There was a problem refreshing your current auth tokens: Failed to retrieve token from the Google Compute Enginemetadata service. Response:\n{'metadata-flavor': 'Google', 'content-type': 'application/json', 'date': 'Sat, 20 Jun 2020 00:08:01 GMT', 'server': 'Metadata Server for VM', 'content-length': '38', 'x-xss-protection': '0', 'x-frame-options': 'SAMEORIGIN', 'status': '404'}\n        Please run:\n\n          $ gcloud auth login\n\n        to obtain new credentials.\nIf you have already logged in with a different account:\n\n    $ gcloud config set account ACCOUNT\n\nto select an already authenticated account to use.\n")
 var invalidProjectOutput = []byte("ERROR: (gcloud.compute.instances.list) Some requests did not succeed:\n - Failed to find project badinvalidproject\n")
@@ -69,7 +69,7 @@ var validComputeInstanceOutput = []byte(`[
     "kind": "compute#instance",
     "labelFingerprint": "",
     "machineType": "https://www.googleapis.com/compute/v1/projects/zones/us-west1-b/machineTypes/custom-1-7680-ext",
-    "name": "project-name",
+    "name": "test-project",
     "networkInterfaces": [
       {
         "fingerprint": "",
@@ -105,26 +105,33 @@ var validComputeInstanceOutput = []byte(`[
   }
 ]`)
 
-func mockCmdAuthFailure(_ string) ([]byte, error) {
-	return invalidAuthOutput, errors.New("error")
+type mockShell struct{}
+
+func (mockShell) ExecuteCmd(cmd string) ([]byte, error) {
+	if cmd == getComputeInstancesForProject+"validProject" {
+		return validComputeInstanceOutput, nil
+	}
+	if cmd == getComputeInstancesForProject+"invalidAuth" {
+		return invalidAuthOutput, errors.New("error")
+	}
+	if cmd == getComputeInstancesForProject+"invalidProject" {
+		return invalidProjectOutput, errors.New("error")
+	}
+	return nil, nil
 }
 
-func mockCmdProjectFailure(_ string) ([]byte, error) {
-	return invalidProjectOutput, errors.New("error")
-}
-
-func mockCmdComputeInstances(_ string) ([]byte, error) {
-	return validComputeInstanceOutput, nil
+func (mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
+	return nil, nil
 }
 
 // TestGetComputeInstances tests the CmdReader which outputs stdout/stderr as a ReadCloser
 func TestGetComputeInstances(t *testing.T) {
-	g := NewCmdRunner(mockCmdAuthFailure)
+	mockShell := &mockShell{}
+	g := NewGcloudExecutor(mockShell)
 	if _, err := g.GetComputeInstances("invalidAuth"); err == nil || err.Error() != SdkAuthError {
 		t.Errorf("GetComputeInstances didn't error on invalid auth")
 	}
 
-	g = NewCmdRunner(mockCmdProjectFailure)
 	if _, err := g.GetComputeInstances("invalidProject"); err == nil || err.Error() != SdkProjectError {
 		t.Errorf("GetComputeInstances didn't error on invalid project")
 	}
@@ -135,7 +142,6 @@ func TestGetComputeInstances(t *testing.T) {
 		t.Errorf("GetComputeInstances JSON unmarshal error with test data")
 	}
 
-	g = NewCmdRunner(mockCmdComputeInstances)
 	if instances, err := g.GetComputeInstances("validProject"); err != nil || !reflect.DeepEqual(instances, validInstances) {
 		t.Errorf("GetComputeInstances failed getting instances, got %v, expected %v", instances, validInstances)
 	}
