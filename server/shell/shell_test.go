@@ -35,8 +35,8 @@ func TestExecuteCmd(t *testing.T) {
 		t.Errorf("Cmd didn't error on invalid cmd")
 	}
 
-	if validCmd, err := shell.ExecuteCmd(validCmd); validCmd == nil || err != nil || bytes.Equal(validCmd, []byte("hello")) {
-		t.Errorf("Cmd failed, expected %v, got %v", "hello", string(validCmd))
+	if validOutput, err := shell.ExecuteCmd(validCmd); validOutput == nil || err != nil || bytes.Equal(validOutput, []byte("hello")) {
+		t.Errorf("Cmd failed, expected %v, got %v", "hello", string(validOutput))
 	}
 }
 

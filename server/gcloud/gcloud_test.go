@@ -110,13 +110,13 @@ var (
 type mockShell struct{}
 
 func (mockShell) ExecuteCmd(cmd string) ([]byte, error) {
-	if cmd == getComputeInstancesForProject+"validProject" {
+	if cmd == getComputeInstancesForProjectPrefix+"validProject" {
 		return validComputeInstanceOutput, nil
 	}
-	if cmd == getComputeInstancesForProject+"invalidAuth" {
+	if cmd == getComputeInstancesForProjectPrefix+"invalidAuth" {
 		return invalidAuthOutput, errors.New("error")
 	}
-	if cmd == getComputeInstancesForProject+"invalidProject" {
+	if cmd == getComputeInstancesForProjectPrefix+"invalidProject" {
 		return invalidProjectOutput, errors.New("error")
 	}
 	return nil, nil

@@ -30,8 +30,8 @@ const (
 	// SdkAuthError is returned if there is an gcloud SDK auth error
 	SdkAuthError string = "gCloud SDK auth invalid"
 	// SdkProjectError is returned if the gcloud project given is invalid
-	SdkProjectError               string = "gCloud SDK project invalid"
-	getComputeInstancesForProject string = "gcloud compute instances list --format=json --project="
+	SdkProjectError                     string = "gCloud SDK project invalid"
+	getComputeInstancesForProjectPrefix string = "gcloud compute instances list --format=json --project="
 )
 
 type osFeatures struct {
@@ -78,7 +78,7 @@ func NewGcloudExecutor(shell shell) *GcloudExecutor {
 
 // GetComputeInstances runs the gCloud instances command, parses the output to the Instances struct and returns
 func (gcloudExecutor *GcloudExecutor) GetComputeInstances(projectName string) ([]Instance, error) {
-	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(getComputeInstancesForProject + projectName)
+	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(getComputeInstancesForProjectPrefix + projectName)
 	if err != nil {
 		if stringOutput := strings.ToLower(string(instanceOutput)); strings.Contains(stringOutput, gcloudAuthError) {
 			return nil, errors.New(SdkAuthError)
