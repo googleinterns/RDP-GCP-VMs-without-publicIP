@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	gcloudAuthError string = "There was a problem refreshing your current auth tokens"
+	gcloudAuthError string = "there was a problem refreshing your current auth tokens"
 	projectCmdError string = "failed to find project"
 	// SdkAuthError is returned if there is an gcloud SDK auth error
 	SdkAuthError string = "gCloud SDK auth invalid"
@@ -80,11 +80,9 @@ func NewGcloudExecutor(shell shell) *GcloudExecutor {
 func (gcloudExecutor *GcloudExecutor) GetComputeInstances(projectName string) ([]Instance, error) {
 	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(getComputeInstancesForProject + projectName)
 	if err != nil {
-		stringOutput := strings.ToLower(string(instanceOutput))
-		if strings.Contains(stringOutput, loginCmdError) {
+		if stringOutput := strings.ToLower(string(instanceOutput)); strings.Contains(stringOutput, gcloudAuthError) {
 			return nil, errors.New(SdkAuthError)
-		}
-		if strings.Contains(stringOutput, projectCmdError) {
+		} else if strings.Contains(stringOutput, projectCmdError) {
 			return nil, errors.New(SdkProjectError)
 		}
 		return nil, err

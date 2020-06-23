@@ -24,9 +24,10 @@ import (
 	"testing"
 )
 
-var invalidAuthOutput = []byte("ERROR: (gcloud.compute.instances.list)         There was a problem refreshing your current auth tokens: Failed to retrieve token from the Google Compute Enginemetadata service. Response:\n{'metadata-flavor': 'Google', 'content-type': 'application/json', 'date': 'Sat, 20 Jun 2020 00:08:01 GMT', 'server': 'Metadata Server for VM', 'content-length': '38', 'x-xss-protection': '0', 'x-frame-options': 'SAMEORIGIN', 'status': '404'}\n        Please run:\n\n          $ gcloud auth login\n\n        to obtain new credentials.\nIf you have already logged in with a different account:\n\n    $ gcloud config set account ACCOUNT\n\nto select an already authenticated account to use.\n")
-var invalidProjectOutput = []byte("ERROR: (gcloud.compute.instances.list) Some requests did not succeed:\n - Failed to find project badinvalidproject\n")
-var validComputeInstanceOutput = []byte(`[
+var (
+	invalidAuthOutput          = []byte("ERROR: (gcloud.compute.instances.list)         There was a problem refreshing your current auth tokens: Failed to retrieve token from the Google Compute Enginemetadata service. Response:\n{'metadata-flavor': 'Google', 'content-type': 'application/json', 'date': 'Sat, 20 Jun 2020 00:08:01 GMT', 'server': 'Metadata Server for VM', 'content-length': '38', 'x-xss-protection': '0', 'x-frame-options': 'SAMEORIGIN', 'status': '404'}\n        Please run:\n\n          $ gcloud auth login\n\n        to obtain new credentials.\nIf you have already logged in with a different account:\n\n    $ gcloud config set account ACCOUNT\n\nto select an already authenticated account to use.\n")
+	invalidProjectOutput       = []byte("ERROR: (gcloud.compute.instances.list) Some requests did not succeed:\n - Failed to find project badinvalidproject\n")
+	validComputeInstanceOutput = []byte(`[
 {
     "canIpForward": false,
     "cpuPlatform": "Intel Broadwell",
@@ -104,6 +105,7 @@ var validComputeInstanceOutput = []byte(`[
     "zone": "https://www.googleapis.com/compute/v1/projects/project-name/zones/us-west1-b"
   }
 ]`)
+)
 
 type mockShell struct{}
 
