@@ -23,34 +23,36 @@ import (
 )
 
 const (
-	invalidCmd  string = "foo"
-	validCmd string = `echo hello`
+	invalidCmd     string = "foo"
+	validCmd       string = `echo hello`
 	validReaderCmd string = `echo stdout; echo stderr >&2;`
 )
 
-// TestCmd tests the Cmd which runs a shell cmd and waits for it output before testing
-func TestCmd(t *testing.T) {
-	if _, err := Cmd(invalidCmd); err == nil {
+// TestExecuteCmd tests the ExecuteCmd method which runs a shell cmd and waits for it output before testing
+func TestExecuteCmd(t *testing.T) {
+	shell := CmdShell{}
+	if _, err := shell.ExecuteCmd(invalidCmd); err == nil {
 		t.Errorf("Cmd didn't error on invalid cmd")
 	}
 
-	if validCmd, err := Cmd(validCmd); validCmd == nil || err != nil || bytes.Equal(validCmd, []byte("hello")) {
-		t.Errorf("Cmd failed, expected %v, got %v", "hello", string(validCmd))
+	if validOutput, err := shell.ExecuteCmd(validCmd); validOutput == nil || err != nil || bytes.Equal(validOutput, []byte("hello")) {
+		t.Errorf("Cmd failed, expected %v, got %v", "hello", string(validOutput))
 	}
 }
 
-// TestCmdReader tests the CmdReader which outputs stdout/stderr as a ReadCloser
-func TestCmdReader(t *testing.T) {
-	if invalidCmd, err := CmdReader(invalidCmd); invalidCmd != nil && err == nil {
+// TestExecuteCmdReader tests the ExecuteCmdReader method which outputs stdout/stderr as a ReadCloser
+func TestExecuteCmdReader(t *testing.T) {
+	shell := CmdShell{}
+	if invalidOutput, err := shell.ExecuteCmdReader(invalidCmd); invalidOutput != nil && err == nil {
 		t.Errorf("CmdReader didn't error on invalid cmd")
 	}
 
-	output, err := CmdReader(validReaderCmd)
+	output, err := shell.ExecuteCmdReader(validReaderCmd)
 	if err != nil {
 		t.Errorf("Valid CmdReader cmd error'd out %v", err)
 	}
 
-	stdout := output[0]; stderr := output[1]
+	stdout, stderr := output[0], output[1]
 
 	stdoutScanner := bufio.NewScanner(stdout)
 	go func() {

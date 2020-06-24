@@ -15,7 +15,7 @@
     "build": "npm run clean && npm run build:angular && npm run build:chrome",
     "watch": "npm-run-all --parallel watch:*",
     "clean": "rimraf dist",
-    "test:chrome": "jasmine-ts --config='chrome/jasmine.json'",
+    "test:chrome": "cd chrome && jasmine-ts --config=jasmine.json",
     "test": "npm-run-all test:*"
   },
   "private": true,

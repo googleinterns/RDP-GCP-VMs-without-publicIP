@@ -24,8 +24,11 @@ import (
 	"strings"
 )
 
-// Cmd runs a shell command and waits for its output before returning the output
-func Cmd(cmd string) ([]byte, error) {
+// CmdShell implements Shell interface, contains functions that run commands.
+type CmdShell struct{}
+
+// ExecuteCmd runs a shell command and waits for its output before returning the output
+func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 	parsedCmd := strings.Fields(cmd)
 	out, err := exec.Command(parsedCmd[0], parsedCmd[1:]...).CombinedOutput()
 	if err != nil {
@@ -34,8 +37,8 @@ func Cmd(cmd string) ([]byte, error) {
 	return out, nil
 }
 
-// CmdReader runs a shell command and pipes the stdout and stderr into ReadClosers
-func CmdReader(cmd string) ([]io.ReadCloser, error) {
+// ExecuteCmdReader runs a shell command and pipes the stdout and stderr into ReadClosers
+func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
 	parsedCmd := strings.Fields(cmd)
 	asyncCmd := exec.Command(parsedCmd[0], parsedCmd[1:]...)
 
