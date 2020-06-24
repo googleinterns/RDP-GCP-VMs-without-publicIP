@@ -31,20 +31,25 @@ Apache header:
 
 
 ## How to get started with the Chrome Extension  
-The Chrome Extension is written in TypeScript, the entire extension is bundled and transpiled using Webpack.  
+The Chrome Extension is written in TypeScript and uses Angular for pages.
 
 To get started with the extension:  
 
 Switch to the extension's directory  
 `cd extensions`  
-Use yarn or npm to install the dependencies  
-`yarn` or `npm install`  
+Use npm to install the dependencies  
+`npm install`  
 The extension requires a extension key in the environment variables, please set a key before building the extension  
 `export EXTENSION_DEV_KEY = "your key"`  
-To run the tests, use the `test` command  
-`yarn test` or `npm test`  
+To run the tests, cd into the extensions directory and use the `test` command  
+`npm test`  
 To start the bundler  
-`yarn start` or `npm start`  
+`npm start`  
 Then load the `dist` folder as an unpacked extension in `chrome://extensions`  
 
 NOTE: Whenever an edit is made to any of the `.ts` or `.html` files, the extension will automatically reload  
+
+## How to run the Go companion server
+To run the Go server, cd into the server directory and run `go run main.go`  
+
+To test the Go server and its packages, run `go test ./...`
