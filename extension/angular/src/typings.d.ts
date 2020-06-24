@@ -14,11 +14,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-/* A script that runs in the background when the extension is initialized */
-
-import {enablePopup, pantheonListener} from './helpers/background';
-import {pantheonPageRegex} from './helpers/constants';
-import {Instance} from './classes';
-
-enablePopup(['pantheon.corp.google.com', 'b.corp.google.com']);
-pantheonListener();
+/// <reference types="chrome"/>

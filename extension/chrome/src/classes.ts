@@ -43,7 +43,7 @@ interface InstanceInterface {
 
 // Class used for instances received from the server.
 class Instance implements InstanceInterface {
-  constructor(instance: InstanceInterface) {
+  constructor(instance: InstanceInterface, projectName: string) {
     this.name = instance.name;
     this.status = instance.status;
     this.id = instance.id;
@@ -52,6 +52,7 @@ class Instance implements InstanceInterface {
     this.description = instance.description;
     this.NetworkInterfaces = instance.NetworkInterfaces;
     this.displayPrivateRdpDom = this.canDisplayRdpDom();
+    this.projectName = projectName;
   }
 
   // Enable RDP button display for instances that are Windows.
@@ -66,6 +67,7 @@ class Instance implements InstanceInterface {
     return false;
   }
 
+
   NetworkInterfaces: NetworkInterface[];
   description: string;
   disks: Disk[];
@@ -74,6 +76,7 @@ class Instance implements InstanceInterface {
   status: string;
   zone: string;
   displayPrivateRdpDom: boolean;
+  projectName: string;
 }
 
 export {Instance, InstanceInterface};

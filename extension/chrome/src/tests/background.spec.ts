@@ -17,6 +17,8 @@
 /* A file that contains unit tests for the functions used in the background script. */
 
 import {instanceFunctions} from '../helpers/background';
+import 'jasmine';
+
 const instance = [
   {
     id: '4',

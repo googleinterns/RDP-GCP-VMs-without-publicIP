@@ -16,7 +16,7 @@
 
 /* A file that contains functions used in the background script */
 
-import {pantheonPageRegex} from './constants';
+import {pantheonInstancesListRegex, pantheonPageRegex} from './constants';
 import {Instance, InstanceInterface} from '../classes';
 
 // Enable chrome extension popup on matching hosts.
@@ -25,7 +25,7 @@ const enablePopup = (hosts: string[]) => {
     if (hosts.some(host => tab.url.includes(host))) {
       chrome.browserAction.setPopup({
         tabId: tabId,
-        popup: 'popup.html',
+        popup: 'index.html?#/popup',
       });
     }
   });
@@ -40,7 +40,7 @@ const instanceFunctions = {
       const instancesData = await this.getInstancesApi(projectName);
       const instances = [] as Array<Instance>;
       for (let i = 0; i < instancesData.length; i++) {
-        instances.push(new Instance(<InstanceInterface>instancesData[i]));
+        instances.push(new Instance(<InstanceInterface>instancesData[i], projectName));
       }
 
       return instances;
@@ -79,7 +79,7 @@ const pantheonListener = () => {
       tab.status === 'complete' &&
       tab.url != undefined
     ) {
-      if (tab.url.match(pantheonPageRegex) && tab.url.indexOf('?') !== -1) {
+      if (tab.url.match(pantheonInstancesListRegex) && tab.url.indexOf('?') !== -1) {
         const urlParams = new URLSearchParams(tab.url.split('?')[1]);
         const projectName = urlParams.get('project');
         console.log(projectName);
@@ -88,7 +88,8 @@ const pantheonListener = () => {
             .getComputeInstances(projectName)
             .then(instances => {
               computeInstances = instances;
-              console.log(computeInstances);
+              console.log(instances);
+              chrome.tabs.sendMessage(tabId, { type: "get-compute-instances", computeInstances })
             })
             .catch(error => chrome.browserAction.setBadgeText({text: 'error'}));
         }
