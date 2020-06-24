@@ -28,4 +28,4 @@ jobs:
         go-version: 1.14.x
     - name: Run tests
       working-directory: ./server
-      run: go test
+      run: go test ./...
