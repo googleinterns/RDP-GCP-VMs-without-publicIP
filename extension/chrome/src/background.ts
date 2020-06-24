@@ -17,9 +17,6 @@ limitations under the License.
 /* A script that runs in the background when the extension is initialized */
 
 import {enablePopup, pantheonListener} from './helpers/background';
-import {pantheonPageRegex} from './helpers/constants';
-import {Instance} from './classes';
 
-console.log("hello")
 enablePopup(['pantheon.corp.google.com', 'b.corp.google.com']);
 pantheonListener();
