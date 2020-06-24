@@ -19,6 +19,7 @@ package gcloud
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"reflect"
 	"testing"
@@ -109,27 +110,26 @@ var (
 
 type mockShell struct{}
 
-func (mockShell) ExecuteCmd(cmd string) ([]byte, error) {
-	if cmd == getComputeInstancesForProjectPrefix+"validProject" {
+func (*mockShell) ExecuteCmd(cmd string) ([]byte, error) {
+	if cmd == fmt.Sprintf("%s%s", getComputeInstancesForProjectPrefix, "validProject") {
 		return validComputeInstanceOutput, nil
 	}
-	if cmd == getComputeInstancesForProjectPrefix+"invalidAuth" {
+	if cmd == fmt.Sprintf("%s%s", getComputeInstancesForProjectPrefix, "invalidAuth") {
 		return invalidAuthOutput, errors.New("error")
 	}
-	if cmd == getComputeInstancesForProjectPrefix+"invalidProject" {
+	if cmd == fmt.Sprintf("%s%s", getComputeInstancesForProjectPrefix, "invalidProject") {
 		return invalidProjectOutput, errors.New("error")
 	}
 	return nil, nil
 }
 
-func (mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
+func (*mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
 	return nil, nil
 }
 
 // TestGetComputeInstances tests the CmdReader which outputs stdout/stderr as a ReadCloser
 func TestGetComputeInstances(t *testing.T) {
-	mockShell := &mockShell{}
-	g := NewGcloudExecutor(mockShell)
+	g := NewGcloudExecutor(&mockShell{})
 	if _, err := g.GetComputeInstances("invalidAuth"); err == nil || err.Error() != SdkAuthError {
 		t.Errorf("GetComputeInstances didn't error on invalid auth")
 	}

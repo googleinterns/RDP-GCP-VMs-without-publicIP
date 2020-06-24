@@ -43,7 +43,7 @@ func TestExecuteCmd(t *testing.T) {
 // TestExecuteCmdReader tests the ExecuteCmdReader method which outputs stdout/stderr as a ReadCloser
 func TestExecuteCmdReader(t *testing.T) {
 	shell := CmdShell{}
-	if invalidCmd, err := shell.ExecuteCmdReader(invalidCmd); invalidCmd != nil && err == nil {
+	if invalidOutput, err := shell.ExecuteCmdReader(invalidCmd); invalidOutput != nil && err == nil {
 		t.Errorf("CmdReader didn't error on invalid cmd")
 	}
 
@@ -52,8 +52,7 @@ func TestExecuteCmdReader(t *testing.T) {
 		t.Errorf("Valid CmdReader cmd error'd out %v", err)
 	}
 
-	stdout := output[0]
-	stderr := output[1]
+	stdout, stderr := output[0], output[1]
 
 	stdoutScanner := bufio.NewScanner(stdout)
 	go func() {

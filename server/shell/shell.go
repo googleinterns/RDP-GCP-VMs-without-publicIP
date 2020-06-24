@@ -28,7 +28,7 @@ import (
 type CmdShell struct{}
 
 // ExecuteCmd runs a shell command and waits for its output before returning the output
-func (CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
+func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 	parsedCmd := strings.Fields(cmd)
 	out, err := exec.Command(parsedCmd[0], parsedCmd[1:]...).CombinedOutput()
 	if err != nil {
@@ -38,7 +38,7 @@ func (CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 }
 
 // ExecuteCmdReader runs a shell command and pipes the stdout and stderr into ReadClosers
-func (CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
+func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
 	parsedCmd := strings.Fields(cmd)
 	asyncCmd := exec.Command(parsedCmd[0], parsedCmd[1:]...)
 
