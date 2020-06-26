@@ -20,6 +20,7 @@ package shell
 import (
 	"fmt"
 	"io"
+	"net"
 	"os/exec"
 	"strings"
 )
@@ -41,7 +42,7 @@ func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
 	parsedCmd := strings.Fields(cmd)
 	asyncCmd := exec.Command(parsedCmd[0], parsedCmd[1:]...)
-
+	fmt.Println(parsedCmd)
 	stdout, err := asyncCmd.StdoutPipe()
 	if err != nil {
 		return nil, err
@@ -58,4 +59,17 @@ func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
 
 	fmt.Println("Stand by to read..")
 	return []io.ReadCloser{stdout, stderr}, nil
+}
+
+func GetPort() (int, error) {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		return -1, err
+	}
+	listener, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		return -1, err
+	}
+	listener.Close()
+	return listener.Addr().(*net.TCPAddr).Port, nil
 }
