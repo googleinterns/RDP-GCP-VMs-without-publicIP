@@ -39,10 +39,14 @@ const (
 	// SdkProjectError is returned if the gcloud project given is invalid
 	SdkProjectError                     string = "gCloud SDK project invalid"
 	getComputeInstancesForProjectPrefix string = "gcloud compute instances list --format=json --project="
-	iapRdpFirewallRuleCmd               string = "gcloud compute firewall-rules create admin-chrome-extension-private-rdp --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s"
+	iapRdpFirewallRuleCmd               string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s"
+	iapRdpFirewallDeleteCmd             string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q"
 	firewallRuleExistsOutput            string = "resource 'projects/%s/global/firewalls/admin-chrome-extension-private-rdp' already exists"
 	firewallRuleAlreadyExists           string = "Firewall rule already exists"
-	iapTunnelCmd                        string = "gcloud compute start-iap-tunnel %v 3389 --project=%v --local-host-port=localhost:%v"
+	iapTunnelCmd                        string = "gcloud compute start-iap-tunnel %v 3389 --project=%v --local-host-port=localhost:%v --verbosity=debug"
+	tunnelCreatedOutput                 string = "DEBUG: CLOSE"
+	gcloudErrorOutput                   string = "Error:"
+	rdpProgramCmd                       string = "xfreerdp /v:localhost /port:%v /u:%v /p:%v +sec-rdp /cert-ignore"
 )
 
 type osFeatures struct {
@@ -113,6 +117,11 @@ type socketMessage struct {
 	Err     string `json:"error"`
 }
 
+type credentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func newSocketMessage(message string, err error) *socketMessage {
 	errorMessage := ""
 	if err != nil {
@@ -166,7 +175,12 @@ func (gcloudExecutor *GcloudExecutor) createIapRdpFirewall(instance *Instance) (
 	return true, string(instanceOutput), nil
 }
 
-func (gcloudExecutor *GcloudExecutor) startIapTunnel(instance *Instance, port int) {
+type iapResult struct {
+	tunnelCreated bool
+	cmdOutput     []string
+}
+
+func (gcloudExecutor *GcloudExecutor) startIapTunnel(instance *Instance, port int, iapOutputChan chan<- iapResult) {
 	fmt.Println("Starting IAP tunnel")
 	cmd := fmt.Sprintf(iapTunnelCmd, instance.Name, instance.ProjectName, port)
 	fmt.Println(cmd)
@@ -179,13 +193,23 @@ func (gcloudExecutor *GcloudExecutor) startIapTunnel(instance *Instance, port in
 	//stderr: ERROR: (gcloud.compute.start-iap-tunnel) Could not fetch resource:
 	// stderr:  - The resource 'projects/rishabl-test/zones/us-west1-b/instances/invalidname' was not found
 	//stderr: ERROR: (gcloud.compute.start-iap-tunnel) Local port [23966] is not available.
+	//DEBUG: CLOSE
 	stdout, stderr := output[0], output[1]
+
+	var cmdOutput []string
+	tunnelCreated := false
 
 	stdoutScanner := bufio.NewScanner(stdout)
 	go func() {
 		for stdoutScanner.Scan() {
 			line := stdoutScanner.Text()
-			fmt.Println(fmt.Sprintf("stdout: %v", line))
+			cmdOutput = append(cmdOutput, line)
+			if strings.Contains(line, tunnelCreatedOutput) {
+				tunnelCreated = true
+				iapOutputChan <- iapResult{tunnelCreated, cmdOutput}
+			} else if strings.Contains(line, gcloudErrorOutput) {
+				iapOutputChan <- iapResult{tunnelCreated, cmdOutput}
+			}
 		}
 	}()
 
@@ -193,10 +217,77 @@ func (gcloudExecutor *GcloudExecutor) startIapTunnel(instance *Instance, port in
 	go func() {
 		for stderrScanner.Scan() {
 			line := stderrScanner.Text()
-			fmt.Println(fmt.Sprintf("stderr: %v", line))
+			cmdOutput = append(cmdOutput, line)
+			if strings.Contains(line, tunnelCreatedOutput) {
+				tunnelCreated = true
+				iapOutputChan <- iapResult{tunnelCreated, cmdOutput}
+			} else if strings.Contains(line, gcloudErrorOutput) {
+				iapOutputChan <- iapResult{tunnelCreated, cmdOutput}
+			}
 		}
 	}()
+}
 
+func (gcloudExecutor *GcloudExecutor) startRdpProgram(creds *credentials, port int, quit chan<- bool, rdperr chan<- error) {
+	fmt.Println("Starting freerdp")
+	cmd := fmt.Sprintf(rdpProgramCmd, port, creds.Username, creds.Password)
+	instanceOutput, err := gcloudExecutor.shell.ExecuteCmdReader(cmd)
+
+	if err != nil {
+		fmt.Println("rdp error")
+		rdperr <- err
+		return
+	}
+	if instanceOutput != nil {
+		fmt.Println("quit rdp")
+		quit <- true
+		return
+	}
+
+}
+
+func getRdpCredentials(ws *websocket.Conn) (*credentials, error) {
+	for {
+		_, message, err := ws.ReadMessage()
+		fmt.Println("reading message")
+		fmt.Println(string(message))
+		if err != nil {
+			log.Println("reading message error")
+			return nil, err
+		}
+		var creds credentials
+		if err := json.Unmarshal(message, &creds); err != nil {
+			fmt.Println("error unmarshalling json")
+			return nil, err
+		}
+		if creds.Username == "" || creds.Password == "" {
+			return nil, errors.New("missing values from data sent")
+		}
+		return &creds, nil
+	}
+}
+
+func listenForEndRdp(ws *websocket.Conn, instance *Instance, endChan chan<- bool) {
+	type socketCmd struct {
+		Cmd          string `json:"cmd"`
+		InstanceName string `json:"name"`
+	}
+	for {
+		_, message, err := ws.ReadMessage()
+		fmt.Println("reading message")
+		fmt.Println(string(message))
+		if err != nil {
+			log.Println("reading message error")
+		}
+		var cmd socketCmd
+		if err := json.Unmarshal(message, &cmd); err != nil {
+			fmt.Println("error unmarshalling json")
+		}
+		if cmd.Cmd == "end" || cmd.InstanceName == instance.Name {
+			endChan <- true
+			return
+		}
+	}
 }
 
 func StartPrivateRdp(ws *websocket.Conn) {
@@ -218,29 +309,32 @@ func StartPrivateRdp(ws *websocket.Conn) {
 	shell := &pshell.CmdShell{}
 	g := NewGcloudExecutor(shell)
 
-	// firewallCreated, output, err := g.createIapRdpFirewall(instanceToConn)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	if err := ws.WriteJSON(newSocketMessage(output, err)); err != nil {
-	// 		ws.Close()
-	// 		log.Println(err)
-	// 		return
-	// 	}
-	// }
-	// fmt.Println(firewallCreated)
-	// if firewallCreated {
-	// 	if err := ws.WriteJSON(newSocketMessage("IAP tunnel firewall was created", nil)); err != nil {
-	// 		log.Println(err)
-	// 		ws.Close()
-	// 		return
-	// 	}
-	// } else {
-	// 	if err := ws.WriteJSON(newSocketMessage("IAP tunnel firewall was not created", nil)); err != nil {
-	// 		log.Println(err)
-	// 		ws.Close()
-	// 		return
-	// 	}
-	// }
+	firewallCreated, output, err := g.createIapRdpFirewall(instanceToConn)
+	if err != nil {
+		log.Println(err)
+		if err := ws.WriteJSON(newSocketMessage(output, err)); err != nil {
+			ws.Close()
+			log.Println(err)
+			return
+		}
+		if err.Error() != firewallRuleAlreadyExists {
+			ws.Close()
+		}
+	}
+	fmt.Println(firewallCreated)
+	if firewallCreated {
+		if err := ws.WriteJSON(newSocketMessage("IAP tunnel firewall was created", nil)); err != nil {
+			log.Println(err)
+			ws.Close()
+			return
+		}
+	} else {
+		if err := ws.WriteJSON(newSocketMessage("IAP tunnel firewall was not created", nil)); err != nil {
+			log.Println(err)
+			ws.Close()
+			return
+		}
+	}
 
 	freePort, err := pshell.GetPort()
 	if err != nil {
@@ -251,6 +345,60 @@ func StartPrivateRdp(ws *websocket.Conn) {
 		}
 	}
 	fmt.Println(freePort)
-	g.startIapTunnel(instanceToConn, freePort)
+	//g.startIapTunnel(instanceToConn, freePort)
+
+	iapOutputChan := make(chan iapResult)
+	go g.startIapTunnel(instanceToConn, freePort, iapOutputChan)
+	iapResult := <-iapOutputChan
+	if !iapResult.tunnelCreated {
+		if err := ws.WriteJSON(newSocketMessage(strings.Join(iapResult.cmdOutput, "\n"), errors.New("Could not start IAP tunnel"))); err != nil {
+			log.Println(err)
+			ws.Close()
+			return
+		}
+	} else {
+		if err := ws.WriteJSON(newSocketMessage(fmt.Sprintf("Started IAP tunnel for %v", instanceToConn.Name), nil)); err != nil {
+			log.Println(err)
+			ws.Close()
+			return
+		}
+	}
+
+	rdpCredentials, err := getRdpCredentials(ws)
+	if err != nil {
+		log.Println(err)
+		if err := ws.WriteJSON(newSocketMessage("", err)); err != nil {
+			log.Println(err)
+		}
+		ws.Close()
+		return
+	}
+
+	go deleteIapRdpFirewall()
+
+	rdpQuitChan := make(chan bool)
+	rdpErrorChan := make(chan error)
+	go g.startRdpProgram(rdpCredentials, freePort, rdpQuitChan, rdpErrorChan)
+	endRdpChan := make(chan bool)
+	fmt.Println("listening for end")
+	go listenForEndRdp(ws, instanceToConn, endRdpChan)
+	if endRdp := <-endRdpChan; endRdp {
+		fmt.Println("ending rdp")
+	}
+	if err = <-rdpErrorChan; err != nil {
+		if err := ws.WriteJSON(newSocketMessage(fmt.Sprintf("Unable to start RDP program for %v", instanceToConn.Name), nil)); err != nil {
+			log.Println(err)
+			ws.Close()
+			return
+		}
+	}
+
+	if rdpQuit := <-rdpQuitChan; rdpQuit {
+		if err := ws.WriteJSON(newSocketMessage(fmt.Sprintf("Shutting down private RDP for %v", instanceToConn.Name), nil)); err != nil {
+			log.Println(err)
+		}
+		ws.Close()
+		return
+	}
 
 }
