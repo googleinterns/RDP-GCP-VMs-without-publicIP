@@ -39,7 +39,7 @@ func newSocketMessage(message string, err error) *socketMessage {
 	}
 }
 
-func getComputeInstanceFromConn(ws *websocket.Conn) (*Instance, error) {
+func getComputeInstanceFromConn(ws websocketConn) (*Instance, error) {
 	for {
 		_, message, err := ws.ReadMessage()
 
@@ -64,66 +64,48 @@ func getComputeInstanceFromConn(ws *websocket.Conn) (*Instance, error) {
 	}
 }
 
-func getRdpCredentials(ws *websocket.Conn) (*credentials, error) {
-	for {
-		log.Println("listening for credentials")
-
-		_, message, err := ws.ReadMessage()
-
-		log.Println("got message: ", string(message))
-
-		if err != nil {
-			log.Println("reading message error")
-			return nil, err
-		}
-
-		var creds credentials
-		if err := json.Unmarshal(message, &creds); err != nil {
-			log.Println("error unmarshalling credentials")
-			return nil, err
-		}
-
-		if creds.Username == "" || creds.Password == "" {
-			return nil, errors.New("missing values from data sent")
-		}
-
-		return &creds, nil
-	}
-}
-
-func listenForEndRdp(ws *websocket.Conn, instance *Instance, endChan chan<- bool) {
+func (gcloudExecutor *GcloudExecutor) listenForCmd(ws websocketConn, instance *Instance, freePort int, endChan chan<- bool, rdpQuitChan chan<- bool) {
 	type socketCmd struct {
 		Cmd          string `json:"cmd"`
 		InstanceName string `json:"name"`
+		Username     string `json:"username"`
+		Password     string `json:"password"`
 	}
 	for {
-		log.Println("listening for end cmd for ", instance.Name)
+		log.Println("listening for cmd for", instance.Name)
 
 		_, message, err := ws.ReadMessage()
 
-		log.Println("got message: ", string(message))
+		log.Println("got message:", string(message))
+
 		if err != nil {
 			endChan <- true
+			return
 		}
 
 		var cmd socketCmd
-
 		if err := json.Unmarshal(message, &cmd); err != nil {
 			log.Println("error unmarshalling socket command for ", instance.Name)
 		}
 
-		if cmd.Cmd == "end" || cmd.InstanceName == instance.Name {
+		if cmd.Cmd == "end" && cmd.InstanceName == instance.Name {
 			endChan <- true
 			return
 		}
+
+		if cmd.Cmd == "start-rdp" && cmd.Username != "" {
+			creds := credentials{Username: cmd.Username, Password: cmd.Password}
+			go gcloudExecutor.startRdpProgram(ws, &creds, freePort, rdpQuitChan)
+		}
+
 	}
 }
 
-func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws *websocket.Conn, instance *Instance, cleanFirewall bool, cleanRdp bool, cancelFunc context.CancelFunc) {
+func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws websocketConn, instance *Instance, cleanFirewall bool, cleanRdp bool, cancelFunc context.CancelFunc) {
 	log.Println("clean up rdp for ", instance.Name)
 	if cleanFirewall {
 		log.Println("deleting iap firewall for ", instance.Name)
-		go gcloudExecutor.deleteIapFirewall(instance)
+		gcloudExecutor.deleteIapFirewall(instance)
 	}
 	if cleanRdp {
 		log.Println("ending rdp for ", instance.Name)
@@ -170,32 +152,24 @@ func StartPrivateRdp(ws *websocket.Conn) {
 
 	go g.startIapTunnel(ctx, ws, instanceToConn, freePort, iapOutputChan)
 	if output := <-iapOutputChan; !output.tunnelCreated || output.err != nil {
-		go g.cleanUpRdp(ws, instanceToConn, true, false, cancel)
+		g.cleanUpRdp(ws, instanceToConn, true, false, cancel)
 		return
 	}
 
-	go listenForEndRdp(ws, instanceToConn, endRdpChan)
+	go g.listenForCmd(ws, instanceToConn, freePort, endRdpChan, rdpQuitChan)
 
-	rdpCredentials, err := getRdpCredentials(ws)
-	if err != nil {
+	if endRdp := <-endRdpChan; endRdp {
 		g.cleanUpRdp(ws, instanceToConn, true, true, cancel)
 		return
 	}
 
-	go g.startRdpProgram(ws, rdpCredentials, freePort, rdpQuitChan)
-
-	if endRdp := <-endRdpChan; endRdp {
-		go g.cleanUpRdp(ws, instanceToConn, true, true, cancel)
-		return
-	}
-
 	if rdpQuit := <-rdpQuitChan; rdpQuit {
-		go g.cleanUpRdp(ws, instanceToConn, true, true, cancel)
+		g.cleanUpRdp(ws, instanceToConn, true, true, cancel)
 		return
 	}
 }
 
-func writeToSocket(ws *websocket.Conn, message string, err error) error {
+func writeToSocket(ws websocketConn, message string, err error) error {
 	if err := ws.WriteJSON(newSocketMessage(message, err)); err != nil {
 		log.Println(err)
 		return err

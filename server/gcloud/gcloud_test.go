@@ -17,6 +17,7 @@ limitations under the License.
 package gcloud
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -123,8 +124,8 @@ func (*mockShell) ExecuteCmd(cmd string) ([]byte, error) {
 	return nil, nil
 }
 
-func (*mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
-	return nil, nil
+func (*mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
+	return nil, nil, nil
 }
 
 // TestGetComputeInstances tests the CmdReader which outputs stdout/stderr as a ReadCloser

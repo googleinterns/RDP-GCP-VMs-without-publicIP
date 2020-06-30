@@ -91,3 +91,9 @@ type iapResult struct {
 	cmdOutput     []string
 	err           error
 }
+
+type websocketConn interface {
+	ReadMessage() (messageType int, p []byte, err error)
+	WriteJSON(interface{}) error
+	Close() error
+}

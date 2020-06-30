@@ -24,8 +24,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
-	"github.com/gorilla/websocket"
 )
 
 // NewGcloudExecutor creates a new gcloudExecutor struct with a struct that implements shell.
@@ -55,7 +53,7 @@ func (gcloudExecutor *GcloudExecutor) GetComputeInstances(projectName string) ([
 	return instances, nil
 }
 
-func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws *websocket.Conn, instance *Instance) error {
+func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws websocketConn, instance *Instance) error {
 	log.Println("Creating firewall for ", instance.Name)
 
 	cmd := fmt.Sprintf(iapFirewallCreateCmd, instance.Name, instance.Name, instance.ProjectName)
@@ -118,7 +116,7 @@ func readIapTunnelOutput(scanner *bufio.Scanner, tunnelCreated *bool, cmdOutput 
 	}
 }
 
-func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws *websocket.Conn, instance *Instance, port int, outputChan chan<- iapResult) {
+func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws websocketConn, instance *Instance, port int, outputChan chan<- iapResult) {
 	log.Println("Starting IAP tunnel for ", instance.Name)
 
 	cmd := fmt.Sprintf(iapTunnelCmd, instance.Name, instance.ProjectName, port)
@@ -150,10 +148,11 @@ func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws *we
 	outputChan <- iapResult
 
 	<-ctx.Done()
+	log.Println("calling cancel func")
 	cmdCancel()
 }
 
-func (gcloudExecutor *GcloudExecutor) startRdpProgram(ws *websocket.Conn, creds *credentials, port int, quit chan<- bool) {
+func (gcloudExecutor *GcloudExecutor) startRdpProgram(ws websocketConn, creds *credentials, port int, quit chan<- bool) {
 	log.Println("Starting xfreerdp for ", creds.Username)
 	cmd := fmt.Sprintf(rdpProgramCmd, port, creds.Username, creds.Password)
 	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(cmd)
