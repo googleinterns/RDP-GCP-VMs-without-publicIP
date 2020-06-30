@@ -18,11 +18,13 @@ limitations under the License.
 package shell
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // CmdShell implements Shell interface, contains functions that run commands.
@@ -39,28 +41,33 @@ func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 }
 
 // ExecuteCmdReader runs a shell command and pipes the stdout and stderr into ReadClosers
-func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
+func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
 	parsedCmd := strings.Fields(cmd)
-	asyncCmd := exec.Command(parsedCmd[0], parsedCmd[1:]...)
+	asyncCmd := exec.CommandContext(ctx, parsedCmd[0], parsedCmd[1:]...)
 	fmt.Println(parsedCmd)
 	stdout, err := asyncCmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		cancel()
+		return nil, nil, err
 	}
 
 	stderr, err := asyncCmd.StderrPipe()
 	if err != nil {
-		return nil, err
+		cancel()
+		return nil, nil, err
 	}
 
 	if err = asyncCmd.Start(); err != nil {
-		return nil, err
+		cancel()
+		return nil, nil, err
 	}
 
 	fmt.Println("Stand by to read..")
-	return []io.ReadCloser{stdout, stderr}, nil
+	return []io.ReadCloser{stdout, stderr}, cancel, nil
 }
 
+// GetPort gets a free port on the system.
 func GetPort() (int, error) {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
