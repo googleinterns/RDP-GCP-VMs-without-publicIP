@@ -22,6 +22,7 @@ import (
 	"io"
 )
 
+// consts containing possible errors from running gcloud commands
 const (
 	gcloudAuthError string = "there was a problem refreshing your current auth tokens"
 	projectCmdError string = "failed to find project"
@@ -32,6 +33,7 @@ const (
 	gcloudErrorOutput string = "Error:"
 )
 
+// iap firewall consts
 const (
 	iapFirewallCreateCmd      string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s"
 	iapFirewallDeleteCmd      string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q --project=%s"
@@ -41,6 +43,7 @@ const (
 	createdFirewall           string = "Created firewall for %v"
 )
 
+// iap tunnel and websocket consts
 const (
 	getComputeInstancesForProjectPrefix string = "gcloud compute instances list --format=json --project="
 	missingInstanceValues               string = "Missing value from instance data sent"
@@ -50,6 +53,7 @@ const (
 	iapTunnelStarted                    string = "Started IAP tunnel for %v"
 )
 
+// automated rdp program consts
 const (
 	rdpProgramCmd   string = "xfreerdp /v:localhost /port:%v /u:%v /p:%v +sec-rdp /cert-ignore"
 	rdpProgramError string = "Unable to start RDP program for %v"
@@ -92,28 +96,33 @@ type GcloudExecutor struct {
 	shell shell
 }
 
+// socketMessage is the struct that is sent to the websockets
 type socketMessage struct {
 	Message string `json:"messsage"`
 	Err     string `json:"error"`
 }
 
+// credentials struct is used for the automated rdp program
 type credentials struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
+// iapResult struct is returned from starting the IAP tunnel
 type iapResult struct {
 	tunnelCreated bool
 	cmdOutput     []string
 	err           error
 }
 
-type websocketConn interface {
+// conn interface is used to mock websocket connections
+type conn interface {
 	ReadMessage() (messageType int, p []byte, err error)
 	WriteJSON(v interface{}) error
 	Close() error
 }
 
+// socketCmd struct is used to read commands such as start-rdp and login from the websocket
 type socketCmd struct {
 	Cmd          string `json:"cmd"`
 	InstanceName string `json:"name"`

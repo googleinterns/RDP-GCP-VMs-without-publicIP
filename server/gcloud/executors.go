@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 )
 
@@ -53,7 +54,8 @@ func (gcloudExecutor *GcloudExecutor) GetComputeInstances(projectName string) ([
 	return instances, nil
 }
 
-func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws websocketConn, instance *Instance) error {
+// createIapFirewall creates the firewall rule for the instance to allow starting IAP tunnels
+func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws conn, instance *Instance) error {
 	log.Println("Creating firewall for ", instance.Name)
 
 	cmd := fmt.Sprintf(iapFirewallCreateCmd, instance.Name, instance.Name, instance.ProjectName)
@@ -94,12 +96,14 @@ func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws websocketConn, instan
 	return returnErr
 }
 
+// deleteIapFirewall creates the firewall rule created for that instance
 func (gcloudExecutor *GcloudExecutor) deleteIapFirewall(instance *Instance) {
 	log.Println("Deleting firewall for ", instance.Name)
 	cmd := fmt.Sprintf(iapFirewallDeleteCmd, instance.Name, instance.ProjectName)
 	gcloudExecutor.shell.ExecuteCmd(cmd)
 }
 
+// readIapTunnelOutput is used as an helper to parse the output from starting the IAP tunnel
 func readIapTunnelOutput(scanner *bufio.Scanner, tunnelCreated *bool, cmdOutput *[]string, iapOutputChan chan<- iapResult) {
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -113,10 +117,12 @@ func readIapTunnelOutput(scanner *bufio.Scanner, tunnelCreated *bool, cmdOutput 
 	}
 }
 
-func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws websocketConn, instance *Instance, port int, outputChan chan<- iapResult) {
+// startIapTunnel is used run the start iap tunnel command and return the appropriate output
+func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws conn, instance *Instance, portListener *net.TCPListener, outputChan chan<- iapResult) {
 	log.Println("Starting IAP tunnel for ", instance.Name)
-
+	port := portListener.Addr().(*net.TCPAddr).Port
 	cmd := fmt.Sprintf(iapTunnelCmd, instance.Name, instance.ProjectName, port)
+	portListener.Close()
 	output, cmdCancel, err := gcloudExecutor.shell.ExecuteCmdReader(cmd)
 	if err != nil {
 		log.Println(err)
@@ -149,7 +155,8 @@ func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws web
 	cmdCancel()
 }
 
-func (gcloudExecutor *GcloudExecutor) startRdpProgram(ws websocketConn, creds *credentials, port int, quit chan<- bool) {
+// startRdpProgram starts the RDP program if the command is sent to the server
+func (gcloudExecutor *GcloudExecutor) startRdpProgram(ws conn, creds *credentials, port int, quit chan<- bool) {
 	log.Println("Starting xfreerdp for ", creds.Username)
 	cmd := fmt.Sprintf(rdpProgramCmd, port, creds.Username, creds.Password)
 	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(cmd)

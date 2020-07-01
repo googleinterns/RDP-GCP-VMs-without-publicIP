@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"time"
 
 	pshell "github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
@@ -39,7 +40,8 @@ func newSocketMessage(message string, err error) *socketMessage {
 	}
 }
 
-func getComputeInstanceFromConn(ws websocketConn) (*Instance, error) {
+// getComputeInstancesFromConn reads the instance that is sent at the start of the websocket connection
+func getComputeInstanceFromConn(ws conn) (*Instance, error) {
 	for {
 		_, message, err := ws.ReadMessage()
 
@@ -65,7 +67,8 @@ func getComputeInstanceFromConn(ws websocketConn) (*Instance, error) {
 	}
 }
 
-func (gcloudExecutor *GcloudExecutor) listenForCmd(ws websocketConn, instance *Instance, freePort int, endChan chan<- bool) {
+// listenForCmd continuosly reads from the websocket expecting the start-rdp or end rdp command
+func (gcloudExecutor *GcloudExecutor) listenForCmd(ws conn, instance *Instance, freePort int, endChan chan<- bool) {
 	for {
 		log.Println("listening for cmd for", instance.Name)
 
@@ -98,7 +101,8 @@ func (gcloudExecutor *GcloudExecutor) listenForCmd(ws websocketConn, instance *I
 	}
 }
 
-func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws websocketConn, instance *Instance, cleanFirewall bool, cleanRdp bool, cancelFunc context.CancelFunc) {
+// cleanUpRdp deletes the created firewall rules and ends the IAP tunnel and closes websocket
+func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws conn, instance *Instance, cleanFirewall bool, cleanRdp bool, cancelFunc context.CancelFunc) {
 	log.Println("clean up rdp for ", instance.Name)
 	if cleanFirewall {
 		log.Println("deleting iap firewall for ", instance.Name)
@@ -137,16 +141,18 @@ func StartPrivateRdp(ws *websocket.Conn) {
 		return
 	}
 
-	freePort, err := pshell.GetPort()
+	portListener, err := pshell.GetPort()
 	if err != nil {
 		writeToSocket(ws, "", errors.New("Could not get a unused port on system"))
 		g.cleanUpRdp(ws, instanceToConn, true, false, cancel)
 		return
 	}
 
+	freePort := portListener.Addr().(*net.TCPAddr).Port
+
 	log.Println("Got free port ", freePort)
 
-	go g.startIapTunnel(ctx, ws, instanceToConn, freePort, iapOutputChan)
+	go g.startIapTunnel(ctx, ws, instanceToConn, portListener, iapOutputChan)
 	if output := <-iapOutputChan; !output.tunnelCreated || output.err != nil {
 		g.cleanUpRdp(ws, instanceToConn, true, false, cancel)
 		return
@@ -159,9 +165,12 @@ func StartPrivateRdp(ws *websocket.Conn) {
 		return
 	}
 
+	cancel()
+	return
 }
 
-func writeToSocket(ws websocketConn, message string, err error) error {
+// writeToSocket is a wrapper that is used to write JSON to the websocket
+func writeToSocket(ws conn, message string, err error) error {
 	if err := ws.WriteJSON(newSocketMessage(message, err)); err != nil {
 		log.Println(err)
 		return err

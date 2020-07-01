@@ -68,15 +68,15 @@ func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFu
 }
 
 // GetPort gets a free port on the system.
-func GetPort() (int, error) {
+func GetPort() (*net.TCPListener, error) {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 	listener, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
-	listener.Close()
-	return listener.Addr().(*net.TCPAddr).Port, nil
+
+	return listener, nil
 }

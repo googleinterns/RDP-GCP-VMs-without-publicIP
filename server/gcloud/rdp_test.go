@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"reflect"
 	"strings"
 	"testing"
@@ -310,7 +311,8 @@ func TestStartIapTunnel(t *testing.T) {
 	json.Unmarshal(instance, &instanceToUse)
 	g := NewGcloudExecutor(&mockShell{})
 
-	port := 9999
+	addr, _ := net.ResolveTCPAddr("tcp", "localhost:9999")
+	port, _ := net.ListenTCP("tcp", addr)
 	outputChan := make(chan iapResult)
 	ctx, _ := context.WithTimeout(context.Background(), 1*time.Hour)
 
