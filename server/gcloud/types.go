@@ -50,7 +50,7 @@ const (
 	iapTunnelCmd                        string = "gcloud compute start-iap-tunnel %v 3389 --project=%v --local-host-port=localhost:%v --verbosity=debug"
 	tunnelCreatedOutput                 string = "DEBUG: CLOSE"
 	iapTunnelError                      string = "Could not start IAP tunnel for %v"
-	iapTunnelStarted                    string = "Started IAP tunnel for %v"
+	iapTunnelStarted                    string = "Started IAP tunnel for %v on port: %v"
 )
 
 // automated rdp program consts

@@ -340,7 +340,7 @@ func TestStartIapTunnel(t *testing.T) {
 	if expected := []string{tunnelCreatedOutput}; !reflect.DeepEqual(output.cmdOutput, expected) {
 		t.Errorf("startIapTunnel output chan cmdoutput not equal to output from cmd, got %v, expected %v", socketOutput.Message, expected)
 	}
-	if expected := fmt.Sprintf(iapTunnelStarted, instanceToUse.Name); socketOutput.Message != expected {
+	if expected := fmt.Sprintf(iapTunnelStarted, instanceToUse.Name, 9999); socketOutput.Message != expected {
 		t.Errorf("startIapTunnel didn't write iapTunnelStarted to socket, got %v, expected %v", socketOutput.Message, expected)
 	}
 

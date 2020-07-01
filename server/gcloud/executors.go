@@ -143,7 +143,7 @@ func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws con
 			iapResult.err = err
 		}
 	} else {
-		if err := writeToSocket(ws, fmt.Sprintf(iapTunnelStarted, instance.Name), nil); err != nil {
+		if err := writeToSocket(ws, fmt.Sprintf(iapTunnelStarted, instance.Name, port), nil); err != nil {
 			iapResult.err = err
 		}
 	}
