@@ -56,7 +56,8 @@ func getComputeInstanceFromConn(ws websocketConn) (*Instance, error) {
 			return nil, err
 		}
 		if instance.Name == "" || instance.ProjectName == "" {
-			err = errors.New("missing values from data sent")
+			log.Println("missing instance data values")
+			err = errors.New(missingInstanceValues)
 			writeToSocket(ws, "", err)
 			return nil, err
 		}
@@ -64,19 +65,14 @@ func getComputeInstanceFromConn(ws websocketConn) (*Instance, error) {
 	}
 }
 
-func (gcloudExecutor *GcloudExecutor) listenForCmd(ws websocketConn, instance *Instance, freePort int, endChan chan<- bool, rdpQuitChan chan<- bool) {
-	type socketCmd struct {
-		Cmd          string `json:"cmd"`
-		InstanceName string `json:"name"`
-		Username     string `json:"username"`
-		Password     string `json:"password"`
-	}
+func (gcloudExecutor *GcloudExecutor) listenForCmd(ws websocketConn, instance *Instance, freePort int, endChan chan<- bool) {
 	for {
 		log.Println("listening for cmd for", instance.Name)
 
 		_, message, err := ws.ReadMessage()
 
 		log.Println("got message:", string(message))
+		log.Println(instance.Name)
 
 		if err != nil {
 			endChan <- true
@@ -94,8 +90,9 @@ func (gcloudExecutor *GcloudExecutor) listenForCmd(ws websocketConn, instance *I
 		}
 
 		if cmd.Cmd == "start-rdp" && cmd.Username != "" {
+			log.Println("starting rdp")
 			creds := credentials{Username: cmd.Username, Password: cmd.Password}
-			go gcloudExecutor.startRdpProgram(ws, &creds, freePort, rdpQuitChan)
+			go gcloudExecutor.startRdpProgram(ws, &creds, freePort, endChan)
 		}
 
 	}
@@ -121,7 +118,6 @@ func StartPrivateRdp(ws *websocket.Conn) {
 	g := NewGcloudExecutor(shell)
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
 	iapOutputChan := make(chan iapResult)
-	rdpQuitChan := make(chan bool)
 	endRdpChan := make(chan bool)
 
 	instanceToConn, err := getComputeInstanceFromConn(ws)
@@ -156,17 +152,13 @@ func StartPrivateRdp(ws *websocket.Conn) {
 		return
 	}
 
-	go g.listenForCmd(ws, instanceToConn, freePort, endRdpChan, rdpQuitChan)
+	go g.listenForCmd(ws, instanceToConn, freePort, endRdpChan)
 
 	if endRdp := <-endRdpChan; endRdp {
 		g.cleanUpRdp(ws, instanceToConn, true, true, cancel)
 		return
 	}
 
-	if rdpQuit := <-rdpQuitChan; rdpQuit {
-		g.cleanUpRdp(ws, instanceToConn, true, true, cancel)
-		return
-	}
 }
 
 func writeToSocket(ws websocketConn, message string, err error) error {

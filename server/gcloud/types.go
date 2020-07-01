@@ -28,16 +28,32 @@ const (
 	// SdkAuthError is returned if there is an gcloud SDK auth error
 	SdkAuthError string = "gCloud SDK auth invalid"
 	// SdkProjectError is returned if the gcloud project given is invalid
-	SdkProjectError                     string = "gCloud SDK project invalid"
+	SdkProjectError   string = "gCloud SDK project invalid"
+	gcloudErrorOutput string = "Error:"
+)
+
+const (
+	iapFirewallCreateCmd      string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s"
+	iapFirewallDeleteCmd      string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q --project=%s"
+	firewallRuleExistsOutput  string = "resource 'projects/%s/global/firewalls/admin-extension-private-rdp-%v' already exists"
+	firewallRuleAlreadyExists string = "Firewall rule already exists for %v"
+	didntCreateFirewall       string = "Didn't create firewall for %v"
+	createdFirewall           string = "Created firewall for %v"
+)
+
+const (
 	getComputeInstancesForProjectPrefix string = "gcloud compute instances list --format=json --project="
-	iapFirewallCreateCmd                string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s"
-	iapFirewallDeleteCmd                string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q --project=%s"
-	firewallRuleExistsOutput            string = "resource 'projects/%s/global/firewalls/admin-extension-private-rdp-%v' already exists"
-	firewallRuleAlreadyExists           string = "Firewall rule already exists"
+	missingInstanceValues               string = "Missing value from instance data sent"
 	iapTunnelCmd                        string = "gcloud compute start-iap-tunnel %v 3389 --project=%v --local-host-port=localhost:%v --verbosity=debug"
 	tunnelCreatedOutput                 string = "DEBUG: CLOSE"
-	gcloudErrorOutput                   string = "Error:"
-	rdpProgramCmd                       string = "xfreerdp /v:localhost /port:%v /u:%v /p:%v +sec-rdp /cert-ignore"
+	iapTunnelError                      string = "Could not start IAP tunnel for %v"
+	iapTunnelStarted                    string = "Started IAP tunnel for %v"
+)
+
+const (
+	rdpProgramCmd   string = "xfreerdp /v:localhost /port:%v /u:%v /p:%v +sec-rdp /cert-ignore"
+	rdpProgramError string = "Unable to start RDP program for %v"
+	rdpProgramQuit  string = "Quit RDP program for %v"
 )
 
 type osFeatures struct {
@@ -94,6 +110,13 @@ type iapResult struct {
 
 type websocketConn interface {
 	ReadMessage() (messageType int, p []byte, err error)
-	WriteJSON(interface{}) error
+	WriteJSON(v interface{}) error
 	Close() error
+}
+
+type socketCmd struct {
+	Cmd          string `json:"cmd"`
+	InstanceName string `json:"name"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
 }

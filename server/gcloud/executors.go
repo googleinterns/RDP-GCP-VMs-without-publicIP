@@ -60,41 +60,38 @@ func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws websocketConn, instan
 
 	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(cmd)
 
-	var firewallCreated bool
 	var output string
 	var returnErr error
 
 	if err != nil {
 		if stringOutput := strings.ToLower(string(instanceOutput)); strings.Contains(stringOutput, gcloudAuthError) {
-			firewallCreated = false
-			output = stringOutput
+			output = fmt.Sprintf(didntCreateFirewall, instance.Name)
 			returnErr = errors.New(SdkAuthError)
 		} else if strings.Contains(stringOutput, projectCmdError) {
-			firewallCreated = false
-			output = stringOutput
+			output = fmt.Sprintf(didntCreateFirewall, instance.Name)
 			returnErr = errors.New(SdkProjectError)
 		} else if strings.Contains(stringOutput, fmt.Sprintf(firewallRuleExistsOutput, instance.ProjectName, instance.Name)) {
-			firewallCreated = true
-			output = stringOutput
+			output = fmt.Sprintf(firewallRuleAlreadyExists, instance.Name)
+			returnErr = nil
 		} else {
-			firewallCreated = false
-			output = stringOutput
-			returnErr = errors.New(SdkProjectError)
-		}
-	} else {
-		firewallCreated = true
-		output = string(instanceOutput)
-	}
-
-	if !firewallCreated {
-		writeToSocket(ws, output, returnErr)
-	} else {
-		if err := writeToSocket(ws, output, nil); err != nil {
+			output = fmt.Sprintf(didntCreateFirewall, instance.Name)
 			returnErr = err
 		}
+	} else {
+		output = fmt.Sprintf(createdFirewall, instance.Name)
+		returnErr = nil
+	}
+	log.Println(output)
+
+	if err := writeToSocket(ws, string(instanceOutput), returnErr); err != nil {
+		return err
 	}
 
-	return nil
+	if err := writeToSocket(ws, output, returnErr); err != nil {
+		returnErr = err
+	}
+
+	return returnErr
 }
 
 func (gcloudExecutor *GcloudExecutor) deleteIapFirewall(instance *Instance) {
@@ -136,11 +133,11 @@ func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws web
 
 	iapResult := <-iapOutputChan
 	if !iapResult.tunnelCreated {
-		if err := writeToSocket(ws, strings.Join(iapResult.cmdOutput, "\n"), errors.New("Could not start IAP tunnel")); err != nil {
+		if err := writeToSocket(ws, strings.Join(iapResult.cmdOutput, "\n"), fmt.Errorf(iapTunnelError, instance.Name)); err != nil {
 			iapResult.err = err
 		}
 	} else {
-		if err := writeToSocket(ws, fmt.Sprintf("Started IAP tunnel for %v", instance.Name), nil); err != nil {
+		if err := writeToSocket(ws, fmt.Sprintf(iapTunnelStarted, instance.Name), nil); err != nil {
 			iapResult.err = err
 		}
 	}
@@ -158,11 +155,11 @@ func (gcloudExecutor *GcloudExecutor) startRdpProgram(ws websocketConn, creds *c
 	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(cmd)
 
 	if err != nil {
-		writeToSocket(ws, fmt.Sprintf("Unable to start RDP program for %v", creds.Username), nil)
+		writeToSocket(ws, "", fmt.Errorf(rdpProgramError, creds.Username))
 		return
 	}
 	if instanceOutput != nil {
-		writeToSocket(ws, fmt.Sprintf("Unable to start RDP program for %v", creds.Username), nil)
+		writeToSocket(ws, fmt.Sprintf(rdpProgramQuit, creds.Username), nil)
 		quit <- true
 		return
 	}

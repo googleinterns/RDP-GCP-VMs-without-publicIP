@@ -22,7 +22,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -104,7 +106,8 @@ var (
     "tags": {
       "fingerprint": ""
     },
-    "zone": "https://www.googleapis.com/compute/v1/projects/project-name/zones/us-west1-b"
+    "zone": "https://www.googleapis.com/compute/v1/projects/project-name/zones/us-west1-b",
+    "project": "project-name"
   }
 ]`)
 )
@@ -121,10 +124,35 @@ func (*mockShell) ExecuteCmd(cmd string) ([]byte, error) {
 	if cmd == fmt.Sprintf("%s%s", getComputeInstancesForProjectPrefix, "invalidProject") {
 		return invalidProjectOutput, errors.New("error")
 	}
+	if cmd == fmt.Sprintf(rdpProgramCmd, 9999, "quit", "password") {
+		return []byte("output"), nil
+	}
+	if cmd == fmt.Sprintf(rdpProgramCmd, 9999, "error", "password") {
+		return []byte("output"), errors.New("error")
+	}
+	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "auth-error") {
+		return []byte(gcloudAuthError), errors.New("error")
+	}
+	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "project-error") {
+		return []byte(projectCmdError), errors.New("error")
+	}
+	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "exists") {
+		return []byte(fmt.Sprintf(firewallRuleExistsOutput, "exists", "test-project")), errors.New("error")
+	}
+	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "valid") {
+		return []byte(fmt.Sprintf(firewallRuleExistsOutput, "exists", "test-project")), nil
+	}
+
 	return nil, nil
 }
 
 func (*mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
+	if cmd == fmt.Sprintf(iapTunnelCmd, "test-project", "invalid", 9999) {
+		return []io.ReadCloser{ioutil.NopCloser(strings.NewReader("")), ioutil.NopCloser(strings.NewReader(gcloudErrorOutput))}, nil, nil
+	}
+	if cmd == fmt.Sprintf(iapTunnelCmd, "test-project", "valid", 9999) {
+		return []io.ReadCloser{ioutil.NopCloser(strings.NewReader("")), ioutil.NopCloser(strings.NewReader(tunnelCreatedOutput))}, nil, nil
+	}
 	return nil, nil, nil
 }
 
