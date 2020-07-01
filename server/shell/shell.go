@@ -45,7 +45,7 @@ func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFu
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
 	parsedCmd := strings.Fields(cmd)
 	asyncCmd := exec.CommandContext(ctx, parsedCmd[0], parsedCmd[1:]...)
-	fmt.Println(parsedCmd)
+
 	stdout, err := asyncCmd.StdoutPipe()
 	if err != nil {
 		cancel()
