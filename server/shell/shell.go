@@ -27,6 +27,8 @@ import (
 	"time"
 )
 
+const cmdReaderContextTimeout time.Duration = 1 * time.Hour
+
 // CmdShell implements Shell interface, contains functions that run commands.
 type CmdShell struct{}
 
@@ -42,7 +44,7 @@ func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 
 // ExecuteCmdReader runs a shell command and pipes the stdout and stderr into ReadClosers
 func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	ctx, cancel := context.WithTimeout(context.Background(), cmdReaderContextTimeout)
 	parsedCmd := strings.Fields(cmd)
 	asyncCmd := exec.CommandContext(ctx, parsedCmd[0], parsedCmd[1:]...)
 
@@ -67,8 +69,8 @@ func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFu
 	return []io.ReadCloser{stdout, stderr}, cancel, nil
 }
 
-// GetPort gets a free port on the system.
-func GetPort() (*net.TCPListener, error) {
+// FindOpenPort finds a free port on the system and returns the listener
+func FindOpenPort() (*net.TCPListener, error) {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
 		return nil, err

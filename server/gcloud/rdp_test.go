@@ -254,7 +254,7 @@ func TestCreateIapFirewall(t *testing.T) {
 
 	instanceToUse.ProjectName = "auth-error"
 	err := g.createIapFirewall(ws, &instanceToUse)
-	if expected := fmt.Sprintf(didntCreateFirewall, instanceToUse.Name); socketOutput.Message != expected {
+	if expected := fmt.Sprintf(didntCreateFirewallOutput, instanceToUse.Name); socketOutput.Message != expected {
 		t.Errorf("createIapFirewall didn't send message to socket about not creating firewall due to auth error, got %v, expected %v", socketOutput.Message, expected)
 	}
 	if expected := SdkAuthError; socketOutput.Err != expected && err.Error() != expected {
@@ -263,7 +263,7 @@ func TestCreateIapFirewall(t *testing.T) {
 
 	instanceToUse.ProjectName = "project-error"
 	err = g.createIapFirewall(ws, &instanceToUse)
-	if expected := fmt.Sprintf(didntCreateFirewall, instanceToUse.Name); socketOutput.Message != expected {
+	if expected := fmt.Sprintf(didntCreateFirewallOutput, instanceToUse.Name); socketOutput.Message != expected {
 		t.Errorf("createIapFirewall didn't send message to socket about not creating firewall due to invalid project error, got %v, expected %v", socketOutput.Message, expected)
 	}
 	if expected := SdkProjectError; socketOutput.Err != expected && err.Error() != expected {
@@ -272,7 +272,7 @@ func TestCreateIapFirewall(t *testing.T) {
 
 	instanceToUse.ProjectName = "exists"
 	err = g.createIapFirewall(ws, &instanceToUse)
-	if expected := fmt.Sprintf(firewallRuleAlreadyExists, instanceToUse.Name); socketOutput.Message != expected {
+	if expected := fmt.Sprintf(firewallRuleAlreadyExistsOutput, instanceToUse.Name); socketOutput.Message != expected {
 		t.Errorf("createIapFirewall didn't send message to socket about firewall existing, got %v, expected %v", socketOutput.Message, expected)
 	}
 	if err != nil {
@@ -281,7 +281,7 @@ func TestCreateIapFirewall(t *testing.T) {
 
 	instanceToUse.ProjectName = "valid"
 	err = g.createIapFirewall(ws, &instanceToUse)
-	if expected := fmt.Sprintf(createdFirewall, instanceToUse.Name); socketOutput.Message != expected {
+	if expected := fmt.Sprintf(createdFirewallOutput, instanceToUse.Name); socketOutput.Message != expected {
 		t.Errorf("createIapFirewall didn't send message to socket about creating firewall, got %v, expected %v", socketOutput.Message, expected)
 	}
 	if err != nil {

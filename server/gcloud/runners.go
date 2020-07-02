@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"time"
 
 	pshell "github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 	"github.com/gorilla/websocket"
@@ -38,6 +37,66 @@ func newSocketMessage(message string, err error) *socketMessage {
 		Message: message,
 		Err:     errorMessage,
 	}
+}
+
+// writeToSocket is a wrapper that is used to write JSON to the websocket
+func writeToSocket(ws conn, message string, err error) error {
+	if err := ws.WriteJSON(newSocketMessage(message, err)); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+// StartPrivateRdp is a task runner that runs all the individual functions for automated RDP.
+func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn) {
+	ctx, cancel := context.WithTimeout(context.Background(), rdpContextTimeout)
+	iapOutputChan := make(chan iapResult)
+	endRdpChan := make(chan bool)
+
+	instanceToConn, err := getComputeInstanceFromConn(ws)
+	if err != nil {
+		gcloudExecutor.cleanUpRdp(ws, instanceToConn, false, false, cancel)
+		return
+	}
+	if err := writeToSocket(ws, fmt.Sprintf("Server received instance %s", instanceToConn.Name), err); err != nil {
+		gcloudExecutor.cleanUpRdp(ws, instanceToConn, false, false, cancel)
+		return
+	}
+
+	log.Println("Got instance", instanceToConn.Name)
+
+	if err := gcloudExecutor.createIapFirewall(ws, instanceToConn); err != nil {
+		gcloudExecutor.cleanUpRdp(ws, instanceToConn, false, false, cancel)
+		return
+	}
+
+	portListener, err := pshell.FindOpenPort()
+	if err != nil {
+		writeToSocket(ws, "", errors.New("Could not get a unused port on system"))
+		gcloudExecutor.cleanUpRdp(ws, instanceToConn, true, false, cancel)
+		return
+	}
+
+	freePort := portListener.Addr().(*net.TCPAddr).Port
+
+	log.Println("Got free port ", freePort)
+
+	go gcloudExecutor.startIapTunnel(ctx, ws, instanceToConn, portListener, iapOutputChan)
+	if output := <-iapOutputChan; !output.tunnelCreated || output.err != nil {
+		gcloudExecutor.cleanUpRdp(ws, instanceToConn, true, false, cancel)
+		return
+	}
+
+	go gcloudExecutor.listenForCmd(ws, instanceToConn, freePort, endRdpChan)
+
+	if endRdp := <-endRdpChan; endRdp {
+		gcloudExecutor.cleanUpRdp(ws, instanceToConn, true, true, cancel)
+		return
+	}
+
+	cancel()
+	return
 }
 
 // getComputeInstancesFromConn reads the instance that is sent at the start of the websocket connection
@@ -74,8 +133,7 @@ func (gcloudExecutor *GcloudExecutor) listenForCmd(ws conn, instance *Instance, 
 
 		_, message, err := ws.ReadMessage()
 
-		log.Println("got message:", string(message))
-		log.Println(instance.Name)
+		log.Printf("listenForCmd for %v got message %v", instance.Name, string(message))
 
 		if err != nil {
 			endChan <- true
@@ -84,15 +142,15 @@ func (gcloudExecutor *GcloudExecutor) listenForCmd(ws conn, instance *Instance, 
 
 		var cmd socketCmd
 		if err := json.Unmarshal(message, &cmd); err != nil {
-			log.Println("error unmarshalling socket command for ", instance.Name)
+			log.Printf("listenForCmd for %v failed due to %v", instance.Name, err)
 		}
 
-		if cmd.Cmd == "end" && cmd.InstanceName == instance.Name {
+		if cmd.Cmd == endRdpSocketCmd && cmd.InstanceName == instance.Name {
 			endChan <- true
 			return
 		}
 
-		if cmd.Cmd == "start-rdp" && cmd.Username != "" {
+		if cmd.Cmd == startRdpSocketCmd && cmd.Username != "" {
 			log.Println("starting rdp")
 			creds := credentials{Username: cmd.Username, Password: cmd.Password}
 			go gcloudExecutor.startRdpProgram(ws, &creds, freePort, endChan)
@@ -114,66 +172,4 @@ func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws conn, instance *Instance, cl
 	}
 	writeToSocket(ws, fmt.Sprintf("shut down private rdp for %v", instance.Name), nil)
 	ws.Close()
-}
-
-// StartPrivateRdp is a task runner that runs all the individual functions for automated RDP.
-func StartPrivateRdp(ws *websocket.Conn) {
-	shell := &pshell.CmdShell{}
-	g := NewGcloudExecutor(shell)
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
-	iapOutputChan := make(chan iapResult)
-	endRdpChan := make(chan bool)
-
-	instanceToConn, err := getComputeInstanceFromConn(ws)
-	if err != nil {
-		g.cleanUpRdp(ws, instanceToConn, false, false, cancel)
-		return
-	}
-	if err := writeToSocket(ws, fmt.Sprintf("Server received instance %s", instanceToConn.Name), err); err != nil {
-		g.cleanUpRdp(ws, instanceToConn, false, false, cancel)
-		return
-	}
-
-	log.Println("Got instance", instanceToConn.Name)
-
-	if err := g.createIapFirewall(ws, instanceToConn); err != nil {
-		g.cleanUpRdp(ws, instanceToConn, false, false, cancel)
-		return
-	}
-
-	portListener, err := pshell.GetPort()
-	if err != nil {
-		writeToSocket(ws, "", errors.New("Could not get a unused port on system"))
-		g.cleanUpRdp(ws, instanceToConn, true, false, cancel)
-		return
-	}
-
-	freePort := portListener.Addr().(*net.TCPAddr).Port
-
-	log.Println("Got free port ", freePort)
-
-	go g.startIapTunnel(ctx, ws, instanceToConn, portListener, iapOutputChan)
-	if output := <-iapOutputChan; !output.tunnelCreated || output.err != nil {
-		g.cleanUpRdp(ws, instanceToConn, true, false, cancel)
-		return
-	}
-
-	go g.listenForCmd(ws, instanceToConn, freePort, endRdpChan)
-
-	if endRdp := <-endRdpChan; endRdp {
-		g.cleanUpRdp(ws, instanceToConn, true, true, cancel)
-		return
-	}
-
-	cancel()
-	return
-}
-
-// writeToSocket is a wrapper that is used to write JSON to the websocket
-func writeToSocket(ws conn, message string, err error) error {
-	if err := ws.WriteJSON(newSocketMessage(message, err)); err != nil {
-		log.Println(err)
-		return err
-	}
-	return nil
 }

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
+// Package gcloud runs gCloud SDK commands like getting instances, starting IAP tunnels and firewalls
 package gcloud
 
 import (
@@ -62,25 +63,27 @@ func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws conn, instance *Insta
 
 	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(cmd)
 
-	var output string
-	var returnErr error
+	var (
+		output    string
+		returnErr error
+	)
 
 	if err != nil {
 		if stringOutput := strings.ToLower(string(instanceOutput)); strings.Contains(stringOutput, gcloudAuthError) {
-			output = fmt.Sprintf(didntCreateFirewall, instance.Name)
+			output = fmt.Sprintf(didntCreateFirewallOutput, instance.Name)
 			returnErr = errors.New(SdkAuthError)
 		} else if strings.Contains(stringOutput, projectCmdError) {
-			output = fmt.Sprintf(didntCreateFirewall, instance.Name)
+			output = fmt.Sprintf(didntCreateFirewallOutput, instance.Name)
 			returnErr = errors.New(SdkProjectError)
-		} else if strings.Contains(stringOutput, fmt.Sprintf(firewallRuleExistsOutput, instance.ProjectName, instance.Name)) {
-			output = fmt.Sprintf(firewallRuleAlreadyExists, instance.Name)
+		} else if strings.Contains(stringOutput, fmt.Sprintf(firewallRuleExistsCmdOutput, instance.ProjectName, instance.Name)) {
+			output = fmt.Sprintf(firewallRuleAlreadyExistsOutput, instance.Name)
 			returnErr = nil
 		} else {
-			output = fmt.Sprintf(didntCreateFirewall, instance.Name)
+			output = fmt.Sprintf(didntCreateFirewallOutput, instance.Name)
 			returnErr = err
 		}
 	} else {
-		output = fmt.Sprintf(createdFirewall, instance.Name)
+		output = fmt.Sprintf(createdFirewallOutput, instance.Name)
 		returnErr = nil
 	}
 	log.Println(output)

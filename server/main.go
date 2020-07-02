@@ -20,7 +20,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -114,13 +113,19 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 
 func startPrivateRdp(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+
+	// To-do, make sure origin for websocket is only chrome extension
+	upgrader.CheckOrigin = func(_ *http.Request) bool { return true }
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Println("starting connection")
+
+	log.Println("Starting RDP socket connection")
 	defer ws.Close()
-	gcloud.StartPrivateRdp(ws)
+
+	shell := &shell.CmdShell{}
+	gcloudExecutor := gcloud.NewGcloudExecutor(shell)
+	gcloudExecutor.StartPrivateRdp(ws)
 
 }

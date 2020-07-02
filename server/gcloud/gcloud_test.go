@@ -137,10 +137,10 @@ func (*mockShell) ExecuteCmd(cmd string) ([]byte, error) {
 		return []byte(projectCmdError), errors.New("error")
 	}
 	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "exists") {
-		return []byte(fmt.Sprintf(firewallRuleExistsOutput, "exists", "test-project")), errors.New("error")
+		return []byte(fmt.Sprintf(firewallRuleExistsCmdOutput, "exists", "test-project")), errors.New("error")
 	}
 	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "valid") {
-		return []byte(fmt.Sprintf(firewallRuleExistsOutput, "exists", "test-project")), nil
+		return []byte(""), nil
 	}
 
 	return nil, nil

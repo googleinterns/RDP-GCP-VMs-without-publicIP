@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-// Package gcloud runs gCloud SDK commands like getting instances, starting IAP tunnels and firewalls
 package gcloud
 
 import (
 	"context"
 	"io"
+	"time"
 )
 
 // consts containing possible errors from running gcloud commands
@@ -35,12 +35,12 @@ const (
 
 // iap firewall consts
 const (
-	iapFirewallCreateCmd      string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s"
-	iapFirewallDeleteCmd      string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q --project=%s"
-	firewallRuleExistsOutput  string = "resource 'projects/%s/global/firewalls/admin-extension-private-rdp-%v' already exists"
-	firewallRuleAlreadyExists string = "Firewall rule already exists for %v"
-	didntCreateFirewall       string = "Didn't create firewall for %v"
-	createdFirewall           string = "Created firewall for %v"
+	iapFirewallCreateCmd            string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s"
+	iapFirewallDeleteCmd            string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q --project=%s"
+	firewallRuleExistsCmdOutput     string = "resource 'projects/%s/global/firewalls/admin-extension-private-rdp-%v' already exists"
+	firewallRuleAlreadyExistsOutput string = "Firewall rule already exists for %v"
+	didntCreateFirewallOutput       string = "Could not create firewall for %v"
+	createdFirewallOutput           string = "Created firewall for %v"
 )
 
 // iap tunnel and websocket consts
@@ -59,6 +59,13 @@ const (
 	rdpProgramError string = "Unable to start RDP program for %v"
 	rdpProgramQuit  string = "Quit RDP program for %v"
 )
+
+const (
+	endRdpSocketCmd   string = "end"
+	startRdpSocketCmd string = "start-rdp"
+)
+
+const rdpContextTimeout time.Duration = 1 * time.Hour
 
 type osFeatures struct {
 	Type string `json:"type"`
