@@ -18,11 +18,16 @@ limitations under the License.
 package shell
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"net"
 	"os/exec"
 	"strings"
+	"time"
 )
+
+const cmdReaderContextTimeout time.Duration = 1 * time.Hour
 
 // CmdShell implements Shell interface, contains functions that run commands.
 type CmdShell struct{}
@@ -38,24 +43,42 @@ func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 }
 
 // ExecuteCmdReader runs a shell command and pipes the stdout and stderr into ReadClosers
-func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, error) {
+func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), cmdReaderContextTimeout)
 	parsedCmd := strings.Fields(cmd)
-	asyncCmd := exec.Command(parsedCmd[0], parsedCmd[1:]...)
+	asyncCmd := exec.CommandContext(ctx, parsedCmd[0], parsedCmd[1:]...)
 
 	stdout, err := asyncCmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		cancel()
+		return nil, nil, err
 	}
 
 	stderr, err := asyncCmd.StderrPipe()
 	if err != nil {
-		return nil, err
+		cancel()
+		return nil, nil, err
 	}
 
 	if err = asyncCmd.Start(); err != nil {
-		return nil, err
+		cancel()
+		return nil, nil, err
 	}
 
 	fmt.Println("Stand by to read..")
-	return []io.ReadCloser{stdout, stderr}, nil
+	return []io.ReadCloser{stdout, stderr}, cancel, nil
+}
+
+// FindOpenPort finds a free port on the system and returns the listener
+func FindOpenPort() (*net.TCPListener, error) {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		return nil, err
+	}
+	listener, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+
+	return listener, nil
 }

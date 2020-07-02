@@ -28,6 +28,7 @@ import (
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -41,8 +42,9 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
 	router.HandleFunc("/health", setCorsHeaders).Methods("OPTIONS")
-	router.HandleFunc("/compute-instances", getComputeInstances).Methods("POST")
-	router.HandleFunc("/compute-instances", setCorsHeaders).Methods("OPTIONS")
+	router.HandleFunc("/gcloud/compute-instances", getComputeInstances).Methods("POST")
+	router.HandleFunc("/gcloud/compute-instances", setCorsHeaders).Methods("OPTIONS")
+	router.HandleFunc("/gcloud/start-private-rdp", startPrivateRdp)
 
 	log.Fatal(http.ListenAndServe(":23966", router))
 }
@@ -107,4 +109,23 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(instances)
+}
+
+func startPrivateRdp(w http.ResponseWriter, r *http.Request) {
+	upgrader := websocket.Upgrader{}
+
+	// To-do, make sure origin for websocket is only chrome extension
+	upgrader.CheckOrigin = func(_ *http.Request) bool { return true }
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println("Starting RDP socket connection")
+	defer ws.Close()
+
+	shell := &shell.CmdShell{}
+	gcloudExecutor := gcloud.NewGcloudExecutor(shell)
+	gcloudExecutor.StartPrivateRdp(ws)
+
 }

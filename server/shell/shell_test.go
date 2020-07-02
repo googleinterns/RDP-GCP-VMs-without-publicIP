@@ -43,11 +43,11 @@ func TestExecuteCmd(t *testing.T) {
 // TestExecuteCmdReader tests the ExecuteCmdReader method which outputs stdout/stderr as a ReadCloser
 func TestExecuteCmdReader(t *testing.T) {
 	shell := CmdShell{}
-	if invalidOutput, err := shell.ExecuteCmdReader(invalidCmd); invalidOutput != nil && err == nil {
+	if invalidOutput, _, err := shell.ExecuteCmdReader(invalidCmd); invalidOutput != nil && err == nil {
 		t.Errorf("CmdReader didn't error on invalid cmd")
 	}
 
-	output, err := shell.ExecuteCmdReader(validReaderCmd)
+	output, _, err := shell.ExecuteCmdReader(validReaderCmd)
 	if err != nil {
 		t.Errorf("Valid CmdReader cmd error'd out %v", err)
 	}
