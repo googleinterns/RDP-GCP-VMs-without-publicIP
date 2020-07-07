@@ -14,16 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { HttpClientModule } from '@angular/common/http';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { RdpComponent } from './pages/rdp/rdp.component';
+import { RdpRoutingModule } from './rdp-routing.module';
 
 @NgModule({
-  declarations: [AppComponent],
-  imports: [BrowserModule, AppRoutingModule, HttpClientModule, BrowserAnimationsModule],
-  bootstrap: [AppComponent]
+  declarations: [RdpComponent],
+  imports: [CommonModule, RdpRoutingModule]
 })
-export class AppModule {}
+export class RdpModule {}

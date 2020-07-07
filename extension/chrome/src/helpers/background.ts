@@ -16,7 +16,7 @@
 
 /* A file that contains functions used in the background script */
 
-import {pantheonInstancesListRegex, pantheonPageRegex} from './constants';
+import {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint} from './constants';
 import {Instance, InstanceInterface} from '../classes';
 
 // Enable chrome extension popup on matching hosts.
@@ -50,7 +50,7 @@ const instanceFunctions = {
   },
   getInstancesApi: async (projectName: string): Promise<any> => {
     const instanceRequest = await fetch(
-      'http://localhost:23966/compute-instances',
+      getComputeInstancesEndpoint,
       {
         method: 'POST',
         mode: 'cors',
@@ -71,6 +71,7 @@ const instanceFunctions = {
 };
 
 let computeInstances = [] as Instance[];
+
 // Pantheon listener listens for pantheon pages and gets the GCP Compute instances to display buttons.
 const pantheonListener = () => {
   chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -82,14 +83,14 @@ const pantheonListener = () => {
       if (tab.url.match(pantheonInstancesListRegex) && tab.url.indexOf('?') !== -1) {
         const urlParams = new URLSearchParams(tab.url.split('?')[1]);
         const projectName = urlParams.get('project');
-        console.log(projectName);
+
         if (projectName) {
           instanceFunctions
             .getComputeInstances(projectName)
             .then(instances => {
               computeInstances = instances;
-              console.log(instances);
-              chrome.tabs.sendMessage(tabId, { type: "get-compute-instances", computeInstances })
+
+              chrome.tabs.sendMessage(tabId, { type: 'get-compute-instances', computeInstances })
             })
             .catch(error => chrome.browserAction.setBadgeText({text: 'error'}));
         }
@@ -97,5 +98,25 @@ const pantheonListener = () => {
     }
   });
 };
+
+// Listener that listens for multiple types of messages
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // Send instances if received get instances from popup
+  if (request.type == 'popup-get-instances') {
+    sendResponse({instances: computeInstances, projectName: computeInstances[0].projectName});
+  } else if (request.type == 'start-private-rdp') {
+
+    // set rdpRunning to true for instances that sent start request
+    for (let i = 0; i < computeInstances.length; i++) {
+      if (computeInstances[i].name === request.instance.name) {
+        computeInstances[i].rdpRunning = true;
+      }
+    }
+    sendResponse({instances: computeInstances})
+
+    // open new RDP status page
+    chrome.tabs.create({url: chrome.extension.getURL('index.html?#/rdp')});
+  }
+});
 
 export {enablePopup, pantheonListener, instanceFunctions};

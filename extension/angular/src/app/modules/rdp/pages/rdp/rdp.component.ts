@@ -14,16 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { HttpClientModule } from '@angular/common/http';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { Component } from '@angular/core';
+import { bindCallback, fromEventPattern, bindNodeCallback } from 'rxjs';
+import { map } from 'rxjs/operators';
 
-@NgModule({
-  declarations: [AppComponent],
-  imports: [BrowserModule, AppRoutingModule, HttpClientModule, BrowserAnimationsModule],
-  bootstrap: [AppComponent]
+@Component({
+  selector: 'app-rdp',
+  templateUrl: 'rdp.component.html',
+  styleUrls: ['rdp.component.scss']
 })
-export class AppModule {}
+
+
+export class RdpComponent {
+  constructor() {}
+}

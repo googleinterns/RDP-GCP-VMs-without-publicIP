@@ -13,3 +13,30 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ***/
+
+.popup-container {
+    display: flex;
+    flex-direction: column;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    justify-content: center;
+    width: 200px;
+    margin: 0;
+}
+
+.spinner-container {
+    padding: 10%;
+}
+
+.instance-container {
+    padding: 10% 0;
+}
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+}
+
+

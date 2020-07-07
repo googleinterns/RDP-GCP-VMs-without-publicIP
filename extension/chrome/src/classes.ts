@@ -53,6 +53,7 @@ class Instance implements InstanceInterface {
     this.NetworkInterfaces = instance.NetworkInterfaces;
     this.displayPrivateRdpDom = this.canDisplayRdpDom();
     this.projectName = projectName;
+    this.rdpRunning = false;
   }
 
   // Enable RDP button display for instances that are Windows.
@@ -77,6 +78,7 @@ class Instance implements InstanceInterface {
   zone: string;
   displayPrivateRdpDom: boolean;
   projectName: string;
+  rdpRunning: boolean;
 }
 
 export {Instance, InstanceInterface};

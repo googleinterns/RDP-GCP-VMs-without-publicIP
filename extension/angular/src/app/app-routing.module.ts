@@ -22,6 +22,11 @@ const routes: Routes = [
     path: 'popup',
     pathMatch: 'full',
     loadChildren: () => import('./modules/popup/popup.module').then(m => m.PopupModule)
+  },
+  {
+    path: 'rdp',
+    pathMatch: 'full',
+    loadChildren: () => import('./modules/rdp/rdp.module').then(m => m.RdpModule)
   }
 ];
 
