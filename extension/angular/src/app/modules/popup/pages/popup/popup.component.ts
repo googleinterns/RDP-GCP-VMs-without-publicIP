@@ -58,9 +58,8 @@ export class PopupComponent {
             this.loading = false;
             this.instances = resp.instances;
             this.projectName = resp.projectName;
-            console.log(this.instances)
           }
-        })
+        });
 
         if (!this.loading) {
           clearInterval(pollForInstances);
@@ -69,12 +68,9 @@ export class PopupComponent {
   };
 
   onRdpClick(instance: Instance) {
-    console.log('button click')
-    console.log(instance)
     chrome.runtime.sendMessage({type: 'start-private-rdp', instance}, (resp) => {
       this.instances = resp.instances;
-      console.log(this.instances)
-    })
-  }
+    });
+  };
 
 }
