@@ -147,10 +147,12 @@ func (*mockShell) ExecuteCmd(cmd string) ([]byte, error) {
 }
 
 func (*mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
-	if cmd == fmt.Sprintf(iapTunnelCmd, "test-project", "invalid", 9999) {
+	var instanceToUse Instance
+	json.Unmarshal(instance, &instanceToUse)
+	if cmd == fmt.Sprintf(iapTunnelCmd, "test-project", "invalid", 9999, instanceToUse.Zone) {
 		return []io.ReadCloser{ioutil.NopCloser(strings.NewReader("")), ioutil.NopCloser(strings.NewReader(gcloudErrorOutput))}, nil, nil
 	}
-	if cmd == fmt.Sprintf(iapTunnelCmd, "test-project", "valid", 9999) {
+	if cmd == fmt.Sprintf(iapTunnelCmd, "test-project", "valid", 9999, instanceToUse.Zone) {
 		return []io.ReadCloser{ioutil.NopCloser(strings.NewReader("")), ioutil.NopCloser(strings.NewReader(tunnelCreatedOutput))}, nil, nil
 	}
 	return nil, nil, nil
