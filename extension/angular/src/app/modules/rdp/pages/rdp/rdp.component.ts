@@ -16,7 +16,7 @@ limitations under the License.
 
 import { Component, NgZone } from '@angular/core';
 import { Instance, SocketMessage, SocketMessageInterface, SocketCmd } from 'src/classes';
-import { readyForRdpCommandSocket, loginRdpCmd, endRdpCmd, rdpShutdownMessage, rdpGetInstances } from 'src/constants';
+import { readyForRdpCommandSocket, loginRdpCmd, endRdpCmd, rdpShutdownMessage, rdpGetInstances, rdpSocketEndpoint } from 'src/constants';
 import { bindCallback, BehaviorSubject, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -35,7 +35,7 @@ export class RdpComponent {
   endButtonReady = false;
   socketMessageList = [] as SocketMessage[];
   getInstances: any;
-  socket: WebSocketSubject<any> = webSocket('ws://localhost:23966/gcloud/start-private-rdp');
+  socket: WebSocketSubject<any> = webSocket(rdpSocketEndpoint);
   username: string;
   password: string;
 

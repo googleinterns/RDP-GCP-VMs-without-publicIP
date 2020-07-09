@@ -25,4 +25,6 @@ const popupGetInstances = 'popup-get-instances';
 const startPrivateRdp = 'start-private-rdp';
 const rdpGetInstances = 'rdp-get-instance';
 
-export {endRdpCmd, loginRdpCmd, readyForRdpCommandSocket, rdpShutdownMessage, popupGetInstances, startPrivateRdp, rdpGetInstances};
+const rdpSocketEndpoint = 'ws://localhost:23966/gcloud/start-private-rdp';
+
+export {endRdpCmd, loginRdpCmd, readyForRdpCommandSocket, rdpShutdownMessage, popupGetInstances, startPrivateRdp, rdpGetInstances, rdpSocketEndpoint};
