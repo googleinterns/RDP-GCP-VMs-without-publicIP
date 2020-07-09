@@ -86,6 +86,8 @@ func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn) {
 	if output := <-iapOutputChan; !output.tunnelCreated || output.err != nil {
 		gcloudExecutor.cleanUpRdp(ws, instanceToConn, true, false, cancel)
 		return
+	} else {
+		writeToSocket(ws, readyForCommandOutput, nil)
 	}
 
 	go gcloudExecutor.listenForCmd(ws, instanceToConn, freePort, endRdpChan)
@@ -170,6 +172,6 @@ func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws conn, instance *Instance, cl
 		log.Println("ending rdp for ", instance.Name)
 		cancelFunc()
 	}
-	writeToSocket(ws, fmt.Sprintf("shut down private rdp for %v", instance.Name), nil)
+	writeToSocket(ws, fmt.Sprintf(shutDownRdp, instance.Name), nil)
 	ws.Close()
 }

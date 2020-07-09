@@ -52,7 +52,7 @@ class Instance implements InstanceInterface {
     this.description = instance.description;
     this.NetworkInterfaces = instance.NetworkInterfaces;
     this.displayPrivateRdpDom = this.canDisplayRdpDom();
-    this.projectName = projectName;
+    this.project = projectName;
     this.rdpRunning = false;
   }
 
@@ -77,7 +77,7 @@ class Instance implements InstanceInterface {
   status: string;
   zone: string;
   displayPrivateRdpDom: boolean;
-  projectName: string;
+  project: string;
   rdpRunning: boolean;
 }
 

@@ -13,6 +13,37 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 
-<div>
-    RDP Status Page placeholder
+<div class="rdp-container">
+    <h2>{{socketStatus}}</h2>
+
+    <div class="main">
+        <div class="log-container">
+            <div class="card-container" *ngFor="let socketMessage of socketMessageList">
+                <mat-card *ngIf="socketMessage.message">{{socketMessage.message}}</mat-card>
+                <mat-card *ngIf="socketMessage.error" >{{socketMessage.error}}</mat-card>
+            </div>
+            <!-- <mat-list>
+                <mat-list-item *ngFor="let socketMessage of socketMessageList">
+                    <div>{{socketMessage.message}}</div>
+                    <p matLine>{{socketMessage.error}}</p>
+                    <mat-divider></mat-divider>
+                </mat-list-item>
+            </mat-list> -->
+        </div>
+        <div class="cmd-container">
+            <div class="input-container">
+                <mat-form-field appearance="standard">
+                    <mat-label>RDP Username</mat-label>
+                    <input [disabled]="!credsReady" matInput [(ngModel)]="username">
+                  </mat-form-field>
+                  <br>
+                  <mat-form-field appearance="standard">
+                    <mat-label>RDP Password</mat-label>
+                    <input [disabled]="!credsReady" matInput type="password" [(ngModel)]="password">
+                  </mat-form-field>
+                  <button type="button" (click)="loginToRdp()" [disabled]="!credsReady" mat-raised-button color="primary">Submit</button>
+            </div>
+            <button type="button" (click)="endRdp()" [disabled]="!endButtonReady" mat-raised-button color="warn">End RDP</button>
+        </div>
+    </div>
 </div>

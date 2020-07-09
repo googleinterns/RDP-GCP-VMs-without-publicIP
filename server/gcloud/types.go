@@ -51,6 +51,9 @@ const (
 	tunnelCreatedOutput                 string = "DEBUG: CLOSE"
 	iapTunnelError                      string = "Could not start IAP tunnel for %v"
 	iapTunnelStarted                    string = "Started IAP tunnel for %v on port: %v"
+	// IMPORTANT: IF CHANGED, NEEDS TO BE CHANGED IN EXTENSION AS WELL
+	readyForCommandOutput string = "Ready for command"
+	shutDownRdp           string = "Shutdown private RDP for %v"
 )
 
 // automated rdp program consts
@@ -105,7 +108,7 @@ type GcloudExecutor struct {
 
 // socketMessage is the struct that is sent to the websockets
 type socketMessage struct {
-	Message string `json:"messsage"`
+	Message string `json:"message"`
 	Err     string `json:"error"`
 }
 
