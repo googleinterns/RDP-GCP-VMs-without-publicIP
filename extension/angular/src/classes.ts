@@ -14,12 +14,33 @@
  limitations under the License.
  ***/
 
-// A file that contains constants for the extension.
+// File used to contain classes and interfaces used in the extension.
 
-const pantheonInstancesListRegex = /.*pantheon.corp.google.com\/compute\/.*/;
-const pantheonPageRegex = /.*pantheon.corp.google.com\/.*/;
+interface GuestOsFeature {
+  type: string;
+}
 
-const serverUrl = "http://localhost:23966";
-const getComputeInstancesEndpoint = serverUrl + "/gcloud/compute-instances";
+interface Disk {
+  guestOsFeatures: GuestOsFeature[];
+}
 
-export {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint};
+interface NetworkInterface {
+  name: string;
+  network: string;
+  networkIP: string;
+}
+
+class Instance {
+  NetworkInterfaces: NetworkInterface[];
+  description: string;
+  disks: Disk[];
+  id: string;
+  name: string;
+  status: string;
+  zone: string;
+  displayPrivateRdpDom: boolean;
+  projectName: string;
+  rdpRunning: boolean;
+}
+
+export {Instance};

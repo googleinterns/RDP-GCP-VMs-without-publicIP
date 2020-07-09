@@ -13,5 +13,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 
-<h1>Popup</h1>
-<p><strong>{{ status }}</strong></p>
+<div class="popup-container">
+    <div *ngIf="loading; then loadingBar else instanceTable">
+    </div>
+
+    <ng-template #loadingBar>
+        <div class="spinner-container">
+            <h2>Loading instances</h2>
+            <mat-spinner diameter=48 ></mat-spinner>
+        </div>
+    </ng-template>
+    
+    <ng-template #instanceTable>
+        <div class="instance-container">
+            <mat-list>
+                <h4 matSubheader>Instances found for {{projectName}}</h4>
+                <mat-list-item *ngFor="let instance of instances">
+                    <div class="list-item">
+                        <p>{{instance.name}}</p>
+                        <button type="button" [disabled]="!instance.displayPrivateRdpDom || instance.rdpRunning" (click)="onRdpClick(instance)" mat-raised-button color="primary">RDP</button>
+                    </div>
+                </mat-list-item>
+            </mat-list>
+        </div>
+    </ng-template>
+</div>

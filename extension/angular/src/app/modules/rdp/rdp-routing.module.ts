@@ -15,15 +15,18 @@ limitations under the License.
 ***/
 
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { HttpClientModule } from '@angular/common/http';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterModule, Routes } from '@angular/router';
+import { RdpComponent } from './pages/rdp/rdp.component';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: RdpComponent
+  }
+];
 
 @NgModule({
-  declarations: [AppComponent],
-  imports: [BrowserModule, AppRoutingModule, HttpClientModule, BrowserAnimationsModule],
-  bootstrap: [AppComponent]
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
 })
-export class AppModule {}
+export class RdpRoutingModule {}

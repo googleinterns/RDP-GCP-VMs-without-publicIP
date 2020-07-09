@@ -18,9 +18,12 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { PopupComponent } from './pages/popup/popup.component';
 import { PopupRoutingModule } from './popup-routing.module';
+import { MatListModule } from '@angular/material/list';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [PopupComponent],
-  imports: [CommonModule, PopupRoutingModule]
+  imports: [CommonModule, PopupRoutingModule, MatListModule, MatProgressSpinnerModule, MatButtonModule]
 })
 export class PopupModule {}

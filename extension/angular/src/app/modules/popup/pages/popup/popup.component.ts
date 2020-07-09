@@ -15,9 +15,10 @@ limitations under the License.
 ***/
 
 import { Component } from '@angular/core';
-import { bindCallback } from 'rxjs';
+import { bindCallback, fromEventPattern, bindNodeCallback } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PopupService } from './popup.service';
+import { Instance } from '../../../../../classes';
 
 @Component({
   selector: 'app-popup',
@@ -25,13 +26,20 @@ import { PopupService } from './popup.service';
   providers: [PopupService],
   styleUrls: ['popup.component.scss']
 })
+
+
 export class PopupComponent {
   status: string;
+  instances: Instance[];
+  loading: boolean;
+  projectName: string;
 
   constructor(private popupService: PopupService) {}
 
   ngOnInit() {
+    this.loading = true;
     this.getStatus();
+    this.getInstances();
   };
 
   getStatus() {
@@ -41,5 +49,28 @@ export class PopupComponent {
       }, error => {
         this.status = 'Could not get server status';
       })
-  }
+  };
+
+  getInstances() {
+    const pollForInstances = setInterval(() => {
+        chrome.runtime.sendMessage({type: 'popup-get-instances'}, (resp) => {
+          if (resp.instances !== []) {
+            this.loading = false;
+            this.instances = resp.instances;
+            this.projectName = resp.projectName;
+          }
+        });
+
+        if (!this.loading) {
+          clearInterval(pollForInstances);
+        }
+    }, 1000)
+  };
+
+  onRdpClick(instance: Instance) {
+    chrome.runtime.sendMessage({type: 'start-private-rdp', instance}, (resp) => {
+      this.instances = resp.instances;
+    });
+  };
+
 }

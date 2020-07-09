@@ -15,16 +15,17 @@
     "build": "npm run clean && npm run build:angular && npm run build:chrome",
     "watch": "npm-run-all --parallel watch:*",
     "clean": "rimraf dist",
-    "test:chrome": "cd chrome && jasmine-ts --config=jasmine.json",
-    "test": "npm-run-all test:*"
+    "test:chrome": "cd chrome && jasmine-ts --config=jasmine.json"
   },
   "private": true,
   "dependencies": {
     "@angular/animations": "~9.1.11",
+    "@angular/cdk": "^9.2.4",
     "@angular/common": "~9.1.11",
     "@angular/compiler": "~9.1.11",
     "@angular/core": "~9.1.11",
     "@angular/forms": "~9.1.11",
+    "@angular/material": "^9.2.4",
     "@angular/platform-browser": "~9.1.11",
     "@angular/platform-browser-dynamic": "~9.1.11",
     "@angular/router": "~9.1.11",
