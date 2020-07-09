@@ -14,17 +14,17 @@
  limitations under the License.
  ***/
 
-// A file that contains constants for the extension.
+const endRdpCmd = 'end';
+const loginRdpCmd = 'start-rdp';
 
-const pantheonInstancesListRegex = /.*pantheon.corp.google.com\/compute\/.*/;
-const pantheonPageRegex = /.*pantheon.corp.google.com\/.*/;
+const readyForRdpCommandSocket = 'Ready for command';
+const rdpShutdownMessage = 'Shutdown private RDP for %v'
 
-const serverUrl = "http://localhost:23966";
-const getComputeInstancesEndpoint = serverUrl + "/gcloud/compute-instances";
-
-// Need to change in Angular constants as well.
+// Need to change in Chrome Extension constants as well.
 const popupGetInstances = 'popup-get-instances';
 const startPrivateRdp = 'start-private-rdp';
 const rdpGetInstances = 'rdp-get-instance';
 
-export {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint, popupGetInstances, startPrivateRdp, rdpGetInstances};
+const rdpSocketEndpoint = 'ws://localhost:23966/gcloud/start-private-rdp';
+
+export {endRdpCmd, loginRdpCmd, readyForRdpCommandSocket, rdpShutdownMessage, popupGetInstances, startPrivateRdp, rdpGetInstances, rdpSocketEndpoint};

@@ -19,6 +19,7 @@ import { bindCallback, fromEventPattern, bindNodeCallback } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PopupService } from './popup.service';
 import { Instance } from '../../../../../classes';
+import { popupGetInstances, startPrivateRdp } from 'src/constants';
 
 @Component({
   selector: 'app-popup',
@@ -53,7 +54,7 @@ export class PopupComponent {
 
   getInstances() {
     const pollForInstances = setInterval(() => {
-        chrome.runtime.sendMessage({type: 'popup-get-instances'}, (resp) => {
+        chrome.runtime.sendMessage({type: popupGetInstances}, (resp) => {
           if (resp.instances !== []) {
             this.loading = false;
             this.instances = resp.instances;
@@ -68,7 +69,7 @@ export class PopupComponent {
   };
 
   onRdpClick(instance: Instance) {
-    chrome.runtime.sendMessage({type: 'start-private-rdp', instance}, (resp) => {
+    chrome.runtime.sendMessage({type: startPrivateRdp, instance}, (resp) => {
       this.instances = resp.instances;
     });
   };

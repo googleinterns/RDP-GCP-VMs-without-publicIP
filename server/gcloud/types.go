@@ -30,7 +30,7 @@ const (
 	SdkAuthError string = "gCloud SDK auth invalid"
 	// SdkProjectError is returned if the gcloud project given is invalid
 	SdkProjectError   string = "gCloud SDK project invalid"
-	gcloudErrorOutput string = "Error:"
+	gcloudErrorOutput string = "ERROR:"
 )
 
 // iap firewall consts
@@ -47,10 +47,18 @@ const (
 const (
 	getComputeInstancesForProjectPrefix string = "gcloud compute instances list --format=json --project="
 	missingInstanceValues               string = "Missing value from instance data sent"
-	iapTunnelCmd                        string = "gcloud compute start-iap-tunnel %v 3389 --project=%v --local-host-port=localhost:%v --verbosity=debug"
+	iapTunnelCmd                        string = "gcloud compute start-iap-tunnel %v 3389 --project=%v --local-host-port=localhost:%v --zone=%s --verbosity=debug"
 	tunnelCreatedOutput                 string = "DEBUG: CLOSE"
 	iapTunnelError                      string = "Could not start IAP tunnel for %v"
 	iapTunnelStarted                    string = "Started IAP tunnel for %v on port: %v"
+	receivedEndCmd                      string = "Received end RDP command from connection"
+	receivedStartRdpCmd                 string = "Received command to start RDP program with credentials"
+	deletingIapFirewall                 string = "Deleting IAP firewall for %v"
+	endingIapTunnel                     string = "Ending IAP tunnel for %v"
+	createIapFailed                     string = "Creating IAP tunnel failed"
+	// IMPORTANT: IF CHANGED, NEEDS TO BE CHANGED IN EXTENSION AS WELL
+	readyForCommandOutput string = "Ready for command"
+	shutDownRdp           string = "Shutdown private RDP for %v"
 )
 
 // automated rdp program consts
@@ -105,7 +113,7 @@ type GcloudExecutor struct {
 
 // socketMessage is the struct that is sent to the websockets
 type socketMessage struct {
-	Message string `json:"messsage"`
+	Message string `json:"message"`
 	Err     string `json:"error"`
 }
 

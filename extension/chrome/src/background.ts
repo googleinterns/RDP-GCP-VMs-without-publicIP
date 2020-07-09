@@ -16,7 +16,8 @@ limitations under the License.
 
 /* A script that runs in the background when the extension is initialized */
 
-import {enablePopup, pantheonListener} from './helpers/background';
+import {enablePopup, tabListener, messageListener} from './helpers/background';
 
 enablePopup(['pantheon.corp.google.com', 'b.corp.google.com']);
-pantheonListener();
+tabListener();
+messageListener();

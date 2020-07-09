@@ -39,8 +39,30 @@ class Instance {
   status: string;
   zone: string;
   displayPrivateRdpDom: boolean;
-  projectName: string;
+  project: string;
   rdpRunning: boolean;
 }
 
-export {Instance};
+interface SocketMessageInterface {
+  message: string;
+  error: string;
+}
+
+class SocketMessage implements SocketMessageInterface {
+  constructor(socketMessage: SocketMessageInterface) {
+    this.message = socketMessage.message;
+    this.error = socketMessage.error;
+  }
+
+  message: string;
+  error: string;
+}
+
+class SocketCmd {
+  cmd: string;
+  name: string;
+  username: string;
+  password: string;
+}
+
+export {Instance, SocketMessageInterface, SocketMessage, SocketCmd};

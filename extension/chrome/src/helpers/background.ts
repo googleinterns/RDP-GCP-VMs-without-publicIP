@@ -16,7 +16,7 @@
 
 /* A file that contains functions used in the background script */
 
-import {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint} from './constants';
+import {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint, popupGetInstances, startPrivateRdp, rdpGetInstances} from './constants';
 import {Instance, InstanceInterface} from '../classes';
 
 // Enable chrome extension popup on matching hosts.
@@ -70,20 +70,38 @@ const instanceFunctions = {
   },
 };
 
+// computeInstances is used to contain all the compute instances received from the server.
 let computeInstances = [] as Instance[];
+// rdpInstancesList contains the current instances that are being RDP'ed into.
+let rdpInstancesList = [];
 
-// Pantheon listener listens for pantheon pages and gets the GCP Compute instances to display buttons.
-const pantheonListener = () => {
+// Tab listener listens for tab changes.
+const tabListener = () => {
   chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (
+    // Check if tab that is being updated is created by the extension for RDP
+    if (changeInfo.status === 'complete' && rdpInstancesList.filter(element => element.tabId === tabId).length > 0) {
+      console.log(tabId)
+
+      // If the tab is being refreshed by the user, delete the tab.
+      for (let i = 0; i < rdpInstancesList.length; i++) {
+        if (rdpInstancesList[i].tabId === tabId && rdpInstancesList[i].status === 'ready') {
+          rdpInstancesList.splice(i, 1);
+          chrome.tabs.remove(tabId);
+        }
+      }
+      
+    } else if (
       changeInfo.status === 'complete' &&
       tab.status === 'complete' &&
       tab.url != undefined
     ) {
+
+      // If tab matches Pantheon instances list page.
       if (tab.url.match(pantheonInstancesListRegex) && tab.url.indexOf('?') !== -1) {
         const urlParams = new URLSearchParams(tab.url.split('?')[1]);
         const projectName = urlParams.get('project');
 
+        // If project name is parsed from URL, get all the compute instances for the project.
         if (projectName) {
           instanceFunctions
             .getComputeInstances(projectName)
@@ -100,23 +118,45 @@ const pantheonListener = () => {
 };
 
 // Listener that listens for multiple types of messages
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  // Send instances if received get instances from popup
-  if (request.type == 'popup-get-instances') {
-    sendResponse({instances: computeInstances, projectName: computeInstances[0].projectName});
-  } else if (request.type == 'start-private-rdp') {
+const messageListener = () => {
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    // Send instances if received get instances from popup
+    if (request.type == popupGetInstances) {
+      sendResponse({instances: computeInstances, projectName: computeInstances[0].project});
+    } else if (request.type == startPrivateRdp) {
 
-    // set rdpRunning to true for instances that sent start request
-    for (let i = 0; i < computeInstances.length; i++) {
-      if (computeInstances[i].name === request.instance.name) {
-        computeInstances[i].rdpRunning = true;
+      let instanceToRdp;
+      // set rdpRunning to true for instances that sent start request
+      for (let i = 0; i < computeInstances.length; i++) {
+        if (computeInstances[i].name === request.instance.name) {
+          computeInstances[i].rdpRunning = true;
+          instanceToRdp = computeInstances[i];
+          break;
+        }
+      }
+      sendResponse({instances: computeInstances});
+
+      // open new tab for RDP, add the instance and its tab id to keep track.
+      chrome.tabs.create({url: chrome.extension.getURL('index.html?#/rdp')}, (tab) => {
+        rdpInstancesList.push({instance: instanceToRdp, tabId: tab.id, status: 'created'});
+      });
+    } else if (request.type == rdpGetInstances) {
+      console.log(rdpInstancesList)
+      let instance;
+      
+      // Set rdp instance status to ready, RDP page in new tab has been created and is now starting connection.
+      for (let i = 0; i < rdpInstancesList.length; i++) {
+        if (rdpInstancesList[i].tabId === sender.tab.id) {
+          rdpInstancesList[i].status = 'ready';
+          instance = rdpInstancesList[i].instance;
+        }
+      }
+
+      if (instance) {
+        sendResponse({instance});
       }
     }
-    sendResponse({instances: computeInstances})
+  });
+}
 
-    // open new RDP status page
-    chrome.tabs.create({url: chrome.extension.getURL('index.html?#/rdp')});
-  }
-});
-
-export {enablePopup, pantheonListener, instanceFunctions};
+export {enablePopup, tabListener, messageListener, instanceFunctions};
