@@ -18,13 +18,12 @@ import { Component, NgZone } from '@angular/core';
 import { Instance, SocketMessage, SocketMessageInterface, SocketCmd } from 'src/classes';
 import { readyForRdpCommandSocket, loginRdpCmd, endRdpCmd, rdpShutdownMessage } from 'src/constants';
 import { bindCallback, BehaviorSubject, Subscription } from 'rxjs';
-import { RdpService } from './rdp.service';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-rdp',
   templateUrl: 'rdp.component.html',
-  providers: [RdpService],
   styleUrls: ['rdp.component.scss']
 })
 
@@ -40,7 +39,7 @@ export class RdpComponent {
   username: string;
   password: string;
 
-  constructor(private zone: NgZone, private rdpService: RdpService) {};
+  constructor(private zone: NgZone, private snackbar: MatSnackBar) {};
 
   ngOnInit() {
     this.getInstanceFromBackground();
@@ -52,7 +51,7 @@ export class RdpComponent {
       if (resp.instance) {
         this.zone.run(() => {
           this.rdpInstance = resp.instance;
-          this.socketStatus = "Connecting to service with instance "  + this.rdpInstance['name'];
+          this.socketStatus = "Connecting to service with instance "  + this.rdpInstance.name;
           this.socketConnection();
         });
       }
@@ -65,7 +64,11 @@ export class RdpComponent {
     msg.username = this.username;
     msg.password = this.password;
 
+    this.username = ""
+    this.password = ""
+
     this.socket.next(msg);
+    this.snackbar.open('Sent credentials', '', { duration: 3000 });
   }
 
   disableButtonsAndInput() {
@@ -82,14 +85,29 @@ export class RdpComponent {
     this.socket.next(msg);
 
     this.disableButtonsAndInput();
+    this.snackbar.open('Sent end command', '', { duration: 3000 });
+  }
+
+  connectionClosed() {
+    this.zone.run(() => {
+      this.socketStatus = "Connection to service with instance " + this.rdpInstance.name + " closed";
+    });
+    this.disableButtonsAndInput();
+    this.snackbar.open('Connection to service was closed', '', { duration: 3000 });
   }
 
   socketConnection() {
     console.log("starting conn")
     this.socket.next(this.rdpInstance)
     this.socket.subscribe(
-      msg => {
+      (msg) => {
+        // Handle messages from the connection
         console.log('message received: ' + JSON.stringify(msg));
+
+        this.zone.run(() => {
+          this.socketStatus = "Connected to service with instance " + this.rdpInstance.name;
+        });
+
         const receivedMessage = new SocketMessage(<SocketMessageInterface> msg);
         this.socketMessageList.push(receivedMessage);
         
@@ -104,17 +122,17 @@ export class RdpComponent {
         if (receivedMessage.message === rdpShutdownMessage) {
           this.disableButtonsAndInput();
         }
-
       }, 
-
-      // Called whenever there is a message from the server
-      err => this.disableButtonsAndInput(),
-      // Called if WebSocket API signals some kind of error
-      () => this.disableButtonsAndInput()
-      // Called when connection is closed (for whatever reason)
+      (err) => {
+        // Handle error from connection
+        console.log(err);
+        this.connectionClosed();
+      },
+      () => {
+        // Handle connection closed from server
+        this.connectionClosed();
+      },
    );
-    //this.rdpService.connect();
-    //this.rdpService.messages.subscribe(msg => {console.log(msg)})
   }
 
 }

@@ -19,7 +19,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RdpComponent } from './pages/rdp/rdp.component';
 import { RdpRoutingModule } from './rdp-routing.module';
-import { MatListModule } from '@angular/material/list';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -27,6 +27,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 
 @NgModule({
   declarations: [RdpComponent],
-  imports: [CommonModule, FormsModule, RdpRoutingModule, MatListModule, MatCardModule, MatButtonModule, MatInputModule, MatFormFieldModule]
+  imports: [CommonModule, FormsModule, RdpRoutingModule, MatSnackBarModule, MatCardModule, MatButtonModule, MatInputModule, MatFormFieldModule]
 })
 export class RdpModule {}

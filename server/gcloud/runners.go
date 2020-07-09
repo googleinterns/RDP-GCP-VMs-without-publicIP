@@ -148,12 +148,14 @@ func (gcloudExecutor *GcloudExecutor) listenForCmd(ws conn, instance *Instance, 
 		}
 
 		if cmd.Cmd == endRdpSocketCmd && cmd.InstanceName == instance.Name {
+			writeToSocket(ws, receivedEndCmd, nil)
 			endChan <- true
 			return
 		}
 
 		if cmd.Cmd == startRdpSocketCmd && cmd.Username != "" {
 			log.Println("starting rdp")
+			writeToSocket(ws, receivedStartRdpCmd, nil)
 			creds := credentials{Username: cmd.Username, Password: cmd.Password}
 			go gcloudExecutor.startRdpProgram(ws, &creds, freePort, endChan)
 		}
@@ -162,13 +164,15 @@ func (gcloudExecutor *GcloudExecutor) listenForCmd(ws conn, instance *Instance, 
 }
 
 // cleanUpRdp deletes the created firewall rules and ends the IAP tunnel and closes websocket
-func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws conn, instance *Instance, cleanFirewall bool, cleanRdp bool, cancelFunc context.CancelFunc) {
+func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws conn, instance *Instance, cleanFirewall bool, cleanIap bool, cancelFunc context.CancelFunc) {
 	log.Println("clean up rdp for ", instance.Name)
 	if cleanFirewall {
+		writeToSocket(ws, fmt.Sprintf(deletingIapFirewall, instance.Name), nil)
 		log.Println("deleting iap firewall for ", instance.Name)
 		gcloudExecutor.deleteIapFirewall(instance)
 	}
-	if cleanRdp {
+	if cleanIap {
+		writeToSocket(ws, fmt.Sprintf(endingIapTunnel, instance.Name), nil)
 		log.Println("ending rdp for ", instance.Name)
 		cancelFunc()
 	}
