@@ -84,6 +84,7 @@ func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn) {
 
 	go gcloudExecutor.startIapTunnel(ctx, ws, instanceToConn, portListener, iapOutputChan)
 	if output := <-iapOutputChan; !output.tunnelCreated || output.err != nil {
+		writeToSocket(ws, "", errors.New(createIapFailed))
 		gcloudExecutor.cleanUpRdp(ws, instanceToConn, true, false, cancel)
 		return
 	} else {

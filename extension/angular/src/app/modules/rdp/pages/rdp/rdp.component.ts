@@ -30,7 +30,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 export class RdpComponent {
   rdpInstance: Instance;
-  socketStatus = "Getting instance for private RDP";
+  socketStatus = 'Getting instance for private RDP';
   credsReady = false;
   endButtonReady = false;
   socketMessageList = [] as SocketMessage[];
@@ -51,7 +51,7 @@ export class RdpComponent {
       if (resp.instance) {
         this.zone.run(() => {
           this.rdpInstance = resp.instance;
-          this.socketStatus = "Connecting to service with instance "  + this.rdpInstance.name;
+          this.socketStatus = 'Connecting to service with instance '  + this.rdpInstance.name;
           this.socketConnection();
         });
       }
@@ -64,8 +64,8 @@ export class RdpComponent {
     msg.username = this.username;
     msg.password = this.password;
 
-    this.username = ""
-    this.password = ""
+    this.username = ''
+    this.password = ''
 
     this.socket.next(msg);
     this.snackbar.open('Sent credentials', '', { duration: 3000 });
@@ -90,14 +90,14 @@ export class RdpComponent {
 
   connectionClosed() {
     this.zone.run(() => {
-      this.socketStatus = "Connection to service with instance " + this.rdpInstance.name + " closed";
+      this.socketStatus = 'Connection to service with instance ' + this.rdpInstance.name + ' closed';
     });
     this.disableButtonsAndInput();
     this.snackbar.open('Connection to service was closed', '', { duration: 3000 });
   }
 
   socketConnection() {
-    console.log("starting conn")
+    console.log('starting conn')
     this.socket.next(this.rdpInstance)
     this.socket.subscribe(
       (msg) => {
@@ -105,13 +105,13 @@ export class RdpComponent {
         console.log('message received: ' + JSON.stringify(msg));
 
         this.zone.run(() => {
-          this.socketStatus = "Connected to service with instance " + this.rdpInstance.name;
+          this.socketStatus = 'Connected to service with instance ' + this.rdpInstance.name;
         });
 
-        const receivedMessage = new SocketMessage(<SocketMessageInterface> msg);
+        const receivedMessage = new SocketMessage(msg as SocketMessageInterface);
         this.socketMessageList.push(receivedMessage);
-        
-        
+
+
         if (receivedMessage.message === readyForRdpCommandSocket) {
           this.zone.run(() => {
             this.credsReady = true;
@@ -122,7 +122,7 @@ export class RdpComponent {
         if (receivedMessage.message === rdpShutdownMessage) {
           this.disableButtonsAndInput();
         }
-      }, 
+      },
       (err) => {
         // Handle error from connection
         console.log(err);

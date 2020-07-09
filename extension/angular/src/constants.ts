@@ -14,10 +14,10 @@
  limitations under the License.
  ***/
 
-const endRdpCmd = "end";
-const loginRdpCmd = "start-rdp";
+const endRdpCmd = 'end';
+const loginRdpCmd = 'start-rdp';
 
-const readyForRdpCommandSocket = "Ready for command";
-const rdpShutdownMessage = "Shutdown private RDP for %v"
+const readyForRdpCommandSocket = 'Ready for command';
+const rdpShutdownMessage = 'Shutdown private RDP for %v'
 
 export {endRdpCmd, loginRdpCmd, readyForRdpCommandSocket, rdpShutdownMessage};

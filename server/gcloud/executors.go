@@ -124,7 +124,7 @@ func readIapTunnelOutput(scanner *bufio.Scanner, tunnelCreated *bool, cmdOutput 
 func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws conn, instance *Instance, portListener *net.TCPListener, outputChan chan<- iapResult) {
 	log.Println("Starting IAP tunnel for ", instance.Name)
 	port := portListener.Addr().(*net.TCPAddr).Port
-	cmd := fmt.Sprintf(iapTunnelCmd, instance.Name, instance.ProjectName, port)
+	cmd := fmt.Sprintf(iapTunnelCmd, instance.Name, instance.ProjectName, port, instance.Zone)
 	portListener.Close()
 	output, cmdCancel, err := gcloudExecutor.shell.ExecuteCmdReader(cmd)
 	if err != nil {
