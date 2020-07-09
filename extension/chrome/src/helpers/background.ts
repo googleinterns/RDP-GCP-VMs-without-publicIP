@@ -16,7 +16,7 @@
 
 /* A file that contains functions used in the background script */
 
-import {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint} from './constants';
+import {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint, popupGetInstances, startPrivateRdp, rdpGetInstances} from './constants';
 import {Instance, InstanceInterface} from '../classes';
 
 // Enable chrome extension popup on matching hosts.
@@ -121,9 +121,9 @@ const tabListener = () => {
 const messageListener = () => {
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // Send instances if received get instances from popup
-    if (request.type == 'popup-get-instances') {
+    if (request.type == popupGetInstances) {
       sendResponse({instances: computeInstances, projectName: computeInstances[0].project});
-    } else if (request.type == 'start-private-rdp') {
+    } else if (request.type == startPrivateRdp) {
 
       let instanceToRdp;
       // set rdpRunning to true for instances that sent start request
@@ -140,7 +140,7 @@ const messageListener = () => {
       chrome.tabs.create({url: chrome.extension.getURL('index.html?#/rdp')}, (tab) => {
         rdpInstancesList.push({instance: instanceToRdp, tabId: tab.id, status: 'created'});
       });
-    } else if (request.type == 'rdp-get-instance') {
+    } else if (request.type == rdpGetInstances) {
       console.log(rdpInstancesList)
       let instance;
       

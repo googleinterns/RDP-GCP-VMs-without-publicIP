@@ -20,4 +20,9 @@ const loginRdpCmd = 'start-rdp';
 const readyForRdpCommandSocket = 'Ready for command';
 const rdpShutdownMessage = 'Shutdown private RDP for %v'
 
-export {endRdpCmd, loginRdpCmd, readyForRdpCommandSocket, rdpShutdownMessage};
+// Need to change in Chrome Extension constants as well.
+const popupGetInstances = 'popup-get-instances';
+const startPrivateRdp = 'start-private-rdp';
+const rdpGetInstances = 'rdp-get-instance';
+
+export {endRdpCmd, loginRdpCmd, readyForRdpCommandSocket, rdpShutdownMessage, popupGetInstances, startPrivateRdp, rdpGetInstances};

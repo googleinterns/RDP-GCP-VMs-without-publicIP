@@ -22,13 +22,6 @@ limitations under the License. -->
                 <mat-card *ngIf="socketMessage.message">{{socketMessage.message}}</mat-card>
                 <mat-card *ngIf="socketMessage.error" >{{socketMessage.error}}</mat-card>
             </div>
-            <!-- <mat-list>
-                <mat-list-item *ngFor="let socketMessage of socketMessageList">
-                    <div>{{socketMessage.message}}</div>
-                    <p matLine>{{socketMessage.error}}</p>
-                    <mat-divider></mat-divider>
-                </mat-list-item>
-            </mat-list> -->
         </div>
         <div class="cmd-container">
             <div class="input-container">

@@ -22,4 +22,9 @@ const pantheonPageRegex = /.*pantheon.corp.google.com\/.*/;
 const serverUrl = "http://localhost:23966";
 const getComputeInstancesEndpoint = serverUrl + "/gcloud/compute-instances";
 
-export {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint};
+// Need to change in Angular constants as well.
+const popupGetInstances = 'popup-get-instances';
+const startPrivateRdp = 'start-private-rdp';
+const rdpGetInstances = 'rdp-get-instance';
+
+export {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint, popupGetInstances, startPrivateRdp, rdpGetInstances};

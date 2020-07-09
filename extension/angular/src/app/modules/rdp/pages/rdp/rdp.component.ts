@@ -16,7 +16,7 @@ limitations under the License.
 
 import { Component, NgZone } from '@angular/core';
 import { Instance, SocketMessage, SocketMessageInterface, SocketCmd } from 'src/classes';
-import { readyForRdpCommandSocket, loginRdpCmd, endRdpCmd, rdpShutdownMessage } from 'src/constants';
+import { readyForRdpCommandSocket, loginRdpCmd, endRdpCmd, rdpShutdownMessage, rdpGetInstances } from 'src/constants';
 import { bindCallback, BehaviorSubject, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -47,7 +47,7 @@ export class RdpComponent {
 
 
   getInstanceFromBackground() {
-    chrome.runtime.sendMessage({type: 'rdp-get-instance'}, (resp) => {
+    chrome.runtime.sendMessage({type: rdpGetInstances}, (resp) => {
       if (resp.instance) {
         this.zone.run(() => {
           this.rdpInstance = resp.instance;
