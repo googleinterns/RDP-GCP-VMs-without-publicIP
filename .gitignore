@@ -19,3 +19,7 @@ extension/dist/
 extension/tmp/
 extension/coverage/
 /.idea/
+server/bazel-bin
+server/bazel-out
+server/bazel-server
+server/bazel-testlogs
