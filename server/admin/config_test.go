@@ -7,16 +7,16 @@ import (
 )
 
 func buildTestConfig() Config {
-	configVariable := ConfigVariable{Type: "string"}
+	variable := configVariable{Type: "string"}
 
-	commonVariables := make(map[string]ConfigVariable)
-	commonVariables["TEST_COMMON"] = configVariable
+	commonVariables := make(map[string]configVariable)
+	commonVariables["TEST_COMMON"] = variable
 
-	commandVariables := make(map[string]ConfigVariable)
-	commandVariables["TEST_COMMAND"] = configVariable
+	commandVariables := make(map[string]configVariable)
+	commandVariables["TEST_COMMAND"] = variable
 
-	configCommand := ConfigAdminCommand{Name: "test-cmd", Command: "$TEST_COMMON $TEST_COMMAND", Variables: commandVariables}
-	return Config{Commands: []ConfigAdminCommand{configCommand}, CommonVariables: commonVariables}
+	configCommand := configAdminCommand{Name: "test-cmd", Command: "$TEST_COMMON $TEST_COMMAND", Variables: commandVariables}
+	return Config{Commands: []configAdminCommand{configCommand}, CommonVariables: commonVariables}
 }
 
 func TestCheckConfigForMissingVariables(t *testing.T) {
@@ -42,9 +42,9 @@ func TestCheckConfigForMissingVariables(t *testing.T) {
 func TestGetMissingVariables(t *testing.T) {
 	variablesFound := make(map[string]string)
 	var missingVariables []string
-	variablesToCheck := make(map[string]ConfigVariable)
-	variablesToCheck["REQUIRED"] = ConfigVariable{Type: "string"}
-	variablesToCheck["OPTIONAL"] = ConfigVariable{Type: "string", Optional: true}
+	variablesToCheck := make(map[string]configVariable)
+	variablesToCheck["REQUIRED"] = configVariable{Type: "string"}
+	variablesToCheck["OPTIONAL"] = configVariable{Type: "string", Optional: true}
 
 	commandVariables := make(map[string]string)
 	commandVariables["REQUIRED"] = "required"
@@ -98,7 +98,7 @@ func TestReadAdminCommand(t *testing.T) {
 	}
 
 	config.Commands[0].Command = "$TEST_COMMON $TEST_COMMAND --optional=$OPTIONAL"
-	config.Commands[0].Variables["OPTIONAL"] = ConfigVariable{Type: "string", Optional: true}
+	config.Commands[0].Variables["OPTIONAL"] = configVariable{Type: "string", Optional: true}
 
 	command.Variables["TEST_COMMON"] = "test1"
 	command.Variables["TEST_COMMAND"] = "test2"

@@ -39,7 +39,10 @@ const (
 	allowedHeaders string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
 )
 
+// loadedConfig points to the config currently in use.
 var loadedConfig *admin.Config
+
+// commandPool keeps track of all the custom commands that are setup and running
 var commandPool []admin.CommandToRun
 
 type errorRequest struct {
@@ -87,6 +90,7 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// getConfig calls the functions to load the config file and set loadedConfig to it
 func getConfig(w http.ResponseWriter, r *http.Request) {
 	setCorsHeaders(w, nil)
 	w.Header().Set("Content-Type", "application/json")
@@ -109,6 +113,7 @@ func getConfig(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// readAdminCommand reads requests from the server that fill in the command's variables
 func readAdminCommand(w http.ResponseWriter, r *http.Request) {
 	setCorsHeaders(w, nil)
 

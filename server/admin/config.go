@@ -19,28 +19,33 @@ const (
 	missingVariablesError         string = "Missing variables defined in config file: %s"
 )
 
-type ConfigVariable struct {
+// configVariable points to a variable in the config file
+type configVariable struct {
 	Default  string `json:"default"`
 	Type     string `json:"type"`
 	Optional bool   `json:"optional"`
 }
 
-type ConfigAdminCommand struct {
+// configAdminCOmmand points to a configured admin command
+type configAdminCommand struct {
 	Name      string                    `json:"name"`
 	Command   string                    `json:"command"`
-	Variables map[string]ConfigVariable `json:"variables"`
+	Variables map[string]configVariable `json:"variables"`
 }
 
+// Config is the fully loaded config represented as structures
 type Config struct {
-	Commands        []ConfigAdminCommand      `json:"commands"`
-	CommonVariables map[string]ConfigVariable `json:"common_variables"`
+	Commands        []configAdminCommand      `json:"commands"`
+	CommonVariables map[string]configVariable `json:"common_variables"`
 }
 
+// CommandToFill is sent by the extension detailing a command and the variables to be filled
 type CommandToFill struct {
 	Name      string            `json:"name"`
 	Variables map[string]string `json:"variables"`
 }
 
+// CommandToRun contains a ready to run command with its status and a unique
 type CommandToRun struct {
 	Command string `json:"command"`
 	Hash    string `json:"hash"`
@@ -110,7 +115,8 @@ func LoadConfig() (*Config, error) {
 	return &config, nil
 }
 
-func getMissingVariables(variablesFound map[string]string, variablesInCommand map[string]string, variablesToCheck map[string]ConfigVariable, missingVariables *[]string) {
+// getMissingVariables checks variables to the current ones in the command either adding them to missingVariables or variablesFound
+func getMissingVariables(variablesFound map[string]string, variablesInCommand map[string]string, variablesToCheck map[string]configVariable, missingVariables *[]string) {
 	for variableName := range variablesToCheck {
 		if value, ok := variablesInCommand[variableName]; ok {
 			variablesFound[variableName] = value
@@ -122,8 +128,9 @@ func getMissingVariables(variablesFound map[string]string, variablesInCommand ma
 	}
 }
 
+// ReadAdminCommand takes a commandToFill and a config and returns a ready to go command
 func ReadAdminCommand(command CommandToFill, config *Config) (CommandToRun, error) {
-	var configuredAdminCommand ConfigAdminCommand
+	var configuredAdminCommand configAdminCommand
 
 	for _, configCommand := range config.Commands {
 		if configCommand.Name == command.Name {
