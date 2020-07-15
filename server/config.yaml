@@ -31,3 +31,5 @@ commands:
         type: string
       DISK_SIZE: 
         type: number
+      NETWORK_TIER:
+        type: string

@@ -5,19 +5,24 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/viper"
 )
 
 const (
-	configFileReadError string = "Error reading configuration file, please make sure it has the necessary permissions and is in DIRECTORY"
-	configFileDataError string = "Error reading data from configuration file, please follow the format specified"
+	configFileReadError           string = "Error reading configuration file, please make sure it has the necessary permissions and is in DIRECTORY"
+	configFileDataError           string = "Error reading data from configuration file, please follow the format specified"
+	configCommandMissingVariables string = "Config is missing variables for these command(s): %s"
+	commandNotFoundError          string = "%s command was not found in the config"
+	missingVariablesError         string = "Missing variables defined in config file: %s"
 )
 
 type ConfigVariable struct {
-	Default string `json:"default"`
-	Type    string `json:"type"`
+	Default  string `json:"default"`
+	Type     string `json:"type"`
+	Optional bool   `json:"optional"`
 }
 
 type ConfigAdminCommand struct {
@@ -42,6 +47,28 @@ type CommandToRun struct {
 	Status  string `json:"status"`
 }
 
+func checkConfigForMissingVariables(config Config) map[string][]string {
+	missingVariables := make(map[string][]string)
+
+	r := regexp.MustCompile(`\$(?s)([A-Z]+_*[A-Z]+)`)
+	for _, command := range config.Commands {
+
+		// Get all variables in the command
+		matches := r.FindAllStringSubmatch(command.Command, -1)
+		for _, match := range matches {
+
+			// Check if variable is defined in either common variables or the command's variables
+			if _, inCommonVariables := config.CommonVariables[match[1]]; !inCommonVariables {
+				if _, inCommandVariables := command.Variables[match[1]]; !inCommandVariables {
+					missingVariables[command.Name] = append(missingVariables[command.Name], match[1])
+				}
+			}
+		}
+	}
+
+	return missingVariables
+}
+
 // LoadConfig reads the config file and unmarshals the data to structs
 func LoadConfig() (*Config, error) {
 	viper.SetConfigName("config")
@@ -61,12 +88,38 @@ func LoadConfig() (*Config, error) {
 
 	if config.CommonVariables != nil {
 		for key, value := range config.CommonVariables {
-			config.CommonVariables[strings.ToUpper(key)] = value
-			delete(config.CommonVariables, key)
+			if key == strings.ToLower(key) {
+				config.CommonVariables[strings.ToUpper(key)] = value
+				delete(config.CommonVariables, key)
+			}
 		}
 	}
 
+	missingVariables := checkConfigForMissingVariables(config)
+
+	if len(missingVariables) > 0 {
+		var errorStrings []string
+		// Join all the missing variables in a list
+		for key, val := range missingVariables {
+			errString := fmt.Sprintf("%s: %s", key, strings.Join(val, ", "))
+			errorStrings = append(errorStrings, errString)
+		}
+		return &Config{}, fmt.Errorf(configCommandMissingVariables, strings.Join(errorStrings, ". "))
+	}
+
 	return &config, nil
+}
+
+func getMissingVariables(variablesFound map[string]string, variablesInCommand map[string]string, variablesToCheck map[string]ConfigVariable, missingVariables *[]string) {
+	for variableName := range variablesToCheck {
+		if value, ok := variablesInCommand[variableName]; ok {
+			variablesFound[variableName] = value
+		} else if variablesToCheck[variableName].Optional {
+			variablesFound[variableName] = ""
+		} else {
+			*missingVariables = append(*missingVariables, variableName)
+		}
+	}
 }
 
 func ReadAdminCommand(command CommandToFill, config *Config) (CommandToRun, error) {
@@ -80,41 +133,31 @@ func ReadAdminCommand(command CommandToFill, config *Config) (CommandToRun, erro
 	}
 
 	if configuredAdminCommand.Name == "" {
-		return CommandToRun{}, errors.New("command not found")
+		return CommandToRun{}, fmt.Errorf(commandNotFoundError, command.Name)
 	}
 
 	variables := make(map[string]string)
 	var missingVariables []string
-	for variableName, _ := range config.CommonVariables {
-		if value, ok := command.Variables[variableName]; ok {
-			variables[variableName] = value
-		} else {
-			missingVariables = append(missingVariables, variableName)
-		}
-	}
 
-	log.Println(configuredAdminCommand.Variables)
-
-	for variableName, _ := range configuredAdminCommand.Variables {
-		if value, ok := command.Variables[variableName]; ok {
-			variables[variableName] = value
-		} else {
-			missingVariables = append(missingVariables, variableName)
-		}
-	}
-	log.Println(len(missingVariables))
+	getMissingVariables(variables, command.Variables, config.CommonVariables, &missingVariables)
+	getMissingVariables(variables, command.Variables, configuredAdminCommand.Variables, &missingVariables)
 
 	if len(missingVariables) > 0 {
-		log.Println(missingVariables)
-		return CommandToRun{}, fmt.Errorf("Missing variables: %v", strings.Join(missingVariables, ", "))
+		return CommandToRun{}, fmt.Errorf(missingVariablesError, strings.Join(missingVariables, ", "))
 	}
 
 	for name, value := range variables {
-		configuredAdminCommand.Command = strings.Replace(configuredAdminCommand.Command, "$"+name, value, -1)
+		if value == "" {
+			r := regexp.MustCompile(fmt.Sprintf(`(--[^=]+=\$%s)`, name))
+
+			configuredAdminCommand.Command = r.ReplaceAllString(configuredAdminCommand.Command, "")
+		} else {
+			configuredAdminCommand.Command = strings.Replace(configuredAdminCommand.Command, "$"+name, value, -1)
+		}
 	}
 
 	var commandToRun CommandToRun
-	commandToRun.Command = configuredAdminCommand.Command
+	commandToRun.Command = strings.TrimSpace(strings.TrimSuffix(configuredAdminCommand.Command, "\n"))
 	commandToRun.Status = "ready"
 	commandToRun.Hash = fmt.Sprintf("%x", sha256.Sum256([]byte(commandToRun.Command)))
 
