@@ -20,10 +20,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
 
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/admin"
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 
@@ -37,6 +39,17 @@ const (
 	allowedHeaders string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
 )
 
+var loadedConfig *admin.Config
+var commandPool []admin.CommandToRun
+
+type errorRequest struct {
+	Error string `json:"error"`
+}
+
+func newErrorRequest(err error) errorRequest {
+	return errorRequest{Error: err.Error()}
+}
+
 // main defines the routes of the HTTP server and starts listening on port 23966
 func main() {
 	router := mux.NewRouter()
@@ -45,6 +58,10 @@ func main() {
 	router.HandleFunc("/gcloud/compute-instances", getComputeInstances).Methods("POST")
 	router.HandleFunc("/gcloud/compute-instances", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/gcloud/start-private-rdp", startPrivateRdp)
+	router.HandleFunc("/admin/get-config", setCorsHeaders).Methods("OPTIONS")
+	router.HandleFunc("/admin/get-config", getConfig).Methods("GET")
+	router.HandleFunc("/admin/command-to-run", readAdminCommand).Methods("POST")
+	router.HandleFunc("/admin/command-to-run", setCorsHeaders).Methods("OPTIONS")
 
 	log.Fatal(http.ListenAndServe(":23966", router))
 }
@@ -68,6 +85,59 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	setCorsHeaders(w, nil)
 	json.NewEncoder(w).Encode(resp)
+}
+
+func getConfig(w http.ResponseWriter, r *http.Request) {
+	setCorsHeaders(w, nil)
+	w.Header().Set("Content-Type", "application/json")
+
+	type request struct {
+		Error string `json:"error"`
+	}
+
+	config, err := admin.LoadConfig()
+	if err != nil {
+		var req request
+		req.Error = err.Error()
+		json.NewEncoder(w).Encode(req)
+
+		return
+	}
+
+	loadedConfig = config
+	json.NewEncoder(w).Encode(config)
+	return
+}
+
+func readAdminCommand(w http.ResponseWriter, r *http.Request) {
+	setCorsHeaders(w, nil)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	var reqBody admin.CommandToFill
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if loadedConfig == nil {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New("config not loaded")))
+		return
+	}
+
+	commandReady, err := admin.ReadAdminCommand(reqBody, loadedConfig)
+	if err != nil {
+		json.NewEncoder(w).Encode(newErrorRequest(err))
+		return
+	}
+
+	commandPool = append(commandPool, commandReady)
+
+	json.NewEncoder(w).Encode(commandReady)
+	return
 }
 
 // getComputeInstances gets the current compute instances for the project passed in.
@@ -127,5 +197,4 @@ func startPrivateRdp(w http.ResponseWriter, r *http.Request) {
 	shell := &shell.CmdShell{}
 	gcloudExecutor := gcloud.NewGcloudExecutor(shell)
 	gcloudExecutor.StartPrivateRdp(ws)
-
 }
