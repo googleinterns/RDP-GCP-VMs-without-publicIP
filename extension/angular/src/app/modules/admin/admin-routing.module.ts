@@ -16,27 +16,17 @@ limitations under the License.
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { AdminComponent } from './admin.component';
 
 const routes: Routes = [
   {
-    path: 'popup',
-    pathMatch: 'full',
-    loadChildren: () => import('./modules/popup/popup.module').then(m => m.PopupModule)
-  },
-  {
-    path: 'rdp',
-    pathMatch: 'full',
-    loadChildren: () => import('./modules/rdp/rdp.module').then(m => m.RdpModule)
-  },
-  {
-    path: 'admin',
-    pathMatch: 'full',
-    loadChildren: () => import('./modules/admin/admin.module').then(m => m.AdminModule)
+    path: '',
+    component: AdminComponent
   }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { useHash: true })],
+  imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
 })
-export class AppRoutingModule {}
+export class AdminRoutingModule {}

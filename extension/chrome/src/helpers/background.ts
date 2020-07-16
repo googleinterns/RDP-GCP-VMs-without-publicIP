@@ -31,6 +31,10 @@ const enablePopup = (hosts: string[]) => {
   });
 };
 
+chrome.browserAction.onClicked.addListener((activeTab) => {
+  chrome.tabs.create({url: chrome.extension.getURL('index.html?#/admin')})
+})
+
 // Object that contains functions used to get instances, needed for unit testing.
 const instanceFunctions = {
   getComputeInstances: async function (
