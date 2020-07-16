@@ -1,10 +1,10 @@
-CommonVariables:
+commonParams:
   PROJECT:
     type: string
     
-commands: 
+operations: 
   - name: create-vm
-    command: >
+    operation: >
       gcloud beta compute
       --project=$PROJECT
       instances create $NAME 
@@ -21,7 +21,7 @@ commands:
       --boot-disk-type=pd-standard 
       --boot-disk-device-name=$NAME
       --reservation-affinity=any
-    variables:
+    params:
       NAME: 
         type: string
         default: new-instance
@@ -33,3 +33,4 @@ commands:
         type: number
       NETWORK_TIER:
         type: string
+        optional: true

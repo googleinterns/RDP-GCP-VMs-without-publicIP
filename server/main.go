@@ -43,7 +43,7 @@ const (
 var loadedConfig *admin.Config
 
 // commandPool keeps track of all the custom commands that are setup and running
-var commandPool []admin.CommandToRun
+var commandPool []admin.OperationToRun
 
 type errorRequest struct {
 	Error string `json:"error"`
@@ -122,7 +122,7 @@ func readAdminCommand(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	var reqBody admin.CommandToFill
+	var reqBody admin.OperationToFill
 	if err := json.Unmarshal(body, &reqBody); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -133,7 +133,7 @@ func readAdminCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	commandReady, err := admin.ReadAdminCommand(reqBody, loadedConfig)
+	commandReady, err := admin.ReadAdminOperation(reqBody, loadedConfig)
 	if err != nil {
 		json.NewEncoder(w).Encode(newErrorRequest(err))
 		return

@@ -1,3 +1,19 @@
+/***
+Copyright 2020 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+***/
+
 package admin
 
 import (
@@ -7,107 +23,107 @@ import (
 )
 
 func buildTestConfig() Config {
-	variable := configVariable{Type: "string"}
+	param := configParam{Type: "string"}
 
-	commonVariables := make(map[string]configVariable)
-	commonVariables["TEST_COMMON"] = variable
+	commonParams := make(map[string]configParam)
+	commonParams["TEST_COMMON"] = param
 
-	commandVariables := make(map[string]configVariable)
-	commandVariables["TEST_COMMAND"] = variable
+	operationParams := make(map[string]configParam)
+	operationParams["TEST_COMMAND"] = param
 
-	configCommand := configAdminCommand{Name: "test-cmd", Command: "$TEST_COMMON $TEST_COMMAND", Variables: commandVariables}
-	return Config{Commands: []configAdminCommand{configCommand}, CommonVariables: commonVariables}
+	configOperation := configAdminOperation{Name: "test-cmd", Operation: "$TEST_COMMON $TEST_COMMAND", Params: operationParams}
+	return Config{Operations: []configAdminOperation{configOperation}, CommonParams: commonParams}
 }
 
-func TestCheckConfigForMissingVariables(t *testing.T) {
+func TestCheckConfigForMissingParams(t *testing.T) {
 	config := buildTestConfig()
-	config.Commands[0].Command = "$TEST_COMMON $TEST_COMMAND $TEST_MISSING"
+	config.Operations[0].Operation = "$TEST_COMMON $TEST_COMMAND $TEST_MISSING"
 
 	expected := make(map[string][]string)
 	expected["test-cmd"] = []string{"TEST_MISSING"}
 
-	if missing := checkConfigForMissingVariables(config); !reflect.DeepEqual(expected, missing) {
-		t.Errorf("checkConfigForMissingVariables didn't return the right value, got %v, expected %v", missing, expected)
+	if missing := checkConfigForMissingParams(config); !reflect.DeepEqual(expected, missing) {
+		t.Errorf("checkConfigForMissingParams didn't return the right value, got %v, expected %v", missing, expected)
 	}
 
-	config.Commands[0].Command = "$TEST_COMMON $TEST_COMMAND"
+	config.Operations[0].Operation = "$TEST_COMMON $TEST_COMMAND"
 
 	delete(expected, "test-cmd")
 
-	if missing := checkConfigForMissingVariables(config); !reflect.DeepEqual(expected, missing) {
-		t.Errorf("checkConfigForMissingVariables didn't return the right value, got %v, expected %v", missing, expected)
+	if missing := checkConfigForMissingParams(config); !reflect.DeepEqual(expected, missing) {
+		t.Errorf("checkConfigForMissingParams didn't return the right value, got %v, expected %v", missing, expected)
 	}
 }
 
-func TestGetMissingVariables(t *testing.T) {
-	variablesFound := make(map[string]string)
-	var missingVariables []string
-	variablesToCheck := make(map[string]configVariable)
-	variablesToCheck["REQUIRED"] = configVariable{Type: "string"}
-	variablesToCheck["OPTIONAL"] = configVariable{Type: "string", Optional: true}
+func TestGetMissingParams(t *testing.T) {
+	paramsFound := make(map[string]string)
+	var missingParams []string
+	paramsToCheck := make(map[string]configParam)
+	paramsToCheck["REQUIRED"] = configParam{Type: "string"}
+	paramsToCheck["OPTIONAL"] = configParam{Type: "string", Optional: true}
 
-	commandVariables := make(map[string]string)
-	commandVariables["REQUIRED"] = "required"
-	commandVariables["OPTIONAL"] = "optional"
+	operationParams := make(map[string]string)
+	operationParams["REQUIRED"] = "required"
+	operationParams["OPTIONAL"] = "optional"
 
 	expected := make(map[string]string)
 	expected["REQUIRED"] = "required"
 	expected["OPTIONAL"] = "optional"
-	getMissingVariables(variablesFound, commandVariables, variablesToCheck, &missingVariables)
-	if len(missingVariables) > 0 {
-		t.Errorf("getMissingVariables put non missing variable in missing, got %v, expected empty slice", missingVariables)
+	getMissingParams(paramsFound, operationParams, paramsToCheck, &missingParams)
+	if len(missingParams) > 0 {
+		t.Errorf("getMissingParams put non missing param in missing, got %v, expected empty slice", missingParams)
 	}
-	if !reflect.DeepEqual(variablesFound, expected) {
-		t.Errorf("getMissingVariables didn't set correct found variables, got %v, expected %v", variablesFound, expected)
+	if !reflect.DeepEqual(paramsFound, expected) {
+		t.Errorf("getMissingParams didn't set correct found params, got %v, expected %v", paramsFound, expected)
 	}
 
-	delete(commandVariables, "OPTIONAL")
+	delete(operationParams, "OPTIONAL")
 	expected["OPTIONAL"] = ""
-	getMissingVariables(variablesFound, commandVariables, variablesToCheck, &missingVariables)
-	if len(missingVariables) > 0 {
-		t.Errorf("getMissingVariables put non missing variable in missing, got %v, expected empty slice", missingVariables)
+	getMissingParams(paramsFound, operationParams, paramsToCheck, &missingParams)
+	if len(missingParams) > 0 {
+		t.Errorf("getMissingParams put non missing param in missing, got %v, expected empty slice", missingParams)
 	}
-	if !reflect.DeepEqual(variablesFound, expected) {
-		t.Errorf("getMissingVariables didn't set correct found variables when optional variable was not given, got %v, expected %v", variablesFound, expected)
+	if !reflect.DeepEqual(paramsFound, expected) {
+		t.Errorf("getMissingParams didn't set correct found params when optional param was not given, got %v, expected %v", paramsFound, expected)
 	}
 
-	variablesFound = make(map[string]string)
-	delete(commandVariables, "REQUIRED")
+	paramsFound = make(map[string]string)
+	delete(operationParams, "REQUIRED")
 	delete(expected, "REQUIRED")
-	getMissingVariables(variablesFound, commandVariables, variablesToCheck, &missingVariables)
-	if len(missingVariables) == 0 {
-		t.Errorf("getMissingVariables didn't put missing variable in missingVariables, got empty slice, expected %v", []string{"REQUIRED"})
+	getMissingParams(paramsFound, operationParams, paramsToCheck, &missingParams)
+	if len(missingParams) == 0 {
+		t.Errorf("getMissingParams didn't put missing param in missingParams, got empty slice, expected %v", []string{"REQUIRED"})
 	}
-	if !reflect.DeepEqual(variablesFound, expected) {
-		t.Errorf("getMissingVariables didn't set correct found variables when required variable was not given, got %v, expected %v", variablesFound, expected)
+	if !reflect.DeepEqual(paramsFound, expected) {
+		t.Errorf("getMissingParams didn't set correct found params when required param was not given, got %v, expected %v", paramsFound, expected)
 	}
 }
 
-func TestReadAdminCommand(t *testing.T) {
+func TestReadAdminOperation(t *testing.T) {
 	config := buildTestConfig()
-	variables := make(map[string]string)
-	command := CommandToFill{Name: "COMMAND_NOT_FOUND", Variables: variables}
+	params := make(map[string]string)
+	operation := OperationToFill{Name: "COMMAND_NOT_FOUND", Params: params}
 
-	if _, err := ReadAdminCommand(command, &config); err.Error() != fmt.Sprintf(commandNotFoundError, command.Name) {
-		t.Errorf("ReadAdminCommand didn't error out on invalid command, got %v, expected %v", err, fmt.Errorf(commandNotFoundError, command.Name))
+	if _, err := ReadAdminOperation(operation, &config); err.Error() != fmt.Sprintf(operationNotFoundError, operation.Name) {
+		t.Errorf("ReadAdminOperation didn't error out on invalid operation, got %v, expected %v", err, fmt.Errorf(operationNotFoundError, operation.Name))
 	}
 
-	command.Name = "test-cmd"
-	if _, err := ReadAdminCommand(command, &config); err.Error() != fmt.Sprintf(missingVariablesError, "TEST_COMMON, TEST_COMMAND") {
-		t.Errorf("ReadAdminCommand didn't error out on missing variables, got %v, expected %v", err, fmt.Errorf(missingVariablesError, "TEST_COMMON, TEST_COMMAND"))
+	operation.Name = "test-cmd"
+	if _, err := ReadAdminOperation(operation, &config); err.Error() != fmt.Sprintf(missingParamsError, "TEST_COMMON, TEST_COMMAND") {
+		t.Errorf("ReadAdminOperation didn't error out on missing params, got %v, expected %v", err, fmt.Errorf(missingParamsError, "TEST_COMMON, TEST_COMMAND"))
 	}
 
-	config.Commands[0].Command = "$TEST_COMMON $TEST_COMMAND --optional=$OPTIONAL"
-	config.Commands[0].Variables["OPTIONAL"] = configVariable{Type: "string", Optional: true}
+	config.Operations[0].Operation = "$TEST_COMMON $TEST_COMMAND --optional=$OPTIONAL"
+	config.Operations[0].Params["OPTIONAL"] = configParam{Type: "string", Optional: true}
 
-	command.Variables["TEST_COMMON"] = "test1"
-	command.Variables["TEST_COMMAND"] = "test2"
-	if commandToRun, err := ReadAdminCommand(command, &config); commandToRun.Command != "test1 test2" || err != nil {
-		t.Errorf("ReadAdminCommand didn't set command properly, got %v, expected %v", commandToRun.Command, "test1 test2")
+	operation.Params["TEST_COMMON"] = "test1"
+	operation.Params["TEST_COMMAND"] = "test2"
+	if operationToRun, err := ReadAdminOperation(operation, &config); operationToRun.Operation != "test1 test2" || err != nil {
+		t.Errorf("ReadAdminOperation didn't set operation properly, got %v, expected %v", operationToRun.Operation, "test1 test2")
 	}
 
-	command.Variables["OPTIONAL"] = "optional"
-	if commandToRun, err := ReadAdminCommand(command, &config); commandToRun.Command != "test1 test2 --optional=optional" || err != nil {
-		t.Errorf("ReadAdminCommand didn't set command properly, got %v, expected %v", commandToRun.Command, "test1 test2 --optional=optional")
+	operation.Params["OPTIONAL"] = "optional"
+	if operationToRun, err := ReadAdminOperation(operation, &config); operationToRun.Operation != "test1 test2 --optional=optional" || err != nil {
+		t.Errorf("ReadAdminOperation didn't set operation properly, got %v, expected %v", operationToRun.Operation, "test1 test2 --optional=optional")
 	}
 }

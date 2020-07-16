@@ -1,3 +1,20 @@
+/***
+Copyright 2020 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+***/
+
+// Package admin is used for the custom admin operation functionality including reading from config, setting up and running the operations.
 package admin
 
 import (
@@ -12,66 +29,68 @@ import (
 )
 
 const (
-	configFileReadError           string = "Error reading configuration file, please make sure it has the necessary permissions and is in DIRECTORY"
-	configFileDataError           string = "Error reading data from configuration file, please follow the format specified"
-	configCommandMissingVariables string = "Config is missing variables for these command(s): %s"
-	commandNotFoundError          string = "%s command was not found in the config"
-	missingVariablesError         string = "Missing variables defined in config file: %s"
+	configFileReadError          string = "Error reading configuration file, please make sure it has the necessary permissions and is in DIRECTORY"
+	configFileDataError          string = "Error reading data from configuration file, please follow the format specified"
+	configOperationMissingParams string = "Config is missing variables for these operation(s): %s"
+	operationNotFoundError       string = "%s operation was not found in the config"
+	missingParamsError           string = "Missing variables defined in config file: %s"
 )
 
-// configVariable points to a variable in the config file
-type configVariable struct {
-	Default  string `json:"default"`
-	Type     string `json:"type"`
-	Optional bool   `json:"optional"`
+// configParam points to a variable in the config file
+type configParam struct {
+	Default     string `json:"default"`
+	Type        string `json:"type"`
+	Optional    bool   `json:"optional"`
+	Description string `json:"description"`
+	Sample      string `json:"sample"`
 }
 
-// configAdminCOmmand points to a configured admin command
-type configAdminCommand struct {
-	Name      string                    `json:"name"`
-	Command   string                    `json:"command"`
-	Variables map[string]configVariable `json:"variables"`
+// configAdminOperation points to a configured admin operation
+type configAdminOperation struct {
+	Name      string                 `json:"name"`
+	Operation string                 `json:"operation"`
+	Params    map[string]configParam `json:"params"`
 }
 
 // Config is the fully loaded config represented as structures
 type Config struct {
-	Commands        []configAdminCommand      `json:"commands"`
-	CommonVariables map[string]configVariable `json:"common_variables"`
+	Operations   []configAdminOperation `json:"operations"`
+	CommonParams map[string]configParam `json:"common_params"`
 }
 
-// CommandToFill is sent by the extension detailing a command and the variables to be filled
-type CommandToFill struct {
-	Name      string            `json:"name"`
-	Variables map[string]string `json:"variables"`
+// OperationToFill is sent by the extension detailing a operation and the variables to be filled
+type OperationToFill struct {
+	Name   string            `json:"name"`
+	Params map[string]string `json:"variables"`
 }
 
-// CommandToRun contains a ready to run command with its status and a unique
-type CommandToRun struct {
-	Command string `json:"command"`
-	Hash    string `json:"hash"`
-	Status  string `json:"status"`
+// OperationToRun contains a ready to run operation with its status and a unique
+type OperationToRun struct {
+	Operation string `json:"operation"`
+	Hash      string `json:"hash"`
+	Status    string `json:"status"`
 }
 
-func checkConfigForMissingVariables(config Config) map[string][]string {
-	missingVariables := make(map[string][]string)
+func checkConfigForMissingParams(config Config) map[string][]string {
+	missingParams := make(map[string][]string)
 
 	r := regexp.MustCompile(`\$(?s)([A-Z]+_*[A-Z]+)`)
-	for _, command := range config.Commands {
+	for _, operation := range config.Operations {
 
-		// Get all variables in the command
-		matches := r.FindAllStringSubmatch(command.Command, -1)
+		// Get all variables in the operation
+		matches := r.FindAllStringSubmatch(operation.Operation, -1)
 		for _, match := range matches {
 
-			// Check if variable is defined in either common variables or the command's variables
-			if _, inCommonVariables := config.CommonVariables[match[1]]; !inCommonVariables {
-				if _, inCommandVariables := command.Variables[match[1]]; !inCommandVariables {
-					missingVariables[command.Name] = append(missingVariables[command.Name], match[1])
+			// Check if variable is defined in either common variables or the operation's variables
+			if _, inCommonParams := config.CommonParams[match[1]]; !inCommonParams {
+				if _, inCommandParams := operation.Params[match[1]]; !inCommandParams {
+					missingParams[operation.Name] = append(missingParams[operation.Name], match[1])
 				}
 			}
 		}
 	}
 
-	return missingVariables
+	return missingParams
 }
 
 // LoadConfig reads the config file and unmarshals the data to structs
@@ -91,83 +110,83 @@ func LoadConfig() (*Config, error) {
 		return &Config{}, errors.New(configFileDataError)
 	}
 
-	if config.CommonVariables != nil {
-		for key, value := range config.CommonVariables {
+	if config.CommonParams != nil {
+		for key, value := range config.CommonParams {
 			if key == strings.ToLower(key) {
-				config.CommonVariables[strings.ToUpper(key)] = value
-				delete(config.CommonVariables, key)
+				config.CommonParams[strings.ToUpper(key)] = value
+				delete(config.CommonParams, key)
 			}
 		}
 	}
 
-	missingVariables := checkConfigForMissingVariables(config)
+	missingParams := checkConfigForMissingParams(config)
 
-	if len(missingVariables) > 0 {
+	if len(missingParams) > 0 {
 		var errorStrings []string
 		// Join all the missing variables in a list
-		for key, val := range missingVariables {
+		for key, val := range missingParams {
 			errString := fmt.Sprintf("%s: %s", key, strings.Join(val, ", "))
 			errorStrings = append(errorStrings, errString)
 		}
-		return &Config{}, fmt.Errorf(configCommandMissingVariables, strings.Join(errorStrings, ". "))
+		return &Config{}, fmt.Errorf(configOperationMissingParams, strings.Join(errorStrings, ". "))
 	}
 
 	return &config, nil
 }
 
-// getMissingVariables checks variables to the current ones in the command either adding them to missingVariables or variablesFound
-func getMissingVariables(variablesFound map[string]string, variablesInCommand map[string]string, variablesToCheck map[string]configVariable, missingVariables *[]string) {
+// getMissingParams checks variables to the current ones in the operation either adding them to missingParams or variablesFound
+func getMissingParams(variablesFound map[string]string, variablesInCommand map[string]string, variablesToCheck map[string]configParam, missingParams *[]string) {
 	for variableName := range variablesToCheck {
 		if value, ok := variablesInCommand[variableName]; ok {
 			variablesFound[variableName] = value
 		} else if variablesToCheck[variableName].Optional {
 			variablesFound[variableName] = ""
 		} else {
-			*missingVariables = append(*missingVariables, variableName)
+			*missingParams = append(*missingParams, variableName)
 		}
 	}
 }
 
-// ReadAdminCommand takes a commandToFill and a config and returns a ready to go command
-func ReadAdminCommand(command CommandToFill, config *Config) (CommandToRun, error) {
-	var configuredAdminCommand configAdminCommand
+// ReadAdminOperation takes a operationToFill and a config and returns a ready to go operation
+func ReadAdminOperation(operation OperationToFill, config *Config) (OperationToRun, error) {
+	var configuredAdminOperation configAdminOperation
 
-	for _, configCommand := range config.Commands {
-		if configCommand.Name == command.Name {
-			configuredAdminCommand = configCommand
+	for _, configCommand := range config.Operations {
+		if configCommand.Name == operation.Name {
+			configuredAdminOperation = configCommand
 			break
 		}
 	}
 
-	if configuredAdminCommand.Name == "" {
-		return CommandToRun{}, fmt.Errorf(commandNotFoundError, command.Name)
+	if configuredAdminOperation.Name == "" {
+		return OperationToRun{}, fmt.Errorf(operationNotFoundError, operation.Name)
 	}
 
 	variables := make(map[string]string)
-	var missingVariables []string
+	var missingParams []string
 
-	getMissingVariables(variables, command.Variables, config.CommonVariables, &missingVariables)
-	getMissingVariables(variables, command.Variables, configuredAdminCommand.Variables, &missingVariables)
+	getMissingParams(variables, operation.Params, config.CommonParams, &missingParams)
+	getMissingParams(variables, operation.Params, configuredAdminOperation.Params, &missingParams)
 
-	if len(missingVariables) > 0 {
-		return CommandToRun{}, fmt.Errorf(missingVariablesError, strings.Join(missingVariables, ", "))
+	if len(missingParams) > 0 {
+		return OperationToRun{}, fmt.Errorf(missingParamsError, strings.Join(missingParams, ", "))
 	}
 
 	for name, value := range variables {
 		if value == "" {
 			r := regexp.MustCompile(fmt.Sprintf(`(--[^=]+=\$%s)`, name))
 
-			configuredAdminCommand.Command = r.ReplaceAllString(configuredAdminCommand.Command, "")
+			configuredAdminOperation.Operation = r.ReplaceAllString(configuredAdminOperation.Operation, "")
 		} else {
-			configuredAdminCommand.Command = strings.Replace(configuredAdminCommand.Command, "$"+name, value, -1)
+			configuredAdminOperation.Operation = strings.Replace(configuredAdminOperation.Operation, "$"+name, value, -1)
 		}
 	}
 
-	var commandToRun CommandToRun
-	commandToRun.Command = strings.TrimSpace(strings.TrimSuffix(configuredAdminCommand.Command, "\n"))
-	commandToRun.Status = "ready"
-	commandToRun.Hash = fmt.Sprintf("%x", sha256.Sum256([]byte(commandToRun.Command)))
+	var operationToRun OperationToRun
+	operationToRun.Operation = strings.TrimSpace(strings.TrimSuffix(configuredAdminOperation.Operation, "\n"))
+	operationToRun.Status = "ready"
+	operationToRun.Hash = fmt.Sprintf("%x", sha256.Sum256([]byte(operationToRun.Operation)))
 
-	return commandToRun, nil
+	return operationToRun, nil
 
 }
