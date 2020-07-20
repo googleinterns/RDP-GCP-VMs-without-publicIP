@@ -1,4 +1,4 @@
-enableRdp: true
+enableRdp: false
 commonParams:
   PROJECT:
     type: string

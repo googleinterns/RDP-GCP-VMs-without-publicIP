@@ -90,7 +90,7 @@ class Config implements ConfigInterface {
   constructor(config: ConfigInterface) {
     this.operations = config.operations;
     this.common_params = config.common_params;
-    this.enable_rdp = this.enable_rdp;
+    this.enable_rdp = config.enable_rdp;
   }
 
   operations: ConfigAdminOperationInterface[];

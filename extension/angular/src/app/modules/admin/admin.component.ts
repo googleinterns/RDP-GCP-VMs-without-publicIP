@@ -32,6 +32,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 export class AdminComponent {
   config: Config;
+  configError: string;
   commonParams = [];
   operations = [];
   loading = true;
@@ -50,7 +51,8 @@ export class AdminComponent {
   }
 
   setOperations() {
-    this.config.operations.forEach((operation) => {
+    if (this.config.operations) {
+      this.config.operations.forEach((operation) => {
         let paramsToSet = {};
         let paramsToLoad = [];
         for (const [name, paramValue] of Object.entries(operation.params)) {
@@ -62,6 +64,7 @@ export class AdminComponent {
     })
 
     console.log(this.operations)
+    }
   }
 
   loadCommonParams(variables: any) {
@@ -106,16 +109,34 @@ export class AdminComponent {
 
   loadConfig() {
     this.adminService.getConfig()
-    .subscribe(response => {
-      this.config = new Config(response as ConfigInterface)
-      this.setCommonParams();
-      this.setOperations();
-      //this.commonParams.push(this.config.common_params);
-      console.log(this.config)
-      console.log(this.commonParams)
+    .subscribe((response: any) => {
+      console.log(response)
+      if (response.error) {
+        this.configError = response.error;
+      } else {
+        this.config = new Config(response as ConfigInterface)
+        this.setCommonParams();
+        this.setOperations();
+
+        console.log(this.config)
+        if (!this.config.operations && !this.config.enable_rdp) {
+          this.configError = "Your configuration file is empty."
+        }
+      }
+
       this.loading = false;
     }, error => {
       console.log(error)
+      this.configError = error;
     })
+  }
+
+  refreshConfig() {
+    this.config = null;
+    this.operations = [];
+    this.configError = null;
+    this.commonParams = [];
+    this.loading = true;
+    this.loadConfig();
   }
 }
