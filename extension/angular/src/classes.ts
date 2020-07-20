@@ -65,4 +65,37 @@ class SocketCmd {
   password: string;
 }
 
-export {Instance, SocketMessageInterface, SocketMessage, SocketCmd};
+interface ConfigParamInterface {
+  default: string;
+  type: string;
+  optional: boolean;
+  description: string;
+  sample: string
+}
+
+interface ConfigAdminOperationInterface {
+  name: string;
+  operation: string;
+  params: Map<string, ConfigParamInterface>;
+  description: string;
+}
+
+interface ConfigInterface {
+  operations: ConfigAdminOperationInterface[];
+  common_params: Map<string, ConfigParamInterface>;
+  enable_rdp: boolean;
+}
+
+class Config implements ConfigInterface {
+  constructor(config: ConfigInterface) {
+    this.operations = config.operations;
+    this.common_params = config.common_params;
+    this.enable_rdp = this.enable_rdp;
+  }
+
+  operations: ConfigAdminOperationInterface[];
+  common_params = new Map<string, ConfigParamInterface>();
+  enable_rdp: boolean;
+}
+
+export {Instance, SocketMessageInterface, SocketMessage, SocketCmd, Config, ConfigInterface, ConfigParamInterface};

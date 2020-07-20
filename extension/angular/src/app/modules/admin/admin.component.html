@@ -13,6 +13,79 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. -->
 
-<div class="admin-container">
-    hello
+<div class="admin-page">
+    <mat-toolbar color="primary" class="toolbar">
+        <span>Admin Console</span>
+        <span class="example-spacer"></span>
+        <button mat-icon-button class="example-icon" aria-label="Example icon-button with share icon">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </mat-toolbar>
+
+    <div *ngIf="loading; then loadingBar else adminConsole">
+    </div>
+
+    <ng-template #loadingBar>
+        <div class="spinner-container">
+            <h2>Loading instances</h2>
+            <mat-spinner diameter=48 ></mat-spinner>
+        </div>
+    </ng-template>
+    
+    <ng-template #adminConsole>
+        <div class="container">
+            <div class="top">
+                <div>rdp container</div>
+            </div>
+            <mat-divider></mat-divider>
+            <div class="middle">
+                <mat-tab-group class="operation-tabs" color="accent">
+                    <mat-tab id="Test" label="{{operation.name}}" *ngFor="let operation of operations">
+                        <div class="operation">
+                            <h3>{{operation.description}}</h3>
+                            <h4 class="param-title">COMMON PARAMS: </h4>
+                            <div class="common-param-form">
+                                <mat-form-field appearance="standard" *ngFor="let commonParam of commonParams">
+                                    <mat-label>{{commonParam.name}}</mat-label>
+                                    <input matInput [(ngModel)]="commonParam.value" [placeholder]="commonParam.sample" [required]="!commonParam.optional">
+                                    <mat-hint>{{commonParam.description}}</mat-hint>
+                                </mat-form-field>
+                            </div>
+                            <mat-divider></mat-divider>
+                            <h4 class="param-title margin-top-2rem">OPERATION PARAMS: </h4>
+                            <div class="operation-param-form">
+                                <mat-form-field appearance="standard" *ngFor="let param of operation.paramsToLoad">
+                                    <mat-label>{{param.name}}</mat-label>
+                                    <input matInput [(ngModel)]="operation.paramsToSet[param.name]" [placeholder]="param.sample" [required]="!param.optional">
+                                    <mat-hint>{{param.description}}</mat-hint>
+                                </mat-form-field>
+                            </div>
+                            <button type="button" (click)="sendOperation(operation)" mat-raised-button color="primary">START</button>
+                            <mat-error *ngIf="operation.error" class="operation-error">{{operation.error}}</mat-error>
+                            <mat-card class="loaded-operation-card" *ngIf="operation.loadedOperation">
+                                <mat-card-content class="loaded-operation">{{operation.loadedOperation.operation}}</mat-card-content>
+                                <mat-card-footer class="loaded-operation-footer">                            
+                                    <button type="button" (click)="clearLoadedOperation(operation)" mat-raised-button color="warn">CLEAR</button>
+                                    <button type="button" (click)="startLoadedOperation(operation)" mat-raised-button color="primary">RUN</button>
+                                </mat-card-footer>
+                            </mat-card>
+                        </div>
+                    </mat-tab>
+                  </mat-tab-group>
+            </div>
+
+            <div id="output-view" class="bottom">
+                <mat-tab-group backgroundColor="primary" color="accent" dynamicHeight class="output-tabs">
+                    <mat-tab label="First"> 
+                        <div class="output">
+                            sample output
+                        </div>
+                    </mat-tab>
+                  </mat-tab-group>
+            </div>
+        </div>
+        <a mat-fab color="accent" href="#output-view" class="bottom-right">
+            <mat-icon>keyboard_arrow_down</mat-icon>
+        </a>
+    </ng-template>
 </div>

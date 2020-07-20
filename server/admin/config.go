@@ -33,7 +33,7 @@ const (
 	configFileDataError          string = "Error reading data from configuration file, please follow the format specified"
 	configOperationMissingParams string = "Config is missing variables for these operation(s): %s"
 	operationNotFoundError       string = "%s operation was not found in the config"
-	missingParamsError           string = "Missing variables defined in config file: %s"
+	missingParamsError           string = "Missing parameters defined in config file for this operation: %s"
 )
 
 // configParam points to a variable in the config file
@@ -47,15 +47,17 @@ type configParam struct {
 
 // configAdminOperation points to a configured admin operation
 type configAdminOperation struct {
-	Name      string                 `json:"name"`
-	Operation string                 `json:"operation"`
-	Params    map[string]configParam `json:"params"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Operation   string                 `json:"operation"`
+	Params      map[string]configParam `json:"params"`
 }
 
 // Config is the fully loaded config represented as structures
 type Config struct {
 	Operations   []configAdminOperation `json:"operations"`
 	CommonParams map[string]configParam `json:"common_params"`
+	EnableRdp    bool                   `json:"enable_rdp"`
 }
 
 // OperationToFill is sent by the extension detailing a operation and the variables to be filled
@@ -137,9 +139,12 @@ func LoadConfig() (*Config, error) {
 // getMissingParams checks variables to the current ones in the operation either adding them to missingParams or variablesFound
 func getMissingParams(variablesFound map[string]string, variablesInCommand map[string]string, variablesToCheck map[string]configParam, missingParams *[]string) {
 	for variableName := range variablesToCheck {
-		if value, ok := variablesInCommand[variableName]; ok {
+		log.Println(variableName)
+		log.Println(variablesInCommand)
+		if value, ok := variablesInCommand[variableName]; value != "" && ok {
 			variablesFound[variableName] = value
 		} else if variablesToCheck[variableName].Optional {
+			log.Println(variableName)
 			variablesFound[variableName] = ""
 		} else {
 			*missingParams = append(*missingParams, variableName)
@@ -167,7 +172,6 @@ func ReadAdminOperation(operation OperationToFill, config *Config) (OperationToR
 
 	getMissingParams(variables, operation.Params, config.CommonParams, &missingParams)
 	getMissingParams(variables, operation.Params, configuredAdminOperation.Params, &missingParams)
-
 	if len(missingParams) > 0 {
 		return OperationToRun{}, fmt.Errorf(missingParamsError, strings.Join(missingParams, ", "))
 	}

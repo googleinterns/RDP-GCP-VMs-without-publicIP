@@ -15,24 +15,107 @@ limitations under the License.
 ***/
 
 import { Component, NgZone } from '@angular/core';
-import { Instance, SocketMessage, SocketMessageInterface, SocketCmd } from 'src/classes';
-import { readyForRdpCommandSocket, loginRdpCmd, endRdpCmd, rdpShutdownMessage, rdpGetInstances, rdpSocketEndpoint } from 'src/constants';
+import { Instance, SocketMessage, SocketMessageInterface, SocketCmd, Config, ConfigInterface, ConfigParamInterface } from 'src/classes';
+import { readyForRdpCommandSocket, loginRdpCmd, endRdpCmd, rdpShutdownMessage, rdpGetInstances, rdpSocketEndpoint, sendOperationEndpoint } from 'src/constants';
 import { bindCallback, BehaviorSubject, Subscription } from 'rxjs';
+import {AdminService} from './admin.service';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-admin',
   templateUrl: 'admin.component.html',
+  providers: [AdminService],
   styleUrls: ['admin.component.scss']
 })
 
 
 export class AdminComponent {
-
-  constructor(private zone: NgZone, private snackbar: MatSnackBar) {};
+  config: Config;
+  commonParams = [];
+  operations = [];
+  loading = true;
+  constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) {};
 
   ngOnInit() {
-   
+   this.loadConfig();
   };
+
+  setCommonParams() {
+    for (const [name, paramValue] of Object.entries(this.config.common_params)) {
+      paramValue.name = name;
+      paramValue.value = paramValue.default;
+      this.commonParams.push(paramValue);
+    }
+  }
+
+  setOperations() {
+    this.config.operations.forEach((operation) => {
+        let paramsToSet = {};
+        let paramsToLoad = [];
+        for (const [name, paramValue] of Object.entries(operation.params)) {
+          paramsToSet[name] = paramValue.default;
+          paramValue.name = name;
+          paramsToLoad.push(paramValue);
+        }
+        this.operations.push({name: operation.name, description: operation.description, paramsToSet, paramsToLoad});
+    })
+
+    console.log(this.operations)
+  }
+
+  loadCommonParams(variables: any) {
+    this.commonParams.forEach((commonParam) => {
+      variables[commonParam.name] = commonParam.value
+    })
+  }
+
+  sendOperation(operation: any) {
+    const data = {name: operation.name, variables: operation.paramsToSet}
+    console.log(this.commonParams)
+    this.loadCommonParams(data.variables)
+    this.adminService.sendOperation(data)
+    .subscribe((response: any) => {
+      console.log(response)
+
+      if (response.operation) {
+        operation.error = "";
+        operation.loadedOperation = response;
+        console.log(operation)
+      }
+
+      if (response.error) {
+        operation.error = response.error;
+      }
+
+    }, error => {
+      operation.error = error;
+    })
+  }
+
+  clearLoadedOperation(operation: any) {
+    operation.loadedOperation = null;
+  }
+
+  startLoadedOperation(operation: any) {
+    Object.keys(operation.paramsToSet).forEach(function(param) {
+      operation.paramsToSet[param] = null
+  });
+    operation.loadedOperation = null;
+  }
+
+  loadConfig() {
+    this.adminService.getConfig()
+    .subscribe(response => {
+      this.config = new Config(response as ConfigInterface)
+      this.setCommonParams();
+      this.setOperations();
+      //this.commonParams.push(this.config.common_params);
+      console.log(this.config)
+      console.log(this.commonParams)
+      this.loading = false;
+    }, error => {
+      console.log(error)
+    })
+  }
 }

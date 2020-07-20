@@ -1,9 +1,27 @@
+enableRdp: true
 commonParams:
   PROJECT:
     type: string
-    
+    description: Used to define which project to run admin command
+    sample: xxxx-xxxx
+  PROJECT2:
+    type: string
+    description: Used to define which project to run admin command
+    default: rishabl-test
+    sample: xxxx-xxxx
+  PROJECT3:
+    type: string
+    description: Used to define which project to run admin command
+    default: rishabl-test
+    sample: xxxx-xxxx
+  PROJECT4:
+    type: string
+    description: Used to define which project to run admin command
+    default: rishabl-test
+    sample: sample value
 operations: 
   - name: create-vm
+    description: Creates a Gcloud VM
     operation: >
       gcloud beta compute
       --project=$PROJECT
@@ -34,3 +52,242 @@ operations:
       NETWORK_TIER:
         type: string
         optional: true
+      NETWORK_TIER2:
+        type: string
+        optional: true
+      NETWORK_TIER3:
+        type: string
+        optional: true
+      NETWORK_TIER4:
+        type: string
+        optional: true
+      NETWORK_TIER5:
+        type: string
+        optional: true
+      NETWORK_TIER6:
+        type: string
+        optional: true
+  - name: create-vm2
+    description: Creates a Gcloud VM
+    operation: >
+      gcloud beta compute
+      --project=$PROJECT
+      instances create $NAME 
+      --zone=us-central1-a 
+      --machine-type=$MACHINE_TYPE 
+      --subnet=default 
+      --network-tier=$NETWORK_TIER 
+      --maintenance-policy=MIGRATE 
+      --service-account=1053439593197-compute@developer.gserviceaccount.com 
+      --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append 
+      --image=$IMAGE
+      --image-project=eip-images 
+      --boot-disk-size=$DISK_SIZE 
+      --boot-disk-type=pd-standard 
+      --boot-disk-device-name=$NAME
+      --reservation-affinity=any
+    params:
+      NAME: 
+        type: string
+        default: new-instance
+      IMAGE: 
+        type: string
+      MACHINE_TYPE:
+        type: string
+      DISK_SIZE: 
+        type: number
+      NETWORK_TIER:
+        type: string
+        optional: true
+  - name: create-vm3
+    description: Creates a Gcloud VM
+    operation: >
+      gcloud beta compute
+      --project=$PROJECT
+      instances create $NAME 
+      --zone=us-central1-a 
+      --machine-type=$MACHINE_TYPE 
+      --subnet=default 
+      --network-tier=$NETWORK_TIER 
+      --maintenance-policy=MIGRATE 
+      --service-account=1053439593197-compute@developer.gserviceaccount.com 
+      --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append 
+      --image=$IMAGE
+      --image-project=eip-images 
+      --boot-disk-size=$DISK_SIZE 
+      --boot-disk-type=pd-standard 
+      --boot-disk-device-name=$NAME
+      --reservation-affinity=any
+    params:
+      NAME: 
+        type: string
+        default: new-instance
+      IMAGE: 
+        type: string
+      MACHINE_TYPE:
+        type: string
+      DISK_SIZE: 
+        type: number
+      NETWORK_TIER:
+        type: string
+        optional: true
+  - name: create-vm5
+    description: Creates a Gcloud VM
+    operation: >
+      gcloud beta compute
+      --project=$PROJECT
+      instances create $NAME 
+      --zone=us-central1-a 
+      --machine-type=$MACHINE_TYPE 
+      --subnet=default 
+      --network-tier=$NETWORK_TIER 
+      --maintenance-policy=MIGRATE 
+      --service-account=1053439593197-compute@developer.gserviceaccount.com 
+      --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append 
+      --image=$IMAGE
+      --image-project=eip-images 
+      --boot-disk-size=$DISK_SIZE 
+      --boot-disk-type=pd-standard 
+      --boot-disk-device-name=$NAME
+      --reservation-affinity=any
+    params:
+      NAME: 
+        type: string
+        default: new-instance
+      IMAGE: 
+        type: string
+      MACHINE_TYPE:
+        type: string
+      DISK_SIZE: 
+        type: number
+      NETWORK_TIER:
+        type: string
+        optional: true
+  - name: create-vm6
+    description: Creates a Gcloud VM
+    operation: >
+      gcloud beta compute
+      --project=$PROJECT
+      instances create $NAME 
+      --zone=us-central1-a 
+      --machine-type=$MACHINE_TYPE 
+      --subnet=default 
+      --network-tier=$NETWORK_TIER 
+      --maintenance-policy=MIGRATE 
+      --service-account=1053439593197-compute@developer.gserviceaccount.com 
+      --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append 
+      --image=$IMAGE
+      --image-project=eip-images 
+      --boot-disk-size=$DISK_SIZE 
+      --boot-disk-type=pd-standard 
+      --boot-disk-device-name=$NAME
+      --reservation-affinity=any
+    params:
+      NAME: 
+        type: string
+        default: new-instance
+      IMAGE: 
+        type: string
+      MACHINE_TYPE:
+        type: string
+      DISK_SIZE: 
+        type: number
+      NETWORK_TIER:
+        type: string
+        optional: true
+  - name: create-vm7
+    description: Creates a Gcloud VM
+    operation: >
+      gcloud beta compute
+      --project=$PROJECT
+      instances create $NAME 
+      --zone=us-central1-a 
+      --machine-type=$MACHINE_TYPE 
+      --subnet=default 
+      --network-tier=$NETWORK_TIER 
+      --maintenance-policy=MIGRATE 
+      --service-account=1053439593197-compute@developer.gserviceaccount.com 
+      --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append 
+      --image=$IMAGE
+      --image-project=eip-images 
+      --boot-disk-size=$DISK_SIZE 
+      --boot-disk-type=pd-standard 
+      --boot-disk-device-name=$NAME
+      --reservation-affinity=any
+    params:
+      NAME: 
+        type: string
+        default: new-instance
+      IMAGE: 
+        type: string
+      MACHINE_TYPE:
+        type: string
+      DISK_SIZE: 
+        type: number
+      NETWORK_TIER:
+        type: string
+        optional: true
+  - name: create-vm8
+    description: Creates a Gcloud VM
+    operation: >
+      gcloud beta compute
+      --project=$PROJECT
+      instances create $NAME 
+      --zone=us-central1-a 
+      --machine-type=$MACHINE_TYPE 
+      --subnet=default 
+      --network-tier=$NETWORK_TIER 
+      --maintenance-policy=MIGRATE 
+      --service-account=1053439593197-compute@developer.gserviceaccount.com 
+      --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append 
+      --image=$IMAGE
+      --image-project=eip-images 
+      --boot-disk-size=$DISK_SIZE 
+      --boot-disk-type=pd-standard 
+      --boot-disk-device-name=$NAME
+      --reservation-affinity=any
+    params:
+      NAME: 
+        type: string
+        default: new-instance
+      IMAGE: 
+        type: string
+      MACHINE_TYPE:
+        type: string
+      DISK_SIZE: 
+        type: number
+      NETWORK_TIER:
+        type: string
+        optional: true
+  - name: create-vm9
+    description: Creates a Gcloud VM
+    operation: >
+      gcloud beta compute
+      --project=$PROJECT
+      instances create $NAME 
+      --zone=us-central1-a 
+      --machine-type=$MACHINE_TYPE 
+      --subnet=default 
+      --network-tier=$NETWORK_TIER 
+      --maintenance-policy=MIGRATE 
+      --service-account=1053439593197-compute@developer.gserviceaccount.com 
+      --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append 
+      --image=$IMAGE
+      --image-project=eip-images 
+      --boot-disk-size=$DISK_SIZE 
+      --boot-disk-type=pd-standard 
+      --boot-disk-device-name=$NAME
+      --reservation-affinity=any
+    params:
+      NAME: 
+        type: string
+        default: new-instance
+      IMAGE: 
+        type: string
+      MACHINE_TYPE:
+        type: string
+      DISK_SIZE: 
+        type: number
+      NETWORK_TIER:
+        type: string
+        optional: true                                                

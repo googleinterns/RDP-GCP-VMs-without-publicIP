@@ -31,10 +31,6 @@ const enablePopup = (hosts: string[]) => {
   });
 };
 
-chrome.browserAction.onClicked.addListener((activeTab) => {
-  chrome.tabs.create({url: chrome.extension.getURL('index.html?#/admin')})
-})
-
 // Object that contains functions used to get instances, needed for unit testing.
 const instanceFunctions = {
   getComputeInstances: async function (
@@ -78,6 +74,30 @@ const instanceFunctions = {
 let computeInstances = [] as Instance[];
 // rdpInstancesList contains the current instances that are being RDP'ed into.
 let rdpInstancesList = [];
+
+let adminTabId;
+
+const createAdminTab = () => {
+  chrome.tabs.create({url: chrome.extension.getURL('index.html?#/admin')}, (tab) => {
+    adminTabId = tab.id;
+  })
+}
+
+const adminTabIconClickListener = () => {
+  chrome.browserAction.onClicked.addListener((activeTab) => {
+    if (!adminTabId) {
+      createAdminTab();
+    } else {
+      chrome.tabs.get(adminTabId, () => {
+        if (chrome.runtime.lastError) {
+          createAdminTab();
+        } else {
+          chrome.tabs.update(adminTabId, {highlighted: true});
+        }
+      })
+    }
+  })
+}
 
 // Tab listener listens for tab changes.
 const tabListener = () => {
@@ -163,4 +183,4 @@ const messageListener = () => {
   });
 }
 
-export {enablePopup, tabListener, messageListener, instanceFunctions};
+export {enablePopup, tabListener, messageListener, instanceFunctions, adminTabIconClickListener};

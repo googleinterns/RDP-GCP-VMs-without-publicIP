@@ -24,6 +24,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import {MatToolbarModule} from '@angular/material/toolbar';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTabsModule} from '@angular/material/tabs';
+import {MatGridListModule} from '@angular/material/grid-list';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {MatDividerModule} from '@angular/material/divider';
 
 @NgModule({
   declarations: [AdminComponent],
@@ -35,7 +41,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
     MatCardModule,
     MatButtonModule,
     MatInputModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatTabsModule,
+    MatGridListModule,
+    MatProgressSpinnerModule,
+    MatDividerModule
   ]
 })
 export class AdminModule {}

@@ -14,44 +14,110 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-
-.rdp-container {
-    padding: 3%;
+.example-spacer {
+    flex: 1 1 auto;
 }
 
-.main {
+.param-title {
+    margin: 0;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.margin-top-2rem {
+    margin-top: 2rem;
+}
+
+.common-param-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+    column-gap: 2rem;
+    row-gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.operation-param-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+    column-gap: 2rem;
+    row-gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.container {
     display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.admin-page {
     height: 100%;
-    justify-content: space-between;
+    display: flex;
+    flex-direction: column;
 }
 
-.status {
-    padding: 0 2.5%;
-    color: rgba(0, 0, 0, 0.6);;
+.output-tabs {
+    margin-top: auto;
 }
 
-.log-container {
-    width: 60%;
-    padding: 0 2.5%;
-    margin: 0 2.5%;
+.output {
+    background-color: #212121;
+    height: 300px;
     overflow-y: auto;
-    border: 1px solid #BDBDBD;
-    border-radius: 4px;
-    height: 40rem;
+    color: #fafafa;
+    flex-grow: 1;
 }
 
-.card-container {
-    margin: 1.5rem 0;
+.operation {
+    padding: 1.5rem;
 }
 
-.cmd-container {
-    width: 30%;
+.operation-error {
+    margin: 1rem 0;
+}
+
+.top {
+    max-height: 20%;
+    overflow-y: auto;
+}
+
+.middle {
+    flex: 2;
+}
+
+.bottom {
+    max-height: 30%;
+    flex: 1;
+}
+
+.bottom-right {
+    top: auto !important;
+    right: 1.5rem !important;
+    bottom: 5rem !important;
+    left: auto !important;
+    position: fixed !important;
+    z-index: 9999 !important;
+}
+
+.toolbar {
+    min-height: 4rem;
+}
+
+.loaded-operation-card {
+    margin-top: 2rem;
+}
+
+.loaded-operation {
+    word-wrap: break-word;
+}
+
+.loaded-operation-footer {
+    padding: 1.5rem;
     display: flex;
-    flex-direction: column;
+    justify-content: flex-end;
+
+    button {
+        margin: 0 0.5rem;
+    }
 }
 
-.input-container {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 1rem;
-}

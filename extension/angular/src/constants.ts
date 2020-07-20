@@ -25,6 +25,9 @@ const popupGetInstances = 'popup-get-instances';
 const startPrivateRdp = 'start-private-rdp';
 const rdpGetInstances = 'rdp-get-instance';
 
+const statusUrl = 'http://localhost:23966/health'
+const getConfigEndpoint = 'http://localhost:23966/admin/get-config'
 const rdpSocketEndpoint = 'ws://localhost:23966/gcloud/start-private-rdp';
+const sendOperationEndpoint = 'http://localhost:23966/admin/command-to-run';
 
-export {endRdpCmd, loginRdpCmd, readyForRdpCommandSocket, rdpShutdownMessage, popupGetInstances, startPrivateRdp, rdpGetInstances, rdpSocketEndpoint};
+export {endRdpCmd, loginRdpCmd, readyForRdpCommandSocket, rdpShutdownMessage, popupGetInstances, startPrivateRdp, rdpGetInstances, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint};
