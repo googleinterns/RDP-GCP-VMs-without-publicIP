@@ -43,6 +43,7 @@ operations:
       NAME: 
         type: string
         default: new-instance
+        choices: [new-instance, new-instance2]
       IMAGE: 
         type: string
       MACHINE_TYPE:

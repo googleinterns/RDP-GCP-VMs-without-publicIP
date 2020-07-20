@@ -38,11 +38,11 @@ const (
 
 // configParam points to a variable in the config file
 type configParam struct {
-	Default     string `json:"default"`
-	Type        string `json:"type"`
-	Optional    bool   `json:"optional"`
-	Description string `json:"description"`
-	Sample      string `json:"sample"`
+	Default     string   `json:"default"`
+	Optional    bool     `json:"optional"`
+	Description string   `json:"description"`
+	Sample      string   `json:"sample"`
+	Choices     []string `json:"choices"`
 }
 
 // configAdminOperation points to a configured admin operation
@@ -136,13 +136,32 @@ func LoadConfig() (*Config, error) {
 	return &config, nil
 }
 
+func checkIfParamInChoices(value string, variableName string, variablesToCheck map[string]configParam) bool {
+	for _, choice := range variablesToCheck[variableName].Choices {
+		if choice == value {
+			return true
+		}
+	}
+
+	return false
+}
+
 // getMissingParams checks variables to the current ones in the operation either adding them to missingParams or variablesFound
 func getMissingParams(variablesFound map[string]string, variablesInCommand map[string]string, variablesToCheck map[string]configParam, missingParams *[]string) {
 	for variableName := range variablesToCheck {
 		log.Println(variableName)
 		log.Println(variablesInCommand)
 		if value, ok := variablesInCommand[variableName]; value != "" && ok {
-			variablesFound[variableName] = value
+			if variablesToCheck[variableName].Choices != nil {
+				paramValid := checkIfParamInChoices(value, variableName, variablesToCheck)
+				if paramValid {
+					variablesFound[variableName] = value
+				} else {
+					*missingParams = append(*missingParams, variableName)
+				}
+			} else {
+				variablesFound[variableName] = value
+			}
 		} else if variablesToCheck[variableName].Optional {
 			log.Println(variableName)
 			variablesFound[variableName] = ""

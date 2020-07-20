@@ -23,7 +23,7 @@ import (
 )
 
 func buildTestConfig() Config {
-	param := configParam{Type: "string"}
+	param := configParam{}
 
 	commonParams := make(map[string]configParam)
 	commonParams["TEST_COMMON"] = param
@@ -59,8 +59,8 @@ func TestGetMissingParams(t *testing.T) {
 	paramsFound := make(map[string]string)
 	var missingParams []string
 	paramsToCheck := make(map[string]configParam)
-	paramsToCheck["REQUIRED"] = configParam{Type: "string"}
-	paramsToCheck["OPTIONAL"] = configParam{Type: "string", Optional: true}
+	paramsToCheck["REQUIRED"] = configParam{}
+	paramsToCheck["OPTIONAL"] = configParam{Optional: true}
 
 	operationParams := make(map[string]string)
 	operationParams["REQUIRED"] = "required"
@@ -114,7 +114,7 @@ func TestReadAdminOperation(t *testing.T) {
 	}
 
 	config.Operations[0].Operation = "$TEST_COMMON $TEST_COMMAND --optional=$OPTIONAL"
-	config.Operations[0].Params["OPTIONAL"] = configParam{Type: "string", Optional: true}
+	config.Operations[0].Params["OPTIONAL"] = configParam{Optional: true}
 
 	operation.Params["TEST_COMMON"] = "test1"
 	operation.Params["TEST_COMMAND"] = "test2"

@@ -71,6 +71,7 @@ interface ConfigParamInterface {
   optional: boolean;
   description: string;
   sample: string
+  choices: string[];
 }
 
 interface ConfigAdminOperationInterface {

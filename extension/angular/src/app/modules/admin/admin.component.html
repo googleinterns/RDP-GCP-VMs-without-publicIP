@@ -51,24 +51,34 @@ limitations under the License. -->
                         <div class="operation">
                             <h3>{{operation.description}}</h3>
                             
-                            <h4 class="param-title">COMMON PARAMS: </h4>
+                            <h4 *ngIf="commonParams.length > 0" class="param-title">COMMON PARAMS: </h4>
                             
-                            <div class="common-param-form">
-                                <mat-form-field appearance="standard" *ngFor="let commonParam of commonParams">
-                                    <mat-label>{{commonParam.name}}</mat-label>
-                                    <input matInput [(ngModel)]="commonParam.value" [placeholder]="commonParam.sample" [required]="!commonParam.optional">
-                                    <mat-hint>{{commonParam.description}}</mat-hint>
+                            <div *ngIf="commonParams.length > 0" class="common-param-form">
+                                <mat-form-field appearance="standard" *ngFor="let param of commonParams">
+                                    <mat-label>{{param.name}}</mat-label>
+                                    <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
+                                        <mat-option *ngFor="let choice of param.choices" [value]="choice">
+                                          {{choice}}
+                                        </mat-option>
+                                      </mat-select>
+                                    <textarea *ngIf="!param.choices" matInput [(ngModel)]="param.value" [placeholder]="param.sample" [required]="!param.optional"></textarea>
+                                    <mat-hint>{{param.description}}</mat-hint>
                                 </mat-form-field>
                             </div>
                             
                             <mat-divider></mat-divider>
                             
-                            <h4 class="param-title margin-top-2rem">OPERATION PARAMS: </h4>
+                            <h4 *ngIf="operation.paramsToLoad" class="param-title margin-top-2rem">OPERATION PARAMS: </h4>
                             
-                            <div class="operation-param-form">
+                            <div *ngIf="operation.paramsToLoad" class="operation-param-form">
                                 <mat-form-field appearance="standard" *ngFor="let param of operation.paramsToLoad">
                                     <mat-label>{{param.name}}</mat-label>
-                                    <input matInput [(ngModel)]="operation.paramsToSet[param.name]" [placeholder]="param.sample" [required]="!param.optional">
+                                    <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="operation.paramsToSet[param.name]">
+                                        <mat-option *ngFor="let choice of param.choices" [value]="choice">
+                                          {{choice}}
+                                        </mat-option>
+                                      </mat-select>
+                                    <textarea *ngIf="!param.choices" matInput [(ngModel)]="operation.paramsToSet[param.name]" [placeholder]="param.sample" [required]="!param.optional"></textarea>
                                     <mat-hint>{{param.description}}</mat-hint>
                                 </mat-form-field>
                             </div>

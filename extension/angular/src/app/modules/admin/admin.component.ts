@@ -77,6 +77,7 @@ export class AdminComponent {
     const data = {name: operation.name, variables: operation.paramsToSet}
     console.log(this.commonParams)
     this.loadCommonParams(data.variables)
+    console.log(data)
     this.adminService.sendOperation(data)
     .subscribe((response: any) => {
       console.log(response)
@@ -124,11 +125,13 @@ export class AdminComponent {
         }
       }
 
-      this.loading = false;
+      
     }, error => {
       console.log(error)
-      this.configError = error;
+      this.configError = JSON.stringify(error);
     })
+
+    this.loading = false;
   }
 
   refreshConfig() {
