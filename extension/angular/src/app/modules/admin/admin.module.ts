@@ -35,8 +35,8 @@ import {MatSelectModule} from '@angular/material/select';
 @NgModule({
   declarations: [AdminComponent],
   imports: [
-    CommonModule, 
-    FormsModule, 
+    CommonModule,
+    FormsModule,
     AdminRoutingModule,
     MatSnackBarModule,
     MatCardModule,

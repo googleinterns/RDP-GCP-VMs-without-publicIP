@@ -28,8 +28,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 @NgModule({
   declarations: [RdpComponent],
   imports: [
-    CommonModule, 
-    FormsModule, 
+    CommonModule,
+    FormsModule,
     RdpRoutingModule,
     MatSnackBarModule,
     MatCardModule,

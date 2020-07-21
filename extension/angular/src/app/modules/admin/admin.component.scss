@@ -28,15 +28,7 @@ limitations under the License.
     margin-top: 2rem;
 }
 
-.common-param-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
-    column-gap: 2rem;
-    row-gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.operation-param-form {
+.param-form {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
     column-gap: 2rem;

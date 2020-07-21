@@ -15,11 +15,8 @@ limitations under the License.
 ***/
 
 import { Component, NgZone } from '@angular/core';
-import { Instance, SocketMessage, SocketMessageInterface, SocketCmd, Config, ConfigInterface, ConfigParamInterface } from 'src/classes';
-import { readyForRdpCommandSocket, loginRdpCmd, endRdpCmd, rdpShutdownMessage, rdpGetInstances, rdpSocketEndpoint, sendOperationEndpoint } from 'src/constants';
-import { bindCallback, BehaviorSubject, Subscription } from 'rxjs';
+import { Config, ConfigInterface } from 'src/classes';
 import {AdminService} from './admin.service';
-import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
@@ -42,6 +39,7 @@ export class AdminComponent {
    this.loadConfig();
   };
 
+  // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {
     for (const [name, paramValue] of Object.entries(this.config.common_params)) {
       paramValue.name = name;
@@ -50,11 +48,14 @@ export class AdminComponent {
     }
   }
 
+  // setOperations sets up an operations array using config.operations
   setOperations() {
     if (this.config.operations) {
       this.config.operations.forEach((operation) => {
-        let paramsToSet = {};
-        let paramsToLoad = [];
+        // paramsToSet consists of a name-value pair, this is the data sent to the server.
+        const paramsToSet = {};
+        // paramsToLoad consists of parameters' names, choices, default values and descriptions, used to build the forms.
+        const paramsToLoad = [];
         for (const [name, paramValue] of Object.entries(operation.params)) {
           paramsToSet[name] = paramValue.default;
           paramValue.name = name;
@@ -67,12 +68,14 @@ export class AdminComponent {
     }
   }
 
+  // loadCommonParams adds the commonParams to a variables object.
   loadCommonParams(variables: any) {
     this.commonParams.forEach((commonParam) => {
       variables[commonParam.name] = commonParam.value
     })
   }
 
+  // sendOperation sends the operation and its params to the server to get an ready operation.
   sendOperation(operation: any) {
     const data = {name: operation.name, variables: operation.paramsToSet}
     console.log(this.commonParams)
@@ -82,12 +85,14 @@ export class AdminComponent {
     .subscribe((response: any) => {
       console.log(response)
 
+      // If operation returned, set loadedOperation to response
       if (response.operation) {
-        operation.error = "";
+        operation.error = '';
         operation.loadedOperation = response;
         console.log(operation)
       }
 
+      // If error returned, set operation.error to error
       if (response.error) {
         operation.error = response.error;
       }
@@ -97,10 +102,12 @@ export class AdminComponent {
     })
   }
 
+  // clearLoadedOperation is triggered by the clear button, clears the operation
   clearLoadedOperation(operation: any) {
     operation.loadedOperation = null;
   }
 
+  // startLoadedOperation will start the loadedOperation, clears the form.
   startLoadedOperation(operation: any) {
     Object.keys(operation.paramsToSet).forEach(function(param) {
       operation.paramsToSet[param] = null
@@ -108,6 +115,7 @@ export class AdminComponent {
     operation.loadedOperation = null;
   }
 
+  // loadConfig loads the config file from the server and sets up all the variables needed to render page.
   loadConfig() {
     this.adminService.getConfig()
     .subscribe((response: any) => {
@@ -120,12 +128,14 @@ export class AdminComponent {
         this.setOperations();
 
         console.log(this.config)
+
+        // If no operations defined and rdp not enabled, set a configError
         if (!this.config.operations && !this.config.enable_rdp) {
-          this.configError = "Your configuration file is empty."
+          this.configError = 'Your configuration file is empty.'
         }
       }
 
-      
+
     }, error => {
       console.log(error)
       this.configError = JSON.stringify(error);
@@ -134,6 +144,7 @@ export class AdminComponent {
     this.loading = false;
   }
 
+  // refreshConfig is trigerred by the refresh icon in the top bar, resets all the variables and reloadsConfig
   refreshConfig() {
     this.config = null;
     this.operations = [];

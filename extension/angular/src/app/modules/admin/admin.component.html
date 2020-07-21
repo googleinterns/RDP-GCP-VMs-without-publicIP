@@ -53,7 +53,7 @@ limitations under the License. -->
                             
                             <h4 *ngIf="commonParams.length > 0" class="param-title">COMMON PARAMS: </h4>
                             
-                            <div *ngIf="commonParams.length > 0" class="common-param-form">
+                            <div *ngIf="commonParams.length > 0" class="param-form">
                                 <mat-form-field appearance="standard" *ngFor="let param of commonParams">
                                     <mat-label>{{param.name}}</mat-label>
                                     <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
@@ -70,7 +70,7 @@ limitations under the License. -->
                             
                             <h4 *ngIf="operation.paramsToLoad" class="param-title margin-top-2rem">OPERATION PARAMS: </h4>
                             
-                            <div *ngIf="operation.paramsToLoad" class="operation-param-form">
+                            <div *ngIf="operation.paramsToLoad" class="param-form">
                                 <mat-form-field appearance="standard" *ngFor="let param of operation.paramsToLoad">
                                     <mat-label>{{param.name}}</mat-label>
                                     <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="operation.paramsToSet[param.name]">

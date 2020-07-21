@@ -30,6 +30,4 @@ export class AdminService {
     sendOperation (data: object): Observable<object> {
         return this.http.post(sendOperationEndpoint, data)
     }
-
-
 }
