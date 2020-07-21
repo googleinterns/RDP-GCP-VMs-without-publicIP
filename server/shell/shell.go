@@ -25,6 +25,8 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/google/shlex"
 )
 
 const cmdReaderContextTimeout time.Duration = 1 * time.Hour
@@ -39,13 +41,19 @@ func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 	if err != nil {
 		return out, err
 	}
-	return out, nil
+	return out, err
 }
 
 // ExecuteCmdReader runs a shell command and pipes the stdout and stderr into ReadClosers
 func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), cmdReaderContextTimeout)
-	parsedCmd := strings.Fields(cmd)
+	parsedCmd, err := shlex.Split(cmd)
+
+	if err != nil {
+		cancel()
+		return nil, nil, err
+	}
+
 	asyncCmd := exec.CommandContext(ctx, parsedCmd[0], parsedCmd[1:]...)
 
 	stdout, err := asyncCmd.StdoutPipe()
