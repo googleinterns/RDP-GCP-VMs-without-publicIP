@@ -14,11 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-/* A script that runs in the background when the extension is initialized */
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { getConfigEndpoint, sendOperationEndpoint } from 'src/constants';
 
-import {enablePopup, tabListener, messageListener, adminTabIconClickListener} from './helpers/background';
+@Injectable()
+export class AdminService {
+    constructor(private http: HttpClient){}
 
-enablePopup(['pantheon.corp.google.com', 'b.corp.google.com']);
-tabListener();
-messageListener();
-adminTabIconClickListener();
+    getConfig (): Observable<object> {
+        return this.http.get(getConfigEndpoint)
+    }
+
+    sendOperation (data: object): Observable<object> {
+        return this.http.post(sendOperationEndpoint, data)
+    }
+}

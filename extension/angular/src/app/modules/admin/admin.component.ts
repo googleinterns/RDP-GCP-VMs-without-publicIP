@@ -1,0 +1,156 @@
+/***
+Copyright 2020 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+***/
+
+import { Component, NgZone } from '@angular/core';
+import { Config, ConfigInterface } from 'src/classes';
+import {AdminService} from './admin.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
+@Component({
+  selector: 'app-admin',
+  templateUrl: 'admin.component.html',
+  providers: [AdminService],
+  styleUrls: ['admin.component.scss']
+})
+
+
+export class AdminComponent {
+  config: Config;
+  configError: string;
+  commonParams = [];
+  operations = [];
+  loading = true;
+  constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) {};
+
+  ngOnInit() {
+   this.loadConfig();
+  };
+
+  // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
+  setCommonParams() {
+    for (const [name, paramValue] of Object.entries(this.config.common_params)) {
+      paramValue.name = name;
+      paramValue.value = paramValue.default;
+      this.commonParams.push(paramValue);
+    }
+  }
+
+  // setOperations sets up an operations array using config.operations
+  setOperations() {
+    if (this.config.operations) {
+      this.config.operations.forEach((operation) => {
+        // paramsToSet consists of a name-value pair, this is the data sent to the server.
+        const paramsToSet = {};
+        // paramsToLoad consists of parameters' names, choices, default values and descriptions, used to build the forms.
+        const paramsToLoad = [];
+        for (const [name, paramValue] of Object.entries(operation.params)) {
+          paramsToSet[name] = paramValue.default;
+          paramValue.name = name;
+          paramsToLoad.push(paramValue);
+        }
+        this.operations.push({name: operation.name, description: operation.description, paramsToSet, paramsToLoad});
+    })
+
+    console.log(this.operations)
+    }
+  }
+
+  // loadCommonParams adds the commonParams to a variables object.
+  loadCommonParams(variables: any) {
+    this.commonParams.forEach((commonParam) => {
+      variables[commonParam.name] = commonParam.value
+    })
+  }
+
+  // sendOperation sends the operation and its params to the server to get an ready operation.
+  sendOperation(operation: any) {
+    const data = {name: operation.name, variables: operation.paramsToSet}
+    console.log(this.commonParams)
+    this.loadCommonParams(data.variables)
+    console.log(data)
+    this.adminService.sendOperation(data)
+    .subscribe((response: any) => {
+      console.log(response)
+
+      // If operation returned, set loadedOperation to response
+      if (response.operation) {
+        operation.error = '';
+        operation.loadedOperation = response;
+        console.log(operation)
+      }
+
+      // If error returned, set operation.error to error
+      if (response.error) {
+        operation.error = response.error;
+      }
+
+    }, error => {
+      operation.error = error;
+    })
+  }
+
+  // clearLoadedOperation is triggered by the clear button, clears the operation
+  clearLoadedOperation(operation: any) {
+    operation.loadedOperation = null;
+  }
+
+  // startLoadedOperation will start the loadedOperation, clears the form.
+  startLoadedOperation(operation: any) {
+    Object.keys(operation.paramsToSet).forEach(function(param) {
+      operation.paramsToSet[param] = null
+  });
+    operation.loadedOperation = null;
+  }
+
+  // loadConfig loads the config file from the server and sets up all the variables needed to render page.
+  loadConfig() {
+    this.adminService.getConfig()
+    .subscribe((response: any) => {
+      console.log(response)
+      if (response.error) {
+        this.configError = response.error;
+      } else {
+        this.config = new Config(response as ConfigInterface)
+        this.setCommonParams();
+        this.setOperations();
+
+        console.log(this.config)
+
+        // If no operations defined and rdp not enabled, set a configError
+        if (!this.config.operations && !this.config.enable_rdp) {
+          this.configError = 'Your configuration file is empty.'
+        }
+      }
+
+
+    }, error => {
+      console.log(error)
+      this.configError = JSON.stringify(error);
+    })
+
+    this.loading = false;
+  }
+
+  // refreshConfig is trigerred by the refresh icon in the top bar, resets all the variables and reloadsConfig
+  refreshConfig() {
+    this.config = null;
+    this.operations = [];
+    this.configError = null;
+    this.commonParams = [];
+    this.loading = true;
+    this.loadConfig();
+  }
+}

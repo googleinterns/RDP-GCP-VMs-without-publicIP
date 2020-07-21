@@ -45,8 +45,8 @@ export class PopupComponent {
 
   getStatus() {
     this.popupService.getStatus()
-      .subscribe(response => {
-        this.status = response['status'];
+      .subscribe((response: any) => {
+        this.status = response.status;
       }, error => {
         this.status = 'Could not get server status';
       })

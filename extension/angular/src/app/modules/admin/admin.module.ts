@@ -17,25 +17,39 @@ limitations under the License.
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RdpComponent } from './pages/rdp/rdp.component';
-import { RdpRoutingModule } from './rdp-routing.module';
+import { AdminComponent } from './admin.component';
+import { AdminRoutingModule } from './admin-routing.module';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import {MatToolbarModule} from '@angular/material/toolbar';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTabsModule} from '@angular/material/tabs';
+import {MatGridListModule} from '@angular/material/grid-list';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatSelectModule} from '@angular/material/select';
 
 @NgModule({
-  declarations: [RdpComponent],
+  declarations: [AdminComponent],
   imports: [
     CommonModule,
     FormsModule,
-    RdpRoutingModule,
+    AdminRoutingModule,
     MatSnackBarModule,
     MatCardModule,
     MatButtonModule,
     MatInputModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatTabsModule,
+    MatGridListModule,
+    MatProgressSpinnerModule,
+    MatDividerModule,
+    MatSelectModule
   ]
 })
-export class RdpModule {}
+export class AdminModule {}
