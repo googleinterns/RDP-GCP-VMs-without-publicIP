@@ -161,7 +161,7 @@ func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 
 	operationToRun, err := admin.GetOperationFromConn(ws, &operationPool)
 	if err != nil {
-		admin.WriteToSocket(ws, "", err)
+		admin.WriteToSocket(ws, "", "", "", err)
 	}
 
 	shell := &shell.CmdShell{}

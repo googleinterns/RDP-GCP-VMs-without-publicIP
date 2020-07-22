@@ -4,19 +4,20 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"sync"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 const (
 	endOperationCmd         string        = "end_operation"
 	operationContextTimeout time.Duration = 5 * time.Minute
+	operationNotFound       string        = "operation with hash %v not found"
+	operationRunning        string        = "operation with hash %v already running"
+	operationEnded          string        = "operation with hash %v ended"
+	serverReceivedOperation string        = "server received operation: %v"
 )
 
 type shell interface {
@@ -36,24 +37,28 @@ type socketCmd struct {
 
 // socketMessage is the struct that is sent to the websockets
 type socketMessage struct {
-	Message string `json:"message"`
-	Err     string `json:"error"`
+	ServerMessage string `json:"message"`
+	Stdout        string `json:"stdout"`
+	Stderr        string `json:"stderr"`
+	Err           string `json:"error"`
 }
 
-func newSocketMessage(message string, err error) *socketMessage {
+func newSocketMessage(message string, stdout string, stderr string, err error) *socketMessage {
 	errorMessage := ""
 	if err != nil {
 		errorMessage = err.Error()
 	}
 	return &socketMessage{
-		Message: message,
-		Err:     errorMessage,
+		ServerMessage: message,
+		Stdout:        stdout,
+		Stderr:        stderr,
+		Err:           errorMessage,
 	}
 }
 
 // WriteToSocket is a wrapper that is used to write JSON to the websocket
-func WriteToSocket(ws conn, message string, err error) error {
-	if err := ws.WriteJSON(newSocketMessage(message, err)); err != nil {
+func WriteToSocket(ws conn, message string, stdout string, stderr string, err error) error {
+	if err := ws.WriteJSON(newSocketMessage(message, stdout, stderr, err)); err != nil {
 		log.Println(err)
 		return err
 	}
@@ -75,48 +80,59 @@ type conn interface {
 }
 
 // StartPrivateRdp is a task runner that runs all the individual functions for automated RDP.
-func (adminExecutor *AdminExecutor) RunOperation(ws *websocket.Conn, operationToRun *OperationToRun) {
+func (adminExecutor *AdminExecutor) RunOperation(ws conn, operationToRun *OperationToRun) {
 	ctx, cancel := context.WithTimeout(context.Background(), operationContextTimeout)
 	endOperationChan := make(chan bool)
 
-	if err := WriteToSocket(ws, fmt.Sprintf("Server received operation %s", operationToRun.Operation), nil); err != nil {
+	if err := WriteToSocket(ws, fmt.Sprintf(serverReceivedOperation, operationToRun.Operation), "", "", nil); err != nil {
 		cancel()
 		return
 	}
 
 	go listenForCmd(ws, operationToRun, endOperationChan)
-	go adminExecutor.ExecuteOperation(ctx, ws, operationToRun, endOperationChan)
+	go adminExecutor.executeOperation(ctx, ws, operationToRun, endOperationChan)
 	<-endOperationChan
 	cancel()
-	WriteToSocket(ws, fmt.Sprintf("Ended operation"), nil)
+	WriteToSocket(ws, fmt.Sprintf(operationEnded, operationToRun.Hash), "", "", nil)
 	return
-
 }
 
-func sendOutputToConn(ws *websocket.Conn, scanner *bufio.Scanner, prefix string, wg *sync.WaitGroup, operationDone chan<- bool) {
+func sendOutputToConn(ws conn, scanner *bufio.Scanner, stdout bool, wg *sync.WaitGroup) {
 	for scanner.Scan() {
 		line := scanner.Text()
-		if err := WriteToSocket(ws, fmt.Sprintf("%v: %v", prefix, line), nil); err != nil {
-			log.Println(err)
-			break
+
+		if stdout == true {
+			log.Println("Yo")
+			log.Println(line)
+			if err := WriteToSocket(ws, "", line, "", nil); err != nil {
+				log.Println(err)
+				break
+			}
+		} else {
+			log.Println("!Yo")
+			log.Println(line)
+			if err := WriteToSocket(ws, "", "", line, nil); err != nil {
+				log.Println(err)
+				break
+			}
 		}
+
 	}
 
 	if err := scanner.Err(); err != nil {
-		WriteToSocket(ws, "", err)
-		operationDone <- true
+		WriteToSocket(ws, "", "", "", err)
 	}
 
 	wg.Done()
 }
 
-func (adminExecutor *AdminExecutor) ExecuteOperation(ctx context.Context, ws *websocket.Conn, operation *OperationToRun, operationDoneChan chan<- bool) {
-	log.Println("Running operation %v", operation.Operation)
+func (adminExecutor *AdminExecutor) executeOperation(ctx context.Context, ws conn, operation *OperationToRun, operationDoneChan chan<- bool) {
+	log.Println("Running operation", operation.Operation)
 
 	output, cmdCancel, err := adminExecutor.shell.ExecuteCmdReader(operation.Operation)
 	if err != nil {
 		log.Println(err)
-		WriteToSocket(ws, "", err)
+		WriteToSocket(ws, "", "", "", err)
 
 		operationDoneChan <- true
 		return
@@ -126,8 +142,8 @@ func (adminExecutor *AdminExecutor) ExecuteOperation(ctx context.Context, ws *we
 
 	var wg sync.WaitGroup
 	wg.Add(2)
-	go sendOutputToConn(ws, stdoutScanner, "stdout", &wg, operationDoneChan)
-	go sendOutputToConn(ws, stderrScanner, "stderr", &wg, operationDoneChan)
+	go sendOutputToConn(ws, stdoutScanner, true, &wg)
+	go sendOutputToConn(ws, stderrScanner, false, &wg)
 
 	done := make(chan bool)
 
@@ -139,13 +155,14 @@ func (adminExecutor *AdminExecutor) ExecuteOperation(ctx context.Context, ws *we
 	go func() {
 		<-ctx.Done()
 		log.Println("calling cancel func")
-		cmdCancel()
+		if cmdCancel != nil {
+			cmdCancel()
+		}
 		done <- true
 	}()
 
 	<-done
 	operationDoneChan <- true
-
 }
 
 func listenForCmd(ws conn, operationRunning *OperationToRun, endOperationChan chan<- bool) {
@@ -157,6 +174,7 @@ func listenForCmd(ws conn, operationRunning *OperationToRun, endOperationChan ch
 		log.Printf("listenForCmd got message %v", string(message))
 
 		if err != nil {
+			log.Println(err)
 			endOperationChan <- true
 			return
 		}
@@ -198,7 +216,7 @@ func GetOperationFromConn(ws conn, operationPool *[]OperationToRun) (*OperationT
 		for _, operation := range *operationPool {
 			if operation.Hash == reqBody.Hash {
 				if operation.Status == "running" {
-					return nil, errors.New("operation already running")
+					return nil, fmt.Errorf(operationRunning, reqBody.Hash)
 				}
 				operation.Status = "running"
 				log.Println(operation)
@@ -206,6 +224,6 @@ func GetOperationFromConn(ws conn, operationPool *[]OperationToRun) (*OperationT
 			}
 		}
 
-		return nil, errors.New("operation not found")
+		return nil, fmt.Errorf(operationNotFound, reqBody.Hash)
 	}
 }
