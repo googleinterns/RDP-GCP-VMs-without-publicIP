@@ -30,6 +30,7 @@ type AdminExecutor struct {
 	shell shell
 }
 
+// socketCmd struct is used to read commands such as end-operation from the websocket
 type socketCmd struct {
 	Cmd  string `json:"cmd"`
 	Hash string `json:"hash"`
@@ -43,6 +44,7 @@ type socketMessage struct {
 	Err           string `json:"error"`
 }
 
+// newSocketMessage creates a socketMessage struct
 func newSocketMessage(message string, stdout string, stderr string, err error) *socketMessage {
 	errorMessage := ""
 	if err != nil {
@@ -79,7 +81,7 @@ type conn interface {
 	Close() error
 }
 
-// StartPrivateRdp is a task runner that runs all the individual functions for automated RDP.
+// RunOperation is a runner that listens for any commands and executes the actual operation
 func (adminExecutor *AdminExecutor) RunOperation(ws conn, operationToRun *OperationToRun) {
 	ctx, cancel := context.WithTimeout(context.Background(), operationContextTimeout)
 	endOperationChan := make(chan bool)
@@ -97,20 +99,18 @@ func (adminExecutor *AdminExecutor) RunOperation(ws conn, operationToRun *Operat
 	return
 }
 
+// sendOutputToConn sends the output from the operation to the websocket
 func sendOutputToConn(ws conn, scanner *bufio.Scanner, stdout bool, wg *sync.WaitGroup) {
 	for scanner.Scan() {
 		line := scanner.Text()
+		log.Println(line)
 
 		if stdout == true {
-			log.Println("Yo")
-			log.Println(line)
 			if err := WriteToSocket(ws, "", line, "", nil); err != nil {
 				log.Println(err)
 				break
 			}
 		} else {
-			log.Println("!Yo")
-			log.Println(line)
 			if err := WriteToSocket(ws, "", "", line, nil); err != nil {
 				log.Println(err)
 				break
@@ -126,6 +126,7 @@ func sendOutputToConn(ws conn, scanner *bufio.Scanner, stdout bool, wg *sync.Wai
 	wg.Done()
 }
 
+// executeOperation executes the actual operation and pipes the stdout and stderr
 func (adminExecutor *AdminExecutor) executeOperation(ctx context.Context, ws conn, operation *OperationToRun, operationDoneChan chan<- bool) {
 	log.Println("Running operation", operation.Operation)
 
@@ -165,6 +166,7 @@ func (adminExecutor *AdminExecutor) executeOperation(ctx context.Context, ws con
 	operationDoneChan <- true
 }
 
+// listenForCmd listens for commands from the extension
 func listenForCmd(ws conn, operationRunning *OperationToRun, endOperationChan chan<- bool) {
 	for {
 		log.Println("listening for end cmd")

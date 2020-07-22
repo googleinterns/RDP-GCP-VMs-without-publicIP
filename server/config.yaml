@@ -5,21 +5,6 @@ commonParams:
     description: Used to define which project to run admin command
     sample: xxxx-xxxx
     optional: true
-#   PROJECT2:
-#     type: string
-#     description: Used to define which project to run admin command
-#     default: rishabl-test
-#     sample: xxxx-xxxx
-#   PROJECT3:
-#     type: string
-#     description: Used to define which project to run admin command
-#     default: rishabl-test
-#     sample: xxxx-xxxx
-#   PROJECT4:
-#     type: string
-#     description: Used to define which project to run admin command
-#     default: rishabl-test
-#     sample: sample value
 operations: 
   - name: echo-vm
     description: Creates a Gcloud VM
