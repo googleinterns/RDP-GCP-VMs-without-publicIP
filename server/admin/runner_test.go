@@ -256,17 +256,29 @@ func TestExecuteOperation(t *testing.T) {
 	operationDoneChan = make(chan bool)
 	operation.Operation = "output"
 
+	socketOutput = []socketMessage{}
+
 	go adminExecutor.executeOperation(ctx, ws, &operation, operationDoneChan)
 	operationDone = <-operationDoneChan
 	if operationDone != true {
 		t.Errorf("executeOperation didn't set operation done channel to true after output waitgroup finished")
 	}
-	log.Println(socketOutput)
-	if socketOutput[1].Stdout != "stdout" {
-		t.Errorf("executeOperation didn't write proper stdout message to socket, got %v, expected %v", socketOutput[1].Stdout, "stdout")
+
+	var expectedStdout bool
+	var expectedStderr bool
+	for _, output := range socketOutput {
+		if output.Stdout == "stdout" {
+			expectedStdout = true
+		} else if output.Stderr == "stderr" {
+			expectedStderr = true
+		}
 	}
-	if socketOutput[2].Stderr != "stderr" {
-		t.Errorf("executeOperation didn't write proper stderr message to socket, got %v, expected %v", socketOutput[2].Stderr, "stderr")
+
+	if !expectedStdout {
+		t.Errorf("executeOperation didn't write proper stdout message to socket, expected %v", "stdout")
+	}
+	if !expectedStderr {
+		t.Errorf("executeOperation didn't write proper stderr message to socket, expected %v", "stderr")
 	}
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), operationContextTimeout)
@@ -301,6 +313,7 @@ func TestRunOperation(t *testing.T) {
 	operation.Operation = testErr
 
 	adminExecutor.RunOperation(ws, &operation)
+
 	if socketOutput[0].ServerMessage != fmt.Sprintf(serverReceivedOperation, testErr) {
 		t.Errorf("RunOperation didn't write proper acknowledgement to socket, got %v, expected %v", socketOutput[0].ServerMessage, fmt.Sprintf(serverReceivedOperation, testErr))
 	}
@@ -317,15 +330,30 @@ func TestRunOperation(t *testing.T) {
 
 	operation.Operation = "output"
 	adminExecutor.RunOperation(ws, &operation)
-	if socketOutput[0].ServerMessage != fmt.Sprintf(serverReceivedOperation, "output") {
-		t.Errorf("RunOperation didn't write proper acknowledgement to socket, got %v, expected %v", socketOutput[0].ServerMessage, fmt.Sprintf(serverReceivedOperation, "output"))
+
+	var expectedServerMessage bool
+	var expectedStdout bool
+	var expectedStderr bool
+
+	for _, output := range socketOutput {
+		if output.ServerMessage == fmt.Sprintf(serverReceivedOperation, "output") {
+			expectedServerMessage = true
+		} else if output.Stdout == "stdout" {
+			expectedStdout = true
+		} else if output.Stderr == "stderr" {
+			expectedStderr = true
+		}
 	}
 
-	if socketOutput[1].Stdout != "stdout" {
-		t.Errorf("RunOperation didn't write proper error to socket, got %v, expected %v", socketOutput[1].Stdout, "stdout")
+	if !expectedServerMessage {
+		t.Errorf("RunOperation didn't write proper acknowledgement to socket, expected %v", fmt.Sprintf(serverReceivedOperation, "output"))
 	}
 
-	if socketOutput[2].Stderr != "stderr" {
-		t.Errorf("RunOperation didn't write proper end message to socket, got %v, expected %v", socketOutput[2].ServerMessage, "stderr")
+	if !expectedStdout {
+		t.Errorf("RunOperation didn't write proper error to socket, expected %v", "stdout")
+	}
+
+	if !expectedStderr {
+		t.Errorf("RunOperation didn't write proper end message to socket, expected %v", "stderr")
 	}
 }

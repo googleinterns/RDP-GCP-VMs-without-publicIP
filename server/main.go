@@ -167,6 +167,14 @@ func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 	shell := &shell.CmdShell{}
 	adminExecutor := admin.NewAdminExecutor(shell)
 	adminExecutor.RunOperation(ws, operationToRun)
+
+	for i, operation := range operationPool {
+		if operation == *operationToRun {
+			operationPool = append(operationPool[:i], operationPool[i+1:]...)
+			break
+		}
+	}
+
 }
 
 // getComputeInstances gets the current compute instances for the project passed in.
