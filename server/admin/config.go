@@ -149,8 +149,6 @@ func checkIfParamInChoices(value string, variableName string, variablesToCheck m
 // getMissingParams checks variables to the current ones in the operation either adding them to missingParams or variablesFound
 func getMissingParams(variablesFound map[string]string, variablesInCommand map[string]string, variablesToCheck map[string]configParam, missingParams *[]string) {
 	for variableName := range variablesToCheck {
-		log.Println(variableName)
-		log.Println(variablesInCommand)
 		if value, ok := variablesInCommand[variableName]; value != "" && ok {
 			if variablesToCheck[variableName].Choices != nil {
 				paramValid := checkIfParamInChoices(value, variableName, variablesToCheck)
@@ -163,7 +161,6 @@ func getMissingParams(variablesFound map[string]string, variablesInCommand map[s
 				variablesFound[variableName] = value
 			}
 		} else if variablesToCheck[variableName].Optional {
-			log.Println(variableName)
 			variablesFound[variableName] = ""
 		} else {
 			*missingParams = append(*missingParams, variableName)
