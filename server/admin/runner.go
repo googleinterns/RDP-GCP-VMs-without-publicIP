@@ -45,7 +45,7 @@ type socketMessage struct {
 }
 
 // newSocketMessage creates a socketMessage struct
-func newSocketMessage(message string, stdout string, stderr string, err error) *socketMessage {
+func newSocketMessage(message, stdout, stderr string, err error) *socketMessage {
 	errorMessage := ""
 	if err != nil {
 		errorMessage = err.Error()
@@ -59,7 +59,7 @@ func newSocketMessage(message string, stdout string, stderr string, err error) *
 }
 
 // WriteToSocket is a wrapper that is used to write JSON to the websocket
-func WriteToSocket(ws conn, message string, stdout string, stderr string, err error) error {
+func WriteToSocket(ws conn, message, stdout, stderr string, err error) error {
 	if err := ws.WriteJSON(newSocketMessage(message, stdout, stderr, err)); err != nil {
 		log.Println(err)
 		return err
@@ -105,7 +105,7 @@ func sendOutputToConn(ws conn, scanner *bufio.Scanner, stdout bool, wg *sync.Wai
 		line := scanner.Text()
 		log.Println(line)
 
-		if stdout == true {
+		if stdout {
 			if err := WriteToSocket(ws, "", line, "", nil); err != nil {
 				log.Println(err)
 				break
@@ -148,12 +148,16 @@ func (adminExecutor *AdminExecutor) executeOperation(ctx context.Context, ws con
 
 	done := make(chan bool)
 
+	// These goroutines run concurrently waiting for either the waitgroup to finish or the
+	// context to be done before ending the operation.
 	go func() {
+		// Wait for cmd to finish outputting
 		wg.Wait()
 		done <- true
 	}()
 
 	go func() {
+		// Wait for context to be done
 		<-ctx.Done()
 		log.Println("calling cancel func")
 		if cmdCancel != nil {
@@ -166,14 +170,14 @@ func (adminExecutor *AdminExecutor) executeOperation(ctx context.Context, ws con
 	operationDoneChan <- true
 }
 
-// listenForCmd listens for commands from the extension
-func listenForCmd(ws conn, operationRunning *OperationToRun, endOperationChan chan<- bool) {
+// listenForEndCmd listens for commands from the extension
+func listenForEndCmd(ws conn, operationRunning *OperationToRun, endOperationChan chan<- bool) {
 	for {
 		log.Println("listening for end cmd")
 
 		_, message, err := ws.ReadMessage()
 
-		log.Printf("listenForCmd got message %v", string(message))
+		log.Printf("listenForEndCmd got message %v", string(message))
 
 		if err != nil {
 			log.Println(err)
@@ -183,18 +187,19 @@ func listenForCmd(ws conn, operationRunning *OperationToRun, endOperationChan ch
 
 		var cmd socketCmd
 		if err := json.Unmarshal(message, &cmd); err != nil {
-			log.Printf("listenForCmd for %v failed due to %v", operationRunning.Operation, err)
+			log.Printf("listenForEndCmd for %v failed due to %v", operationRunning.Operation, err)
 		}
 
 		if cmd.Cmd == endOperationCmd && cmd.Hash == operationRunning.Hash {
+			log.Printf("listenForEndCmd for %v successfully read", operationRunning.Operation)
 			endOperationChan <- true
 			return
 		}
 	}
 }
 
-// GetOperationFromConn reads the instance that is sent at the start of the websocket connection
-func GetOperationFromConn(ws conn, operationPool *[]OperationToRun) (*OperationToRun, error) {
+// ReadOperationHashFromConn reads the instance that is sent at the start of the websocket connection
+func ReadOperationHashFromConn(ws conn, operationPool *[]OperationToRun) (*OperationToRun, error) {
 	type request struct {
 		Hash string `json:"hash"`
 	}
@@ -215,6 +220,7 @@ func GetOperationFromConn(ws conn, operationPool *[]OperationToRun) (*OperationT
 			return nil, err
 		}
 
+		// Check if operation hash exists in pool and if status is not running
 		for _, operation := range *operationPool {
 			if operation.Hash == reqBody.Hash {
 				if operation.Status == "running" {
