@@ -84,7 +84,7 @@ func TestGetOperationFromConn(t *testing.T) {
 
 	operationPool := []OperationToRun{}
 
-	_, err := GetOperationFromConn(ws, &operationPool)
+	_, err := ReadOperationHashFromConn(ws, &operationPool)
 	if err.Error() != testErr {
 		t.Errorf("GetOperationFromConn didn't error from socket ReadMessage error")
 	}
@@ -92,13 +92,13 @@ func TestGetOperationFromConn(t *testing.T) {
 	messageErr = nil
 
 	message = []byte(`{"hash": "test"`)
-	_, err = GetOperationFromConn(ws, &operationPool)
+	_, err = ReadOperationHashFromConn(ws, &operationPool)
 	if err.Error() != "unexpected end of JSON input" {
 		t.Errorf("GetOperationFromConn didn't error from bad JSON sent")
 	}
 
 	message = []byte(`{"hash": "bad hash"}`)
-	_, err = GetOperationFromConn(ws, &operationPool)
+	_, err = ReadOperationHashFromConn(ws, &operationPool)
 	if err.Error() != fmt.Sprintf(operationNotFound, "bad hash") {
 		t.Errorf("GetOperationFromConn didn't error from missing values, got %v, expected %v", err.Error(), fmt.Sprintf(operationNotFound, "bad hash"))
 	}
@@ -107,7 +107,7 @@ func TestGetOperationFromConn(t *testing.T) {
 
 	operationPool = append(operationPool, mockOperationToRun)
 
-	operation, err := GetOperationFromConn(ws, &operationPool)
+	operation, err := ReadOperationHashFromConn(ws, &operationPool)
 	runningOperation := mockOperationToRun
 	runningOperation.Status = "running"
 	if !reflect.DeepEqual(*operation, runningOperation) {
@@ -118,7 +118,7 @@ func TestGetOperationFromConn(t *testing.T) {
 	}
 
 	operationPool[0].Status = "running"
-	_, err = GetOperationFromConn(ws, &operationPool)
+	_, err = ReadOperationHashFromConn(ws, &operationPool)
 	if err.Error() != fmt.Sprintf(operationRunning, "hash") {
 		t.Errorf("GetOperationFromConn didn't error from missing values, got %v, expected %v", err.Error(), fmt.Sprintf(operationRunning, "hash"))
 	}
@@ -152,7 +152,7 @@ func TestListenForCmd(t *testing.T) {
 	operationRunning := mockOperationToRun
 	operationRunning.Status = "running"
 
-	go listenForCmd(ws, &operationRunning, endChan)
+	go listenForEndCmd(ws, &operationRunning, endChan)
 	if end := <-endChan; end != true {
 		t.Errorf("listenForCmd didn't set quit channel out on readmessage error")
 	}
@@ -162,7 +162,7 @@ func TestListenForCmd(t *testing.T) {
 	message = []byte(`{"cmd": "end_operation", "hash":"hash"}`)
 	endChan = make(chan bool)
 	readOnce = false
-	go listenForCmd(ws, &operationRunning, endChan)
+	go listenForEndCmd(ws, &operationRunning, endChan)
 	if end := <-endChan; end != true {
 		log.Println(end)
 		t.Errorf("listenForCmd didn't set quit channel out on end cmd")

@@ -62,8 +62,8 @@ func main() {
 	router.HandleFunc("/gcloud/compute-instances", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/gcloud/start-private-rdp", startPrivateRdp)
 	router.HandleFunc("/admin/get-config", setCorsHeaders).Methods("OPTIONS")
-	router.HandleFunc("/admin/get-config", getConfig).Methods("GET")
-	router.HandleFunc("/admin/command-to-run", readAdminOperation).Methods("POST")
+	router.HandleFunc("/admin/get-config", getConfigFileAndSendJson).Methods("GET")
+	router.HandleFunc("/admin/command-to-run", validateAdminOperationParams).Methods("POST")
 	router.HandleFunc("/admin/command-to-run", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/run-operation", runAdminOperation)
 
@@ -91,8 +91,8 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// getConfig calls the functions to load the config file and set loadedConfig to it
-func getConfig(w http.ResponseWriter, r *http.Request) {
+// getConfigFileAndSendJson calls the functions to load the config file and set loadedConfig to it
+func getConfigFileAndSendJson(w http.ResponseWriter, r *http.Request) {
 	setCorsHeaders(w, nil)
 	w.Header().Set("Content-Type", "application/json")
 
@@ -114,8 +114,8 @@ func getConfig(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// readAdminOperation reads requests from the server that fill in the command's variables
-func readAdminOperation(w http.ResponseWriter, r *http.Request) {
+// validateAdminOperationParams reads requests from the server that fill in the command's variables
+func validateAdminOperationParams(w http.ResponseWriter, r *http.Request) {
 	setCorsHeaders(w, nil)
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -159,7 +159,8 @@ func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 	log.Println("Starting operation socket connection")
 	defer ws.Close()
 
-	operationToRun, err := admin.GetOperationFromConn(ws, &operationPool)
+	// Read operation hash from conn and verify it is valid before running operation.
+	operationToRun, err := admin.ReadOperationHashFromConn(ws, &operationPool)
 	if err != nil {
 		admin.WriteToSocket(ws, "", "", "", err)
 	}
@@ -168,6 +169,7 @@ func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 	adminExecutor := admin.NewAdminExecutor(shell)
 	adminExecutor.RunOperation(ws, operationToRun)
 
+	// Remove finished operation from pool
 	for i, operation := range operationPool {
 		if operation == *operationToRun {
 			operationPool = append(operationPool[:i], operationPool[i+1:]...)
