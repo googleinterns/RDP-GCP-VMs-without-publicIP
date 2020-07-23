@@ -1,0 +1,22 @@
+.container {
+    background-color: #212121;
+    height: 300px;
+    overflow-y: auto;
+    color: #fafafa;
+    flex-grow: 1;
+    padding: 1.5rem;
+    font-size: 1rem;
+}
+
+.stdout {
+    color: #76ff03;
+}
+
+.stderr {
+    color: #03a9f4;;
+}
+
+.err {
+    color: #9c27b0
+}
+

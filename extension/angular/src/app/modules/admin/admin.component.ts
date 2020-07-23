@@ -19,6 +19,7 @@ import { Config, ConfigInterface } from 'src/classes';
 import {AdminService} from './admin.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {OutputComponent} from './output/output.component';
+import { SubRdpComponent } from './sub-rdp/subrdp.component';
 
 @Component({
   selector: 'app-admin',
