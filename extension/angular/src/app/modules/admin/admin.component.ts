@@ -18,6 +18,7 @@ import { Component, NgZone } from '@angular/core';
 import { Config, ConfigInterface } from 'src/classes';
 import {AdminService} from './admin.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import {OutputComponent} from './output/output.component';
 
 @Component({
   selector: 'app-admin',
@@ -33,6 +34,9 @@ export class AdminComponent {
   commonParams = [];
   operations = [];
   loading = true;
+  operationsRunning = [];
+  outputTabIndex: number;
+
   constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) {};
 
   ngOnInit() {
@@ -112,6 +116,14 @@ export class AdminComponent {
     Object.keys(operation.paramsToSet).forEach(function(param) {
       operation.paramsToSet[param] = null
   });
+
+    const operationFull = operation.loadedOperation.operation;
+    operation.loadedOperation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':''); 
+    this.operationsRunning.push(operation.loadedOperation)
+
+    this.snackbar.open('Started operation', '', { duration: 3000 });
+
+    console.log(this.operationsRunning)
     operation.loadedOperation = null;
   }
 
@@ -152,5 +164,22 @@ export class AdminComponent {
     this.commonParams = [];
     this.loading = true;
     this.loadConfig();
+  }
+
+  // closeOutputTab sends a close message to the tab running an operation to close the websocket.
+  closeOutputTab() {
+    console.log("close button")
+    this.operationsRunning[this.outputTabIndex].close = true;
+  }
+
+  // tabChanged changes outputTabIndex to the current tab index
+  tabChanged(tabChangeEvent: any): void {
+    this.outputTabIndex = tabChangeEvent.index;
+  }
+
+  // outputTabClosed removes the ended operation from the list of tabs
+  outputTabClosed(i: number) {
+    this.operationsRunning.splice(i, 1);
+    this.snackbar.open('Operation ended', '', { duration: 3000 });
   }
 }

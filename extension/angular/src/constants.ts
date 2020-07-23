@@ -16,6 +16,7 @@
 
 const endRdpCmd = 'end';
 const loginRdpCmd = 'start-rdp';
+const endOperationCmd = 'end_operation';
 
 const readyForRdpCommandSocket = 'Ready for command';
 const rdpShutdownMessage = 'Shutdown private RDP for %v'
@@ -29,5 +30,6 @@ const statusUrl = 'http://localhost:23966/health'
 const getConfigEndpoint = 'http://localhost:23966/admin/get-config'
 const rdpSocketEndpoint = 'ws://localhost:23966/gcloud/start-private-rdp';
 const sendOperationEndpoint = 'http://localhost:23966/admin/command-to-run';
+const runOperationSocketEndpoint = 'ws://localhost:23966/admin/run-operation';
 
-export {endRdpCmd, loginRdpCmd, readyForRdpCommandSocket, rdpShutdownMessage, popupGetInstances, startPrivateRdp, rdpGetInstances, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint};
+export {endRdpCmd, loginRdpCmd, endOperationCmd, readyForRdpCommandSocket, rdpShutdownMessage, popupGetInstances, startPrivateRdp, rdpGetInstances, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint, runOperationSocketEndpoint};

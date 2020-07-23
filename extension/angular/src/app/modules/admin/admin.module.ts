@@ -15,7 +15,7 @@ limitations under the License.
 ***/
 
 import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
+import { NgModule, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminComponent } from './admin.component';
 import { AdminRoutingModule } from './admin-routing.module';
@@ -31,9 +31,10 @@ import {MatGridListModule} from '@angular/material/grid-list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatSelectModule} from '@angular/material/select';
+import { OutputComponent } from './output/output.component';
 
 @NgModule({
-  declarations: [AdminComponent],
+  declarations: [AdminComponent, OutputComponent],
   imports: [
     CommonModule,
     FormsModule,
@@ -49,7 +50,8 @@ import {MatSelectModule} from '@angular/material/select';
     MatGridListModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    MatSelectModule
+    MatSelectModule,
   ]
 })
+
 export class AdminModule {}
