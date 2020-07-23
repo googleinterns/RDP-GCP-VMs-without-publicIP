@@ -204,13 +204,12 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 		switch err.Error() {
 		case gcloud.SdkAuthError:
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(gcloud.SdkAuthError))
 		case gcloud.SdkProjectError:
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(gcloud.SdkProjectError))
 		default:
 			w.WriteHeader(http.StatusBadRequest)
 		}
+		json.NewEncoder(w).Encode(newErrorRequest(err))
 		return
 	}
 

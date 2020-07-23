@@ -86,6 +86,8 @@ export class RdpComponent {
 
     this.disableButtonsAndInput();
     this.snackbar.open('Sent end command', '', { duration: 3000 });
+
+    chrome.runtime.sendMessage({type: "rdpEnded", instance: this.rdpInstance});
   }
 
   connectionClosed() {

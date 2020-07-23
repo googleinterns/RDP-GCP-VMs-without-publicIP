@@ -27,9 +27,9 @@ const (
 	gcloudAuthError string = "there was a problem refreshing your current auth tokens"
 	projectCmdError string = "failed to find project"
 	// SdkAuthError is returned if there is an gcloud SDK auth error
-	SdkAuthError string = "gCloud SDK auth invalid"
+	SdkAuthError string = `gCloud SDK authorization is invalid, please login using "gcloud auth login"`
 	// SdkProjectError is returned if the gcloud project given is invalid
-	SdkProjectError   string = "gCloud SDK project invalid"
+	SdkProjectError   string = "gCloud SDK project is invalid"
 	gcloudErrorOutput string = "ERROR:"
 )
 

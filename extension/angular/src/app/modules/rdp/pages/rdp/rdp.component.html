@@ -14,13 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 
 <div class="rdp-container">
-    <h2 class="status">{{socketStatus}}</h2>
+    <mat-toolbar color="primary" class="toolbar">
+        <span>{{socketStatus}}</span>
+      </mat-toolbar>
 
     <div class="main">
         <div class="log-container">
-            <div class="card-container" *ngFor="let socketMessage of socketMessageList">
-                <mat-card *ngIf="socketMessage.message">{{socketMessage.message}}</mat-card>
-                <mat-card *ngIf="socketMessage.error" >{{socketMessage.error}}</mat-card>
+            <div *ngFor="let socketMessage of socketMessageList">
+                <div *ngIf="socketMessage.message" class="message">{{socketMessage.message}}</div>
+                <div *ngIf="socketMessage.error" class="error">{{socketMessage.error}}</div>
             </div>
         </div>
         <div class="cmd-container">
