@@ -19,7 +19,10 @@ import { Config, ConfigInterface, Instance } from 'src/classes';
 import {AdminService} from './admin.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {OutputComponent} from './output/output.component';
+<<<<<<< HEAD
 import { SubRdpComponent } from './sub-rdp/subrdp.component';
+=======
+>>>>>>> master
 
 @Component({
   selector: 'app-admin',
@@ -37,7 +40,10 @@ export class AdminComponent {
   loading = true;
   operationsRunning = [];
   outputTabIndex: number;
+<<<<<<< HEAD
   instanceToUpdate: Instance;
+=======
+>>>>>>> master
 
   constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) {};
 
