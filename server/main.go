@@ -159,7 +159,7 @@ func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 	log.Println("Starting operation socket connection")
 	defer ws.Close()
 
-	operationToRun, err := admin.GetOperationFromConn(ws, &operationPool)
+	operationToRun, err := admin.ReadOperationHashFromConn(ws, &operationPool)
 	if err != nil {
 		admin.WriteToSocket(ws, "", "", "", err)
 	}
