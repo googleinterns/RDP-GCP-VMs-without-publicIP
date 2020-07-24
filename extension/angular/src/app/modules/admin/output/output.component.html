@@ -1,0 +1,16 @@
+<div class="container">
+    <div class="list" *ngFor="let socketMessage of messages">
+        <div *ngIf="socketMessage.message" class="server-message">
+            {{socketMessage.message}}
+        </div>
+        <div *ngIf="socketMessage.stdout" class="stdout">
+            {{socketMessage.stdout}}
+        </div>
+        <div *ngIf="socketMessage.stderr" class="stderr">
+            {{socketMessage.stderr}}
+        </div>
+        <div *ngIf="socketMessage.err" class="err">
+            {{socketMessage.err}}
+        </div>
+    </div>    
+</div>

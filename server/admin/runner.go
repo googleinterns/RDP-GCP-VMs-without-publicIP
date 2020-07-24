@@ -91,7 +91,7 @@ func (adminExecutor *AdminExecutor) RunOperation(ws conn, operationToRun *Operat
 		return
 	}
 
-	go listenForCmd(ws, operationToRun, endOperationChan)
+	go listenForEndCmd(ws, operationToRun, endOperationChan)
 	go adminExecutor.executeOperation(ctx, ws, operationToRun, endOperationChan)
 	<-endOperationChan
 	cancel()

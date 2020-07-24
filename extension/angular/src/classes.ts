@@ -14,6 +14,8 @@
  limitations under the License.
  ***/
 
+import { AdminRoutingModule } from './app/modules/admin/admin-routing.module';
+
 // File used to contain classes and interfaces used in the extension.
 
 interface GuestOsFeature {
@@ -63,6 +65,7 @@ class SocketCmd {
   name: string;
   username: string;
   password: string;
+  hash: string;
 }
 
 interface ConfigParamInterface {
@@ -87,6 +90,19 @@ interface ConfigInterface {
   enable_rdp: boolean;
 }
 
+interface AdminOperationInterface {
+  operation: string;
+  hash: string;
+  status: string;
+}
+
+interface AdminOperationSocketOutput {
+  message: string;
+  stdout: string;
+  stderr: string;
+  error: string;
+}
+
 class Config implements ConfigInterface {
   constructor(config: ConfigInterface) {
     this.operations = config.operations;
@@ -99,4 +115,4 @@ class Config implements ConfigInterface {
   enable_rdp: boolean;
 }
 
-export {Instance, SocketMessageInterface, SocketMessage, SocketCmd, Config, ConfigInterface, ConfigParamInterface};
+export {Instance, SocketMessageInterface, SocketMessage, SocketCmd, Config, ConfigInterface, ConfigParamInterface, AdminOperationSocketOutput, AdminOperationInterface};

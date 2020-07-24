@@ -102,18 +102,16 @@ limitations under the License. -->
             </div>
 
             <div id="output-view" class="bottom" *ngIf="config.operations">
-                <mat-tab-group backgroundColor="primary" color="accent" dynamicHeight class="output-tabs">
-                    <mat-tab label="First"> 
-                        <div class="output">
-                            sample output
-                        </div>
+                <mat-tab-group (selectedTabChange)="tabChanged($event)" [selectedIndex]="operationsRunning.length-1" backgroundColor="primary" color="accent" class="output-tabs">
+                    <mat-tab class="output" label="{{operation.label}}" *ngFor="let operation of operationsRunning; index as i"> 
+                        <output [close]="operation.close" [operationToRun]="operation" (outputClosed)="outputTabClosed(i)"></output>
                     </mat-tab>
                   </mat-tab-group>
             </div>
 
         </div>
-        <a mat-fab color="accent" href="#output-view" class="bottom-right">
-            <mat-icon>keyboard_arrow_down</mat-icon>
-        </a>
+        <button (click)="closeOutputTab()" mat-fab color="warn" class="bottom-right" *ngIf="operationsRunning.length > 0">
+            <mat-icon>close</mat-icon>
+        </button>
     </ng-template>
 </div>

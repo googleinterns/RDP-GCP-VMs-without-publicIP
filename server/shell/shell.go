@@ -38,7 +38,6 @@ type CmdShell struct{}
 func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 	parsedCmd := strings.Fields(cmd)
 	out, err := exec.Command(parsedCmd[0], parsedCmd[1:]...).CombinedOutput()
-
 	return out, err
 }
 
