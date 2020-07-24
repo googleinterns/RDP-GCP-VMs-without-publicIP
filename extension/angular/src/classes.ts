@@ -43,6 +43,8 @@ class Instance {
   displayPrivateRdpDom: boolean;
   project: string;
   rdpRunning: boolean;
+  portRunning: string;
+  rdpStatus: string;
 }
 
 interface SocketMessageInterface {
@@ -91,6 +93,8 @@ interface ConfigInterface {
 }
 
 interface AdminOperationInterface {
+  type: string;
+  instance: Instance;
   operation: string;
   hash: string;
   status: string;

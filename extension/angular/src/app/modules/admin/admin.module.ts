@@ -33,6 +33,9 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatSelectModule} from '@angular/material/select';
 import { OutputComponent } from './output/output.component';
 import { SubRdpComponent } from './sub-rdp/subrdp.component';
+import {MatTableModule} from '@angular/material/table';
+import {MatPaginatorModule} from '@angular/material/paginator';
+
 
 @NgModule({
   declarations: [AdminComponent, OutputComponent, SubRdpComponent],
@@ -52,6 +55,8 @@ import { SubRdpComponent } from './sub-rdp/subrdp.component';
     MatProgressSpinnerModule,
     MatDividerModule,
     MatSelectModule,
+    MatTableModule,
+    MatPaginatorModule
   ]
 })
 

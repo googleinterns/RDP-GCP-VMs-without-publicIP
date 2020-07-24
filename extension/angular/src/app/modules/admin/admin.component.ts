@@ -15,7 +15,7 @@ limitations under the License.
 ***/
 
 import { Component, NgZone } from '@angular/core';
-import { Config, ConfigInterface } from 'src/classes';
+import { Config, ConfigInterface, Instance } from 'src/classes';
 import {AdminService} from './admin.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {OutputComponent} from './output/output.component';
@@ -37,6 +37,7 @@ export class AdminComponent {
   loading = true;
   operationsRunning = [];
   outputTabIndex: number;
+  instanceToUpdate: Instance;
 
   constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) {};
 
@@ -182,5 +183,29 @@ export class AdminComponent {
   outputTabClosed(i: number) {
     this.operationsRunning.splice(i, 1);
     this.snackbar.open('Operation ended', '', { duration: 3000 });
+  }
+
+  instanceEmitted(instance: Instance) {
+    if (!instance.rdpRunning) {
+      instance.rdpRunning = true;
+      const operation = {type: 'rdp', label: "RDP "+instance.name, instance: instance}
+      this.operationsRunning.push(operation);
+    } else {
+      this.operationsRunning.forEach((operation => {
+        if (operation.instance === instance) {
+          operation.close = true;
+        }
+      }))
+      instance.rdpRunning = false;
+    }
+    console.log(instance);
+    console.log(instance.rdpRunning);
+    console.log(!instance.rdpRunning);
+  }
+
+  updateInstance(instance: Instance) {
+    console.log(instance);
+    this.instanceToUpdate = instance;
+    this.instanceToUpdate = null;
   }
 }

@@ -1,11 +1,9 @@
 .container {
-    background-color: #212121;
-    height: 300px;
     overflow-y: auto;
-    color: #fafafa;
     flex-grow: 1;
     padding: 1.5rem;
-    font-size: 1rem;
+    display: flex;
+    justify-content: space-between;
 }
 
 .stdout {
@@ -18,5 +16,15 @@
 
 .err {
     color: #9c27b0
+}
+
+.project-info {
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+}
+
+.table-container {
+    width: 75%;
 }
 

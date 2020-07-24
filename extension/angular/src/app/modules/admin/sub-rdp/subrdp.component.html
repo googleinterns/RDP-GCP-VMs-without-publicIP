@@ -1,3 +1,41 @@
 <div class="container">
-    hello
+    <div class="project-info">
+        <h4>RDP into private Windows instances</h4>
+        <mat-form-field appearance="standard">
+            <mat-label>GCloud Project</mat-label>
+            <input matInput [(ngModel)]="project">
+          </mat-form-field>
+          <button type="button" [disabled]="!project" (click)="getComputeInstances()" mat-raised-button color="primary">GET INSTANCES</button>
+    </div>
+    <div *ngIf="instances" class="table-container mat-elevation-z1">
+        <mat-table [dataSource]="dataSource">      
+          <ng-container matColumnDef="name">
+            <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.name}} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.rdpStatus}} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="port">
+            <mat-header-cell *matHeaderCellDef> IAP Port </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.portRunning}} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="start-rdp">
+            <mat-header-cell *matHeaderCellDef> </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> 
+                <button type="button" [disabled]="instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="primary">START RDP</button>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="end-rdp">
+            <mat-header-cell *matHeaderCellDef> </mat-header-cell>
+            <mat-cell *matCellDef="let instance">
+                <button type="button" [disabled]="!instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="warn">END RDP</button>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+    </div>
 </div>
