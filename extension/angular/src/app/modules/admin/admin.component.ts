@@ -151,7 +151,12 @@ export class AdminComponent {
 
     }, error => {
       console.log(error)
-      this.configError = JSON.stringify(error);
+      console.log(error.status)
+      if (error.status === 0) {
+        this.configError = "Error connecting to server, are you sure the companion server is running?";
+      } else {
+        this.configError = JSON.stringify(error);
+      }
     })
 
     this.loading = false;
