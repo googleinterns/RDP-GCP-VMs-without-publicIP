@@ -45,6 +45,7 @@ class Instance {
   rdpRunning: boolean;
   portRunning: string;
   rdpStatus: string;
+  firewallNetwork: string;
 }
 
 interface SocketMessageInterface {

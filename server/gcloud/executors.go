@@ -59,7 +59,7 @@ func (gcloudExecutor *GcloudExecutor) GetComputeInstances(projectName string) ([
 func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws conn, instance *Instance) error {
 	log.Println("Creating firewall for ", instance.Name)
 
-	cmd := fmt.Sprintf(iapFirewallCreateCmd, instance.Name, instance.Name, instance.ProjectName)
+	cmd := fmt.Sprintf(iapFirewallCreateCmd, instance.Name, instance.Name, instance.ProjectName, instance.FirewallNetwork)
 
 	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(cmd)
 

@@ -21,9 +21,10 @@ import { PopupRoutingModule } from './popup-routing.module';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @NgModule({
   declarations: [PopupComponent],
-  imports: [CommonModule, PopupRoutingModule, MatListModule, MatProgressSpinnerModule, MatButtonModule]
+  imports: [CommonModule, PopupRoutingModule, MatListModule, MatProgressSpinnerModule, MatButtonModule, MatDialogModule]
 })
 export class PopupModule {}

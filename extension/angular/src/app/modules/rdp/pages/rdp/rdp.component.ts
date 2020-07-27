@@ -17,7 +17,6 @@ limitations under the License.
 import { Component, NgZone } from '@angular/core';
 import { Instance, SocketMessage, SocketMessageInterface, SocketCmd } from 'src/classes';
 import { readyForRdpCommandSocket, loginRdpCmd, endRdpCmd, rdpShutdownMessage, rdpGetInstances, rdpSocketEndpoint } from 'src/constants';
-import { bindCallback, BehaviorSubject, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -87,7 +86,7 @@ export class RdpComponent {
     this.disableButtonsAndInput();
     this.snackbar.open('Sent end command', '', { duration: 3000 });
 
-    chrome.runtime.sendMessage({type: "rdpEnded", instance: this.rdpInstance});
+    chrome.runtime.sendMessage({type: 'rdpEnded', instance: this.rdpInstance});
   }
 
   connectionClosed() {

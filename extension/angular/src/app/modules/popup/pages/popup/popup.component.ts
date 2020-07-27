@@ -15,11 +15,12 @@ limitations under the License.
 ***/
 
 import { Component } from '@angular/core';
-import { bindCallback, fromEventPattern, bindNodeCallback } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
+
 import { PopupService } from './popup.service';
 import { Instance } from '../../../../../classes';
 import { popupGetInstances, startPrivateRdp } from 'src/constants';
+import { NetworkDialog } from '../../../../components/network-dialog/network-dialog.component';
 
 @Component({
   selector: 'app-popup',
@@ -36,7 +37,7 @@ export class PopupComponent {
   projectName: string;
   displayError: string;
 
-  constructor(private popupService: PopupService) {}
+  constructor(public dialog: MatDialog, private popupService: PopupService) {}
 
   ngOnInit() {
     this.loading = true;
@@ -62,11 +63,8 @@ export class PopupComponent {
             this.instances = resp.instances;
             this.projectName = this.instances[0].project;
           } else if (resp.error.length > 0) {
-            console.log("haha")
             this.loading = false;
             this.displayError = resp.error;
-            console.log(this.displayError)
-            console.log(resp.error)
           }
         });
 
@@ -77,9 +75,20 @@ export class PopupComponent {
   };
 
   onRdpClick(instance: Instance) {
-    chrome.runtime.sendMessage({type: startPrivateRdp, instance}, (resp) => {
-      this.instances = resp.instances;
+    const dialogRef = this.dialog.open(NetworkDialog, {
+      width: '400px',
+      data: {network: 'default'}
     });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        instance.firewallNetwork = result;
+        console.log(instance)
+        chrome.runtime.sendMessage({type: startPrivateRdp, instance}, (resp) => {
+          this.instances = resp.instances;
+        });
+      }
+    });
+
   };
 
 }

@@ -14,15 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { Component, NgZone, Input, Output, EventEmitter } from '@angular/core';
-import { Instance, AdminOperationInterface, SocketCmd} from 'src/classes';
-import { runOperationSocketEndpoint, loginRdpCmd, endRdpCmd, rdpShutdownMessage, rdpGetInstances, rdpSocketEndpoint, endOperationCmd } from 'src/constants';
-import { bindCallback, BehaviorSubject, Subscription } from 'rxjs';
-import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { Output, EventEmitter, Component } from '@angular/core';
 import { SubRdpService } from './subrdp.service';
-//import {MatPaginator} from '@angular/material/paginator';
-import {MatTableDataSource} from '@angular/material/table';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatDialog } from '@angular/material/dialog';
+
+import { Instance} from 'src/classes';
+import { NetworkDialog } from '../../../components/network-dialog/network-dialog.component';
 
 @Component({
   selector: 'sub-rdp',
@@ -35,31 +33,14 @@ export class SubRdpComponent {
     project: string;
     getInstancesError: string;
     instances: Instance[];
-    displayedColumns: string[] = ['name', 'status', 'port', 'start-rdp', 'end-rdp'];
+    displayedColumns: string[] = ['name', 'zone', 'status', 'port', 'start-rdp', 'end-rdp'];
     dataSource: MatTableDataSource<Instance>;
-
-    @Input() set updateInstance(updateInstance: Instance) {
-      console.log("haha")
-      // if (updateInstance) {
-      //   console.log("received updateinstance")
-      //   console.log(updateInstance)
-      //   this.instances.forEach((instance) => {
-      //     if (instance.id === updateInstance.id) {
-      //       instance = updateInstance;
-      //     }
-      //   });
-      //   this.dataSource = new MatTableDataSource<Instance>(this.instances);
-      // }
-    }
 
     @Output() instance = new EventEmitter<Instance>();
 
-    constructor(private zone: NgZone, private subRdpService: SubRdpService) {};
+    constructor(public dialog: MatDialog, private subRdpService: SubRdpService) {};
 
-    ngOnInit() {
-
-    }
-
+    // getComputeInstances gets the current compute instances for the credentials signed into gCloud
     getComputeInstances() {
       const data = {project: this.project}
       this.subRdpService.getComputeInstances(data)
@@ -73,18 +54,34 @@ export class SubRdpComponent {
           this.instances = response;
           this.instances.forEach((instance) => {
             instance.project = this.project;
+            instance.zone = instance.zone.split('/').pop();
           })
           console.log(this.instances)
-          this.project = "";
+          this.project = '';
+          this.getInstancesError = null;
           this.dataSource = new MatTableDataSource<Instance>(this.instances);
         }
-  
+
       }, error => {
-        this.getInstancesError = error;
+        this.getInstancesError = error.error.error;
       })
     }
 
     rdp(instance: Instance) {
-      this.instance.emit(instance);
+      if (!instance.rdpRunning) {
+        const dialogRef = this.dialog.open(NetworkDialog, {
+          width: '400px',
+          data: {network: 'default'}
+        });
+        dialogRef.afterClosed().subscribe(result => {
+          if (result) {
+            instance.firewallNetwork = result;
+            this.instance.emit(instance);
+          }
+        });
+      } else {
+        this.instance.emit(instance);
+      }
     }
 }
+

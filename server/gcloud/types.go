@@ -35,7 +35,7 @@ const (
 
 // iap firewall consts
 const (
-	iapFirewallCreateCmd            string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s"
+	iapFirewallCreateCmd            string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s --network=%s"
 	iapFirewallDeleteCmd            string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q --project=%s"
 	firewallRuleExistsCmdOutput     string = "resource 'projects/%s/global/firewalls/admin-extension-private-rdp-%v' already exists"
 	firewallRuleAlreadyExistsOutput string = "Firewall rule already exists for %v"
@@ -99,6 +99,7 @@ type Instance struct {
 	Disk              []disk              `json:"disks"`
 	NetworkInterfaces []networkInterfaces `json:"networkInterfaces"`
 	ProjectName       string              `json:"project"`
+	FirewallNetwork   string              `json:"firewallNetwork"`
 }
 
 type shell interface {

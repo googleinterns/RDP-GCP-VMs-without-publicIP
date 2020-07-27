@@ -14,32 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-.popup-container {
-    display: flex;
-    flex-direction: column;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
-    justify-content: center;
-    width: 400px;
-    margin: 0;
-}
-
-.spinner-container {
-    padding: 10%;
-}
-
-.instance-container {
-    padding: 10% 0;
-}
-
-.list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-
-}
+import { Inject, Component } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 
-.error {
-    padding: 5%;
-}
+@Component({
+    selector: 'network-dialog',
+    templateUrl: 'network-dialog.html',
+  })
+export class NetworkDialog {
+
+    constructor(
+      public dialogRef: MatDialogRef<NetworkDialog>,
+      @Inject(MAT_DIALOG_DATA) public data: {network: string}) {}
+
+    onNoClick(): void {
+      this.dialogRef.close();
+    }
+  }

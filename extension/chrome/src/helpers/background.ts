@@ -16,7 +16,7 @@
 
 /* A file that contains functions used in the background script */
 
-import {pantheonInstancesListRegex, pantheonPageRegex, getComputeInstancesEndpoint, popupGetInstances, startPrivateRdp, rdpGetInstances} from './constants';
+import {pantheonPageRegex, getComputeInstancesEndpoint, popupGetInstances, startPrivateRdp, rdpGetInstances} from './constants';
 import {Instance, InstanceInterface} from '../classes';
 
 // Enable chrome extension popup on matching hosts.
@@ -63,12 +63,7 @@ const instanceFunctions = {
         body: JSON.stringify({project: projectName}),
       }
     );
-    // if (instanceRequest.status === 401) {
-    //   throw new Error('gCloud Auth');
-    // }
-    // if (!instanceRequest.ok) {
-    //   throw new Error('server error');
-    // }
+
     return await instanceRequest.json();
   },
 };
@@ -198,7 +193,7 @@ const messageListener = () => {
       for (let i = 0; i < computeInstances.length; i++) {
         if (computeInstances[i].name === request.instance.name) {
           computeInstances[i].rdpRunning = true;
-          instanceToRdp = computeInstances[i];
+          instanceToRdp = request.instance;
           break;
         }
       }
