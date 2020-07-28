@@ -1,0 +1,13 @@
+{
+  "name": "Extension for administration on GCP",
+  "version": "1.0",
+  "description": "Extension for administration on GCP",
+  "permissions": ["activeTab", "declarativeContent", "storage", "tabs", "webNavigation", "webRequest"],
+  "background": {
+      "scripts": ["background.js"]
+  },
+  "browser_action": {
+      "default_title": "gCloud Admin Extension"
+  },
+  "manifest_version": 2
+}

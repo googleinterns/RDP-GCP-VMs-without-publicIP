@@ -60,6 +60,7 @@ func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws conn, instance *Insta
 	log.Println("Creating firewall for ", instance.Name)
 
 	if len(instance.NetworkInterfaces) != 1 {
+		log.Println(instance.NetworkInterfaces)
 		return errors.New(multipleNetworksError)
 	}
 

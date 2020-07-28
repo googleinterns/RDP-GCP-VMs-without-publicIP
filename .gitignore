@@ -12,10 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-extension/npm-debug.log
-extension/yarn-error.log
-extension/node_modules/
-extension/dist/
-extension/tmp/
-extension/coverage/
+admin-extension/npm-debug.log
+admin-extension/yarn-error.log
+admin-extension/node_modules/
+admin-extension/dist/
+admin-extension/tmp/
+admin-extension/coverage/
+gcloud-private-rdp/npm-debug.log
+gcloud-private-rdp/yarn-error.log
+gcloud-private-rdp/node_modules/
+gcloud-private-rdp/dist/
+gcloud-private-rdp/tmp/
+gcloud-private-rdp/coverage/
 /.idea/

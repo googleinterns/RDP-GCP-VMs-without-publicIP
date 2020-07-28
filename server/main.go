@@ -34,7 +34,6 @@ import (
 )
 
 const (
-	allowedOrigin  string = "chrome-extension://ljejdkiepkafbpnbacemjjcleckglnjl"
 	allowedMethods string = "POST, GET, OPTIONS"
 	allowedHeaders string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
 )
@@ -72,8 +71,8 @@ func main() {
 
 // setCorsHeaders is used to set the headers for CORS requests from the Chrome Extension.
 // All preflight requests are handled by this function and it is also used in the HTTP functions.
-func setCorsHeaders(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+func setCorsHeaders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", allowedMethods)
 	w.Header().Set("Access-Control-Allow-Headers", allowedHeaders)
 }
