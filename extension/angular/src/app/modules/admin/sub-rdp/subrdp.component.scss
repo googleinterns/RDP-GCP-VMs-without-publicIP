@@ -14,18 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+.container {
+    overflow-y: auto;
+    flex-grow: 1;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+}
 
-import { AppModule } from './app/app.module';
-import { environment } from './environments/environment';
+.err {
+    color: #ba000d;
+}
 
-chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-  if (environment.production) {
-    enableProdMode();
-  }
+.project-info {
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+}
 
-  platformBrowserDynamic()
-    .bootstrapModule(AppModule)
-    .catch(error => console.error(error));
-});
+.table-container {
+    width: 75%;
+}
+
+.title {
+    margin: 0;
+    font-weight: bold;
+    font-size: 12px;
+}

@@ -80,7 +80,7 @@ var (
         "fingerprint": "",
         "kind": "compute#networkInterface",
         "name": "nic0",
-        "network": "",
+        "network": "default",
         "networkIP": "",
         "subnetwork": ""
       }
@@ -107,7 +107,8 @@ var (
       "fingerprint": ""
     },
     "zone": "https://www.googleapis.com/compute/v1/projects/project-name/zones/us-west1-b",
-    "project": "project-name"
+    "project": "project-name",
+    "firewallNetwork": "default"
   }
 ]`)
 )
@@ -130,16 +131,16 @@ func (*mockShell) ExecuteCmd(cmd string) ([]byte, error) {
 	if cmd == fmt.Sprintf(rdpProgramCmd, 9999, "error", "password") {
 		return []byte("output"), errors.New("error")
 	}
-	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "auth-error") {
+	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "auth-error", "default") {
 		return []byte(gcloudAuthError), errors.New("error")
 	}
-	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "project-error") {
+	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "project-error", "default") {
 		return []byte(projectCmdError), errors.New("error")
 	}
-	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "exists") {
+	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "exists", "default") {
 		return []byte(fmt.Sprintf(firewallRuleExistsCmdOutput, "exists", "test-project")), errors.New("error")
 	}
-	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "valid") {
+	if cmd == fmt.Sprintf(iapFirewallCreateCmd, "test-project", "test-project", "valid", "default") {
 		return []byte(""), nil
 	}
 

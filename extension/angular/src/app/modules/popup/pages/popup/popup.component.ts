@@ -15,8 +15,8 @@ limitations under the License.
 ***/
 
 import { Component } from '@angular/core';
-import { bindCallback, fromEventPattern, bindNodeCallback } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
+
 import { PopupService } from './popup.service';
 import { Instance } from '../../../../../classes';
 import { popupGetInstances, startPrivateRdp } from 'src/constants';
@@ -34,6 +34,7 @@ export class PopupComponent {
   instances: Instance[];
   loading: boolean;
   projectName: string;
+  displayError: string;
 
   constructor(private popupService: PopupService) {}
 
@@ -55,10 +56,14 @@ export class PopupComponent {
   getInstances() {
     const pollForInstances = setInterval(() => {
         chrome.runtime.sendMessage({type: popupGetInstances}, (resp) => {
-          if (resp.instances !== []) {
+          console.log(resp)
+          if (resp.instances.length > 0) {
             this.loading = false;
             this.instances = resp.instances;
-            this.projectName = resp.projectName;
+            this.projectName = this.instances[0].project;
+          } else if (resp.error.length > 0) {
+            this.loading = false;
+            this.displayError = resp.error;
           }
         });
 

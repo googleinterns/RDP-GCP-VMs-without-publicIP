@@ -26,7 +26,10 @@ limitations under the License. -->
     
     <ng-template #instanceTable>
         <div class="instance-container">
-            <mat-list>
+            <div *ngIf="displayError" class="error">
+                <h4 matSubheader>{{displayError}}</h4>
+            </div>
+            <mat-list *ngIf="instances">
                 <h4 matSubheader>Instances found for {{projectName}}</h4>
                 <mat-list-item *ngFor="let instance of instances">
                     <div class="list-item">

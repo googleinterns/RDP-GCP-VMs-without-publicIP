@@ -14,18 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { getComputeInstancesEndpoint } from 'src/constants';
 
-import { AppModule } from './app/app.module';
-import { environment } from './environments/environment';
+@Injectable()
+export class SubRdpService {
+    constructor(private http: HttpClient){}
 
-chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-  if (environment.production) {
-    enableProdMode();
-  }
-
-  platformBrowserDynamic()
-    .bootstrapModule(AppModule)
-    .catch(error => console.error(error));
-});
+    getComputeInstances (data: object): Observable<object> {
+        return this.http.post(getComputeInstancesEndpoint, data)
+    }
+}

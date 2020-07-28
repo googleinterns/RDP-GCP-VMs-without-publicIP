@@ -27,20 +27,21 @@ const (
 	gcloudAuthError string = "there was a problem refreshing your current auth tokens"
 	projectCmdError string = "failed to find project"
 	// SdkAuthError is returned if there is an gcloud SDK auth error
-	SdkAuthError string = "gCloud SDK auth invalid"
+	SdkAuthError string = `gCloud SDK authorization is invalid, please login using "gcloud auth login"`
 	// SdkProjectError is returned if the gcloud project given is invalid
-	SdkProjectError   string = "gCloud SDK project invalid"
+	SdkProjectError   string = "gCloud SDK project is invalid"
 	gcloudErrorOutput string = "ERROR:"
 )
 
 // iap firewall consts
 const (
-	iapFirewallCreateCmd            string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s"
+	iapFirewallCreateCmd            string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s --network=%s"
 	iapFirewallDeleteCmd            string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q --project=%s"
 	firewallRuleExistsCmdOutput     string = "resource 'projects/%s/global/firewalls/admin-extension-private-rdp-%v' already exists"
 	firewallRuleAlreadyExistsOutput string = "Firewall rule already exists for %v"
 	didntCreateFirewallOutput       string = "Could not create firewall for %v"
 	createdFirewallOutput           string = "Created firewall for %v"
+	multipleNetworksError           string = "%v has 0 or more than 1 network interface"
 )
 
 // iap tunnel and websocket consts
@@ -99,6 +100,7 @@ type Instance struct {
 	Disk              []disk              `json:"disks"`
 	NetworkInterfaces []networkInterfaces `json:"networkInterfaces"`
 	ProjectName       string              `json:"project"`
+	FirewallNetwork   string              `json:"firewallNetwork"`
 }
 
 type shell interface {

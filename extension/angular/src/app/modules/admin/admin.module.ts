@@ -15,7 +15,7 @@ limitations under the License.
 ***/
 
 import { CommonModule } from '@angular/common';
-import { NgModule, Output } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminComponent } from './admin.component';
 import { AdminRoutingModule } from './admin-routing.module';
@@ -24,17 +24,24 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import {MatToolbarModule} from '@angular/material/toolbar';
-import {MatIconModule} from '@angular/material/icon';
-import {MatTabsModule} from '@angular/material/tabs';
-import {MatGridListModule} from '@angular/material/grid-list';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatGridListModule} from '@angular/material/grid-list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatSelectModule} from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
+
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatDialogModule } from '@angular/material/dialog';
+
 import { OutputComponent } from './output/output.component';
+import { SubRdpComponent } from './sub-rdp/subrdp.component';
+
 
 @NgModule({
-  declarations: [AdminComponent, OutputComponent],
+  declarations: [AdminComponent, OutputComponent, SubRdpComponent],
   imports: [
     CommonModule,
     FormsModule,
@@ -51,6 +58,9 @@ import { OutputComponent } from './output/output.component';
     MatProgressSpinnerModule,
     MatDividerModule,
     MatSelectModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatDialogModule
   ]
 })
 

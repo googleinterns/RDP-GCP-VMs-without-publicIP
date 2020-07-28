@@ -1,0 +1,65 @@
+<!--
+Copyright 2020 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div class="container">
+    <div class="project-info">
+        <h4 class="title">PRIVATE RDP INTO WINDOWS INSTANCES</h4>
+        <mat-form-field appearance="standard">
+            <mat-label>GCloud Project</mat-label>
+            <input matInput [(ngModel)]="project">
+          </mat-form-field>
+          <button type="button" [disabled]="!project" (click)="getComputeInstances()" mat-raised-button color="primary">GET INSTANCES</button>
+    </div>
+    <div *ngIf="getInstancesError" class="err">
+        {{getInstancesError}}
+    </div>
+
+    <div *ngIf="instances" class="table-container mat-elevation-z1">
+        <mat-table [dataSource]="dataSource">      
+          <ng-container matColumnDef="name">
+            <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.name}} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="zone">
+            <mat-header-cell *matHeaderCellDef> Zone </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.zone}} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.rdpStatus}} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="port">
+            <mat-header-cell *matHeaderCellDef> IAP Port </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.portRunning}} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="start-rdp">
+            <mat-header-cell *matHeaderCellDef> </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> 
+                <button type="button" [disabled]="instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="primary">START RDP</button>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="end-rdp">
+            <mat-header-cell *matHeaderCellDef> </mat-header-cell>
+            <mat-cell *matCellDef="let instance">
+                <button type="button" [disabled]="!instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="warn">END RDP</button>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+    </div>
+</div>

@@ -15,10 +15,10 @@ limitations under the License.
 ***/
 
 import { Component, NgZone } from '@angular/core';
-import { Config, ConfigInterface } from 'src/classes';
-import {AdminService} from './admin.service';
+import { Config, ConfigInterface, Instance } from 'src/classes';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import {OutputComponent} from './output/output.component';
+import { AdminService } from './admin.service';
+
 
 @Component({
   selector: 'app-admin',
@@ -36,6 +36,7 @@ export class AdminComponent {
   loading = true;
   operationsRunning = [];
   outputTabIndex: number;
+  instanceToUpdate: Instance;
 
   constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) {};
 
@@ -113,12 +114,12 @@ export class AdminComponent {
 
   // startLoadedOperation will start the loadedOperation, clears the form.
   startLoadedOperation(operation: any) {
-    Object.keys(operation.paramsToSet).forEach(function(param) {
+    Object.keys(operation.paramsToSet).forEach((param) => {
       operation.paramsToSet[param] = null
-  });
+    });
 
     const operationFull = operation.loadedOperation.operation;
-    operation.loadedOperation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':''); 
+    operation.loadedOperation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');
     this.operationsRunning.push(operation.loadedOperation)
 
     this.snackbar.open('Started operation', '', { duration: 3000 });
@@ -150,7 +151,12 @@ export class AdminComponent {
 
     }, error => {
       console.log(error)
-      this.configError = JSON.stringify(error);
+      console.log(error.status)
+      if (error.status === 0) {
+        this.configError = "Error connecting to server, are you sure the companion server is running?";
+      } else {
+        this.configError = JSON.stringify(error);
+      }
     })
 
     this.loading = false;
@@ -168,7 +174,8 @@ export class AdminComponent {
 
   // closeOutputTab sends a close message to the tab running an operation to close the websocket.
   closeOutputTab() {
-    console.log("close button")
+    console.log('close button')
+    console.log(this.operationsRunning[this.outputTabIndex])
     this.operationsRunning[this.outputTabIndex].close = true;
   }
 
@@ -181,5 +188,22 @@ export class AdminComponent {
   outputTabClosed(i: number) {
     this.operationsRunning.splice(i, 1);
     this.snackbar.open('Operation ended', '', { duration: 3000 });
+  }
+
+  // instanceEmitted handles cases from the subrdp component including starting and ending the RDP websocket connection.
+  instanceEmitted(instance: Instance) {
+    if (!instance.rdpRunning) {
+      instance.rdpRunning = true;
+      const operation = {type: 'rdp', label: 'RDP '+instance.name, instance}
+      this.operationsRunning.push(operation);
+    } else {
+      this.operationsRunning.forEach((operation => {
+        if (operation.instance === instance) {
+          operation.rdpClose = true;
+
+          this.snackbar.open('Ending RDP for '+instance.name, '', { duration: 3000 });
+        }
+      }))
+    }
   }
 }

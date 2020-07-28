@@ -14,12 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { Component, NgZone, Input, Output, EventEmitter } from '@angular/core';
-import { AdminOperationSocketOutput, AdminOperationInterface, SocketCmd} from 'src/classes';
-import { runOperationSocketEndpoint, loginRdpCmd, endRdpCmd, rdpShutdownMessage, rdpGetInstances, rdpSocketEndpoint, endOperationCmd } from 'src/constants';
-import { bindCallback, BehaviorSubject, Subscription } from 'rxjs';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { MatSnackBar } from '@angular/material/snack-bar';
+
+import { AdminOperationSocketOutput, AdminOperationInterface, SocketCmd} from 'src/classes';
+import { runOperationSocketEndpoint, readyForRdpCommandSocket, endRdpCmd, rdpShutdownMessage, rdpSocketEndpoint, endOperationCmd } from 'src/constants';
 
 @Component({
   selector: 'output',
@@ -30,19 +29,53 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class OutputComponent {
     messages = [] as AdminOperationSocketOutput[];
     socket: WebSocketSubject<any> = webSocket(runOperationSocketEndpoint);
+    rdpSocket: WebSocketSubject<any> = webSocket(rdpSocketEndpoint);
 
     @Input() operationToRun: AdminOperationInterface;
+
+    // Close input from the red close button
     @Input() set close(close: boolean) {
         if (close) {
+          if (this.operationToRun.type === 'rdp') {
+            if (!this.operationToRun.instance.rdpRunning) {
+              this.outputClosed.emit(true);
+            } else {
+              this.endRdp();
+            }
+            this.outputClosed.emit(true);
+          } else {
             this.endOperation();
+          }
         }
     }
+
+    // Close input from the end RDP button
+    @Input() set closeRdp(end: boolean) {
+      if (end) {
+        this.endRdp();
+      }
+    }
+
     @Output() outputClosed = new EventEmitter<boolean>();
 
-    constructor(private zone: NgZone) {};
+    constructor() {};
 
     ngOnInit() {
-        this.socketConnection();
+        if (this.operationToRun.type === 'rdp') {
+          this.rdpConnection();
+        } else {
+          this.socketConnection();
+        }
+    }
+
+
+    // Send end RDP command and remove port
+    endRdp() {
+      const msg = new SocketCmd()
+      msg.cmd = endRdpCmd;
+      msg.name = this.operationToRun.instance.name;
+      this.rdpSocket.next(msg);
+      this.operationToRun.instance.portRunning = '';
     }
 
     // endOperation sends an end command to websocket
@@ -68,11 +101,55 @@ export class OutputComponent {
           (err) => {
             // Handle error from connection
             console.log(err);
-            
+
           },
           () => {
             // Handle connection closed from server
-            console.log("closed")
+            console.log('closed')
+          },
+       );
+      }
+
+
+    // rdpConnection handles the websocket connection for private RDP
+    rdpConnection() {
+        console.log('starting conn')
+        this.rdpSocket.next(this.operationToRun.instance)
+        this.rdpSocket.subscribe(
+          (msg) => {
+            // Handle messages from the connection
+            this.operationToRun.instance.rdpStatus = 'Connected'
+
+            const receivedMessage = msg as AdminOperationSocketOutput;
+            this.messages.push(receivedMessage);
+
+            // If started IAP tunnel message, display port in table
+            if (receivedMessage.message.includes('Started IAP tunnel for ' + this.operationToRun.instance.name)) {
+              const port = receivedMessage.message.split(': ')[1];
+              this.operationToRun.instance.portRunning = port;
+            }
+            
+            // Set status to ready if received ready for RDP message
+            if (receivedMessage.message === readyForRdpCommandSocket) {
+              this.operationToRun.instance.rdpStatus = 'Ready';
+            }
+
+            // Set instance to not running when shut down message received.
+            if (receivedMessage.message === rdpShutdownMessage) {
+              this.operationToRun.instance.rdpStatus = 'Shut down';
+              this.operationToRun.instance.rdpRunning = false;
+            }
+          },
+          (err) => {
+            // Handle error from connection
+            console.log(err);
+            this.operationToRun.instance.rdpStatus = 'Closed';
+            this.operationToRun.instance.rdpRunning = false;
+          },
+          () => {
+            // Handle connection closed from server
+            this.operationToRun.instance.rdpStatus = 'Closed from server';
+            this.operationToRun.instance.rdpRunning = false;
           },
        );
       }

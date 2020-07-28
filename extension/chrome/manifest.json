@@ -9,10 +9,5 @@
   "browser_action": {
       "default_title": "gCloud Admin Extension"
   },
-  "content_scripts": [{
-      "js": ["pantheon_content.js"],
-      "run_at": "document_end",
-      "matches": ["https://b.corp.google.com/*", "https://pantheon.corp.google.com/*"]
-    }],
   "manifest_version": 2
 }

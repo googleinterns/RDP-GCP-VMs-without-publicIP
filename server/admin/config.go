@@ -104,7 +104,7 @@ func LoadConfig() (*Config, error) {
 	var config Config
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println(err)
-		return &Config{}, errors.New(configFileReadError)
+		return &Config{}, err
 	}
 
 	if err := viper.Unmarshal(&config); err != nil {
