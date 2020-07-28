@@ -41,6 +41,7 @@ const (
 	firewallRuleAlreadyExistsOutput string = "Firewall rule already exists for %v"
 	didntCreateFirewallOutput       string = "Could not create firewall for %v"
 	createdFirewallOutput           string = "Created firewall for %v"
+	multipleNetworksError           string = "%v has 0 or more than 1 network interface"
 )
 
 // iap tunnel and websocket consts

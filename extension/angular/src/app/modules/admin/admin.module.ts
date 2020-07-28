@@ -38,11 +38,10 @@ import { MatDialogModule } from '@angular/material/dialog';
 
 import { OutputComponent } from './output/output.component';
 import { SubRdpComponent } from './sub-rdp/subrdp.component';
-import { NetworkDialog } from '../../components/network-dialog/network-dialog.component';
 
 
 @NgModule({
-  declarations: [AdminComponent, OutputComponent, SubRdpComponent, NetworkDialog],
+  declarations: [AdminComponent, OutputComponent, SubRdpComponent],
   imports: [
     CommonModule,
     FormsModule,

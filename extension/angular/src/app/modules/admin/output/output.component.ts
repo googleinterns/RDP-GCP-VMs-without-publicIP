@@ -42,6 +42,7 @@ export class OutputComponent {
             } else {
               this.endRdp();
             }
+            this.outputClosed.emit(true);
           } else {
             this.endOperation();
           }

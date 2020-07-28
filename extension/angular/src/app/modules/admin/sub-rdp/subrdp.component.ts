@@ -17,10 +17,8 @@ limitations under the License.
 import { Output, EventEmitter, Component } from '@angular/core';
 import { SubRdpService } from './subrdp.service';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatDialog } from '@angular/material/dialog';
 
 import { Instance} from 'src/classes';
-import { NetworkDialog } from '../../../components/network-dialog/network-dialog.component';
 
 @Component({
   selector: 'sub-rdp',
@@ -38,7 +36,7 @@ export class SubRdpComponent {
 
     @Output() instance = new EventEmitter<Instance>();
 
-    constructor(public dialog: MatDialog, private subRdpService: SubRdpService) {};
+    constructor(private subRdpService: SubRdpService) {};
 
     // getComputeInstances gets the current compute instances for the credentials signed into gCloud
     getComputeInstances() {
@@ -68,20 +66,7 @@ export class SubRdpComponent {
     }
 
     rdp(instance: Instance) {
-      if (!instance.rdpRunning) {
-        const dialogRef = this.dialog.open(NetworkDialog, {
-          width: '400px',
-          data: {network: 'default'}
-        });
-        dialogRef.afterClosed().subscribe(result => {
-          if (result) {
-            instance.firewallNetwork = result;
-            this.instance.emit(instance);
-          }
-        });
-      } else {
         this.instance.emit(instance);
-      }
     }
 }
 

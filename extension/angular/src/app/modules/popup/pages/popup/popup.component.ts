@@ -20,7 +20,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { PopupService } from './popup.service';
 import { Instance } from '../../../../../classes';
 import { popupGetInstances, startPrivateRdp } from 'src/constants';
-import { NetworkDialog } from '../../../../components/network-dialog/network-dialog.component';
 
 @Component({
   selector: 'app-popup',
@@ -37,7 +36,7 @@ export class PopupComponent {
   projectName: string;
   displayError: string;
 
-  constructor(public dialog: MatDialog, private popupService: PopupService) {}
+  constructor(private popupService: PopupService) {}
 
   ngOnInit() {
     this.loading = true;
@@ -75,20 +74,9 @@ export class PopupComponent {
   };
 
   onRdpClick(instance: Instance) {
-    const dialogRef = this.dialog.open(NetworkDialog, {
-      width: '400px',
-      data: {network: 'default'}
+    chrome.runtime.sendMessage({type: startPrivateRdp, instance}, (resp) => {
+      this.instances = resp.instances;
     });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        instance.firewallNetwork = result;
-        console.log(instance)
-        chrome.runtime.sendMessage({type: startPrivateRdp, instance}, (resp) => {
-          this.instances = resp.instances;
-        });
-      }
-    });
-
   };
 
 }
