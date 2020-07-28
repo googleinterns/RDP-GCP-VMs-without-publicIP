@@ -25,9 +25,6 @@ chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     enableProdMode();
   }
 
-  const tab = [...tabs].pop();
-  const { id: tabId } = tab;
-
   platformBrowserDynamic()
     .bootstrapModule(AppModule)
     .catch(error => console.error(error));

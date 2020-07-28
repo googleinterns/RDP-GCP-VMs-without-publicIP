@@ -80,7 +80,7 @@ var (
         "fingerprint": "",
         "kind": "compute#networkInterface",
         "name": "nic0",
-        "network": "",
+        "network": "default",
         "networkIP": "",
         "subnetwork": ""
       }
