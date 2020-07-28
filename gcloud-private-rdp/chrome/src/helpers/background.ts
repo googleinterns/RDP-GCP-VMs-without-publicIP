@@ -201,4 +201,4 @@ const messageListener = () => {
   });
 }
 
-export {enablePopup, tabUpdatedListener, tabRemovedListener, messageListener, instanceFunctions, adminTabIconClickListener};
+export {enablePopup, tabUpdatedListener, tabRemovedListener, messageListener, instanceFunctions};

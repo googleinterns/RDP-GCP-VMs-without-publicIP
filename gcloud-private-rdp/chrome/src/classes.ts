@@ -50,7 +50,7 @@ class Instance implements InstanceInterface {
     this.zone = instance.zone;
     this.disks = instance.disks;
     this.description = instance.description;
-    this.NetworkInterfaces = instance.networkInterfaces;
+    this.networkInterfaces = instance.networkInterfaces;
     this.displayPrivateRdpDom = this.canDisplayRdpDom();
     this.project = projectName;
     this.rdpRunning = false;
@@ -69,7 +69,7 @@ class Instance implements InstanceInterface {
   }
 
 
-  NetworkInterfaces: NetworkInterface[];
+  networkInterfaces: NetworkInterface[];
   description: string;
   disks: Disk[];
   id: string;
