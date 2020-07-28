@@ -68,8 +68,8 @@ func TestCorsHeaders(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	if gotOrigin := rr.Header().Get("Access-Control-Allow-Origin"); gotOrigin != allowedOrigin {
-		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotOrigin, allowedOrigin)
+	if gotOrigin := rr.Header().Get("Access-Control-Allow-Origin"); gotOrigin != "*" {
+		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotOrigin, "*")
 	}
 
 	if gotMethods := rr.Header().Get("Access-Control-Allow-Methods"); gotMethods != allowedMethods {

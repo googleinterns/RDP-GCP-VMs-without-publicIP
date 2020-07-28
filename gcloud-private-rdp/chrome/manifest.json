@@ -1,0 +1,13 @@
+{
+  "name": "GCP Private RDP",
+  "version": "1.0",
+  "description": "Extension for performing private RDP on GCP Windows Instances",
+  "permissions": ["https://pantheon.corp.google.com/*", "activeTab", "declarativeContent", "storage", "tabs", "webNavigation", "webRequest"],
+  "background": {
+      "scripts": ["background.js"]
+  },
+  "browser_action": {
+      "default_title": "gCloud Admin Extension"
+  },
+  "manifest_version": 2
+}
