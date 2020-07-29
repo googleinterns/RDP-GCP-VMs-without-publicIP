@@ -17,10 +17,50 @@ limitations under the License.
 package admin
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
 )
+
+var validComputeInstance = []byte(
+	`{
+		  "id": "test",
+		  "name": "test",
+		  "status": "RUNNING",
+		  "description": "",
+		  "zone": "https://www.googleapis.com/compute/v1/projects/test/zones/us-central1-a",
+		  "disks": [
+			{
+			  "guestOsFeatures": [
+				{
+				  "type": "VIRTIO_SCSI_MULTIQUEUE"
+				},
+				{
+				  "type": "WINDOWS"
+				},
+				{
+				  "type": "MULTI_IP_SUBNET"
+				},
+				{
+				  "type": "UEFI_COMPATIBLE"
+				}
+			  ]
+			}
+		  ],
+		  "networkInterfaces": [
+			{
+			  "name": "nic0",
+			  "network": "https://www.googleapis.com/compute/v1/projects/test/global/networks/default",
+			  "networkIP": "10.128.0.2"
+			}
+		  ],
+		  "project": "project",
+		  "firewallNetwork": ""
+		}`)
 
 func buildTestConfig() Config {
 	param := configParam{}
@@ -31,13 +71,16 @@ func buildTestConfig() Config {
 	operationParams := make(map[string]configParam)
 	operationParams["TEST_COMMAND"] = param
 
-	configOperation := configAdminOperation{Name: "test-cmd", Operation: "$TEST_COMMON $TEST_COMMAND", Params: operationParams}
-	return Config{Operations: []configAdminOperation{configOperation}, CommonParams: commonParams}
+	configOperation := configAdminOperation{Name: "test-cmd", Operation: "${{TEST_COMMON}} ${{TEST_COMMAND}}", Params: operationParams}
+
+	configInstanceOperation := configAdminOperation{Name: "test-instance", Operation: "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}}"}
+
+	return Config{Operations: []configAdminOperation{configOperation}, CommonParams: commonParams, InstanceOperations: []configAdminOperation{configInstanceOperation}}
 }
 
 func TestCheckConfigForMissingParams(t *testing.T) {
 	config := buildTestConfig()
-	config.Operations[0].Operation = "$TEST_COMMON $TEST_COMMAND $TEST_MISSING"
+	config.Operations[0].Operation = "${{TEST_COMMON}} ${{TEST_COMMAND}} ${{TEST_MISSING}}"
 
 	expected := make(map[string][]string)
 	expected["test-cmd"] = []string{"TEST_MISSING"}
@@ -46,7 +89,7 @@ func TestCheckConfigForMissingParams(t *testing.T) {
 		t.Errorf("checkConfigForMissingParams didn't return the right value, got %v, expected %v", missing, expected)
 	}
 
-	config.Operations[0].Operation = "$TEST_COMMON $TEST_COMMAND"
+	config.Operations[0].Operation = "${{TEST_COMMON}} ${{TEST_COMMAND}}"
 
 	delete(expected, "test-cmd")
 
@@ -113,7 +156,7 @@ func TestReadAdminOperation(t *testing.T) {
 		t.Errorf("ReadAdminOperation didn't error out on missing params, got %v, expected %v", err, fmt.Errorf(missingParamsError, "TEST_COMMON, TEST_COMMAND"))
 	}
 
-	config.Operations[0].Operation = "$TEST_COMMON $TEST_COMMAND --optional=$OPTIONAL"
+	config.Operations[0].Operation = "${{TEST_COMMON}} ${{TEST_COMMAND}} --optional=${{OPTIONAL}}"
 	config.Operations[0].Params["OPTIONAL"] = configParam{Optional: true}
 
 	operation.Params["TEST_COMMON"] = "test1"
@@ -125,5 +168,64 @@ func TestReadAdminOperation(t *testing.T) {
 	operation.Params["OPTIONAL"] = "optional"
 	if operationToRun, err := ReadAdminOperation(operation, &config); operationToRun.Operation != "test1 test2 --optional=optional" || err != nil {
 		t.Errorf("ReadAdminOperation didn't set operation properly, got %v, expected %v", operationToRun.Operation, "test1 test2 --optional=optional")
+	}
+}
+
+func TestCaptureParamsFromInstanceOperation(t *testing.T) {
+	var instance gcloud.Instance
+
+	json.Unmarshal(validComputeInstance, &instance)
+
+	expected := fmt.Sprintf("%s %s %s %s", instance.Name, instance.Zone, instance.NetworkInterfaces[0].IP, instance.ProjectName)
+
+	successOperation := "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}}"
+
+	missingParams := captureParamsFromInstanceOperation(instance, &successOperation)
+	if len(missingParams) != 0 {
+		t.Errorf("captureParamsFromInstanceOperation had missingParams for a proper operation: %s", strings.Join(missingParams, ", "))
+	}
+
+	if successOperation != expected {
+		t.Errorf("captureParamsFromInstanceOperation didn't set operation properly, got %s, expected %s", successOperation, expected)
+	}
+
+	missingParamInOperation := "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}} ${{MISSING}}"
+
+	missingParams = captureParamsFromInstanceOperation(instance, &missingParamInOperation)
+	if len(missingParams) != 1 {
+		t.Errorf("captureParamsFromInstanceOperation didn't had correct number missingParams for a proper operation: %s", strings.Join(missingParams, ", "))
+	}
+
+	if (missingParams[0]) != "MISSING" {
+		t.Errorf("captureParamsFromInstanceOperation didn't set missing parameter properly, got %v, expected %v", missingParams[0], "MISSING")
+	}
+
+	if successOperation != expected {
+		t.Errorf("captureParamsFromInstanceOperation didn't set operation properly, got %s, expected %s", successOperation, expected)
+	}
+}
+
+func TestReadInstanceOperation(t *testing.T) {
+	config := buildTestConfig()
+
+	var instance gcloud.Instance
+	json.Unmarshal(validComputeInstance, &instance)
+
+	expectedOperation := fmt.Sprintf("%s %s %s %s", instance.Name, instance.Zone, instance.NetworkInterfaces[0].IP, instance.ProjectName)
+
+	operation := InstanceOperationToFill{Name: "COMMAND_NOT_FOUND", Instance: instance}
+
+	if _, err := ReadInstanceOperation(operation, &config); err.Error() != fmt.Sprintf(operationNotFoundError, operation.Name) {
+		t.Errorf("ReadInstanceOperation didn't error out on invalid operation, got %v, expected %v", err, fmt.Errorf(operationNotFoundError, operation.Name))
+	}
+
+	operation.Name = "test-instance"
+	if operationToRun, err := ReadInstanceOperation(operation, &config); operationToRun.Operation != expectedOperation || err != nil {
+		t.Errorf("ReadInstanceOperation didn't set operation properly, got %v, expected %v", operationToRun.Operation, expectedOperation)
+	}
+
+	config.InstanceOperations[0].Operation = "${{MISSING}}"
+	if _, err := ReadInstanceOperation(operation, &config); err.Error() != fmt.Sprintf(missingInstanceParamsError, "MISSING") {
+		t.Errorf("ReadInstanceOperation didn't set error properly, got %v, expected %v", err.Error(), fmt.Sprintf(missingInstanceParamsError, "MISSING"))
 	}
 }

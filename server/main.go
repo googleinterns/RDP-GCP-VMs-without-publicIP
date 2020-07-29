@@ -64,6 +64,8 @@ func main() {
 	router.HandleFunc("/admin/get-config", getConfigFileAndSendJson).Methods("GET")
 	router.HandleFunc("/admin/command-to-run", validateAdminOperationParams).Methods("POST")
 	router.HandleFunc("/admin/command-to-run", setCorsHeaders).Methods("OPTIONS")
+	router.HandleFunc("/admin/instance-operation-to-run", validateInstanceOperationParams).Methods("POST")
+	router.HandleFunc("/admin/instance-operation-to-run", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/run-operation", runAdminOperation)
 
 	log.Fatal(http.ListenAndServe(":23966", router))
@@ -134,6 +136,38 @@ func validateAdminOperationParams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	operationReady, err := admin.ReadAdminOperation(reqBody, loadedConfig)
+	if err != nil {
+		json.NewEncoder(w).Encode(newErrorRequest(err))
+		return
+	}
+
+	operationPool = append(operationPool, operationReady)
+
+	json.NewEncoder(w).Encode(operationReady)
+	return
+}
+
+func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
+	setCorsHeaders(w, nil)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	var reqBody admin.InstanceOperationToFill
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if loadedConfig == nil {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New("config not loaded")))
+		return
+	}
+
+	operationReady, err := admin.ReadInstanceOperation(reqBody, loadedConfig)
 	if err != nil {
 		json.NewEncoder(w).Encode(newErrorRequest(err))
 		return
