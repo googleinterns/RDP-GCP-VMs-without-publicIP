@@ -1,4 +1,4 @@
-<div class="container">
+<div #scrollMe [scrollTop]="scrollMe.scrollHeight" class="container">
     <div class="list" *ngFor="let socketMessage of messages">
         <div *ngIf="socketMessage.message" class="server-message">
             {{socketMessage.message}}

@@ -16,6 +16,7 @@ limitations under the License.
 
 import { Component, NgZone } from '@angular/core';
 import { Config, ConfigInterface, Instance } from 'src/classes';
+import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminService } from './admin.service';
 
@@ -61,10 +62,13 @@ export class AdminComponent {
         const paramsToSet = {};
         // paramsToLoad consists of parameters' names, choices, default values and descriptions, used to build the forms.
         const paramsToLoad = [];
-        for (const [name, paramValue] of Object.entries(operation.params)) {
-          paramsToSet[name] = paramValue.default;
-          paramValue.name = name;
-          paramsToLoad.push(paramValue);
+
+        if (operation.params) {
+          for (const [name, paramValue] of Object.entries(operation.params)) {
+            paramsToSet[name] = paramValue.default;
+            paramValue.name = name;
+            paramsToLoad.push(paramValue);
+          }
         }
         this.operations.push({name: operation.name, description: operation.description, paramsToSet, paramsToLoad});
     })
@@ -153,7 +157,7 @@ export class AdminComponent {
       console.log(error)
       console.log(error.status)
       if (error.status === 0) {
-        this.configError = "Error connecting to server, are you sure the companion server is running?";
+        this.configError = errorConnectingToServer;
       } else {
         this.configError = JSON.stringify(error);
       }

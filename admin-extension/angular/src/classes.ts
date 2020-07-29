@@ -33,7 +33,7 @@ interface NetworkInterface {
 }
 
 class Instance {
-  NetworkInterfaces: NetworkInterface[];
+  networkInterfaces: NetworkInterface[];
   description: string;
   disks: Disk[];
   id: string;

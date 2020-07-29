@@ -18,11 +18,6 @@ limitations under the License.
     flex: 1 1 auto;
 }
 
-.param-title {
-    margin: 0;
-    font-weight: bold;
-    font-size: 12px;
-}
 
 .margin-top-2rem {
     margin-top: 2rem;
@@ -33,7 +28,7 @@ limitations under the License.
     grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
     column-gap: 2rem;
     row-gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 }
 
 .container {
@@ -69,7 +64,7 @@ limitations under the License.
 }
 
 .top {
-    max-height: 20%;
+    //max-height: 20%;
     overflow-y: auto;
 }
 
@@ -92,7 +87,7 @@ limitations under the License.
 }
 
 .toolbar {
-    min-height: 4rem;
+    //min-height: 4rem;
 }
 
 .loaded-operation-card {
@@ -113,3 +108,19 @@ limitations under the License.
     }
 }
 
+.param-title {
+    color: #005cb2;
+    text-transform: uppercase;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.divider {
+    margin-bottom: 2rem;
+}
+
+.description {
+    color: #616161;
+    font-size: 14px;
+    font-weight: 500;
+}
