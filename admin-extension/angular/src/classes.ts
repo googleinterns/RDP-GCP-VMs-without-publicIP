@@ -88,6 +88,7 @@ interface ConfigAdminOperationInterface {
 }
 
 interface ConfigInterface {
+  instance_operations: ConfigAdminOperationInterface[];
   operations: ConfigAdminOperationInterface[];
   common_params: Map<string, ConfigParamInterface>;
   enable_rdp: boolean;
@@ -110,14 +111,16 @@ interface AdminOperationSocketOutput {
 
 class Config implements ConfigInterface {
   constructor(config: ConfigInterface) {
+    this.instance_operations = config.instance_operations;
     this.operations = config.operations;
     this.common_params = config.common_params;
     this.enable_rdp = config.enable_rdp;
   }
 
+  instance_operations: ConfigAdminOperationInterface[];
   operations: ConfigAdminOperationInterface[];
   common_params = new Map<string, ConfigParamInterface>();
   enable_rdp: boolean;
 }
 
-export {Instance, SocketMessageInterface, SocketMessage, SocketCmd, Config, ConfigInterface, ConfigParamInterface, AdminOperationSocketOutput, AdminOperationInterface};
+export {Instance, SocketMessageInterface, SocketMessage, SocketCmd, AdminOperationInterface, Config, ConfigInterface, ConfigParamInterface, AdminOperationSocketOutput, ConfigAdminOperationInterface};

@@ -43,3 +43,25 @@ limitations under the License.
     width: 75%;
     min-width: 700px;
 }
+
+.center {
+    margin: 0 auto;
+}
+
+.loaded-operation-card {
+    margin-top: 2rem;
+}
+
+.loaded-operation {
+    word-wrap: break-word;
+}
+
+.loaded-operation-footer {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+        margin: 0 0.5rem;
+    }
+}

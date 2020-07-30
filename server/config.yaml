@@ -2,7 +2,7 @@ enableRdp: true
 instanceOperations:
   - name: describe-instance
     operation: >
-      gcloud compute instances describe ${{NAME}} --zone=${{ZONE}} --networkIP=${{NETWORKIP}} --format=json
+      gcloud compute instances describe ${{NAME}} --zone=${{ZONE}} --format=json
 commonParams:
   PROJECT:
     type: string

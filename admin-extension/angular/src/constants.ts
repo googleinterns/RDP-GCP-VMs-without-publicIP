@@ -29,6 +29,7 @@ const getConfigEndpoint = 'http://localhost:23966/admin/get-config'
 const rdpSocketEndpoint = 'ws://localhost:23966/gcloud/start-private-rdp';
 const sendOperationEndpoint = 'http://localhost:23966/admin/command-to-run';
 const runOperationSocketEndpoint = 'ws://localhost:23966/admin/run-operation';
-const getComputeInstancesEndpoint = 'http://localhost:23966/gcloud/compute-instances'
+const getComputeInstancesEndpoint = 'http://localhost:23966/gcloud/compute-instances';
+const sendInstanceOperationEndpoint = 'http://localhost:23966/admin/instance-operation-to-run';
 
-export {endRdpCmd, loginRdpCmd, endOperationCmd, readyForRdpCommandSocket, rdpShutdownMessage, errorConnectingToServer, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint, runOperationSocketEndpoint, getComputeInstancesEndpoint};
+export {endRdpCmd, loginRdpCmd, endOperationCmd, readyForRdpCommandSocket, rdpShutdownMessage, errorConnectingToServer, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint, runOperationSocketEndpoint, getComputeInstancesEndpoint, sendInstanceOperationEndpoint};

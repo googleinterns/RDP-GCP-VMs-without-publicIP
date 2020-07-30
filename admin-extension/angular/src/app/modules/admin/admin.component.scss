@@ -73,8 +73,9 @@ limitations under the License.
 }
 
 .bottom {
-    max-height: 30%;
-    flex: 1;
+    width: 100%;
+    z-index: 100;
+    box-sizing:border-box;
 }
 
 .bottom-right {
@@ -123,4 +124,16 @@ limitations under the License.
     color: #616161;
     font-size: 14px;
     font-weight: 500;
+}
+
+#tab-group {
+    height: 100%;
+}
+
+#tab-group mat-tab-body {
+    flex-grow: 1;
+}
+
+:host ::ng-deep .mat-tab-body-wrapper {
+    height: 100%;
 }

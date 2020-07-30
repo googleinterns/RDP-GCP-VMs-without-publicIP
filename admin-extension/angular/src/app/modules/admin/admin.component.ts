@@ -19,7 +19,7 @@ import { Config, ConfigInterface, Instance } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminService } from './admin.service';
-
+import { ResizeEvent } from "angular-resizable-element";
 
 @Component({
   selector: 'app-admin',
@@ -38,12 +38,21 @@ export class AdminComponent {
   operationsRunning = [];
   outputTabIndex: number;
   instanceToUpdate: Instance;
+  style: {};
 
   constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) {};
 
   ngOnInit() {
    this.loadConfig();
   };
+
+  onResizeEnd(event: ResizeEvent): void {
+    this.style = {
+      position: 'fixed',
+      top: `${event.rectangle.top}px`,
+      height: `${event.rectangle.height}px`
+    };
+  }
 
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {
@@ -122,7 +131,7 @@ export class AdminComponent {
       operation.paramsToSet[param] = null
     });
 
-    const operationFull = operation.loadedOperation.operation;
+    const operationFull = operation.name;
     operation.loadedOperation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');
     this.operationsRunning.push(operation.loadedOperation)
 
@@ -130,6 +139,13 @@ export class AdminComponent {
 
     console.log(this.operationsRunning)
     operation.loadedOperation = null;
+  }
+
+  startLoadedInstanceOperation(operation: any) {
+    const operationFull = operation.operation;
+    operation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');
+    this.operationsRunning.push(operation)
+    this.snackbar.open('Started instance operation', '', { duration: 3000 });
   }
 
   // loadConfig loads the config file from the server and sets up all the variables needed to render page.

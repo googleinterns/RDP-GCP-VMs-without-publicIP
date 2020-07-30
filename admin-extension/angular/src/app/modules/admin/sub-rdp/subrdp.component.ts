@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { Output, EventEmitter, Component } from '@angular/core';
+import { Output, EventEmitter, Component, Input } from '@angular/core';
 import { SubRdpService } from './subrdp.service';
 import { MatTableDataSource } from '@angular/material/table';
 
-import { Instance } from 'src/classes';
+import { Instance, ConfigAdminOperationInterface } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 
 @Component({
@@ -32,11 +32,16 @@ export class SubRdpComponent {
     project: string;
     getInstancesError: string;
     instances: Instance[];
-    displayedColumns: string[] = ['name', 'zone', 'networkIp', 'network', 'port', 'status', 'rdp-button'];
+    displayedColumns: string[] = ['name', 'zone', 'networkIp', 'port', 'rdp-button', 'operations'];
     dataSource: MatTableDataSource<Instance>;
     instancesLoading = false;
+    operationError: string;
+    loadedOperation: any;
+
+    @Input() instanceOperations: ConfigAdminOperationInterface[];
 
     @Output() instance = new EventEmitter<Instance>();
+    @Output() startOperation = new EventEmitter<any>();
 
     constructor(private subRdpService: SubRdpService) {};
 
@@ -65,6 +70,7 @@ export class SubRdpComponent {
           this.getInstancesError = null;
           this.instancesLoading = false;
           this.dataSource = new MatTableDataSource<Instance>(this.instances);
+          console.log(this.instanceOperations)
         }
 
       }, error => {
@@ -83,7 +89,43 @@ export class SubRdpComponent {
     }
 
     rdp(instance: Instance) {
-        this.instance.emit(instance);
+      this.instance.emit(instance);
     }
+
+    startInstanceOperation(instance: Instance, instanceOperation: ConfigAdminOperationInterface) {
+      console.log(instance)
+      console.log(instanceOperation)
+      const data = {name: instanceOperation.name, instance: instance}
+
+      this.subRdpService.sendOperation(data)
+      .subscribe((response: any) => {
+        console.log(response)
+  
+        // If operation returned, set loadedOperation to response
+        if (response.operation) {
+          this.operationError = '';
+          this.loadedOperation = response;
+        }
+  
+        // If error returned, set operation.error to error
+        if (response.error) {
+          this.operationError = response.error;
+        }
+  
+      }, error => {
+        this.operationError = error;
+      })
+    }
+
+    clearLoadedOperation() {
+      this.loadedOperation = null;
+    }
+
+    startLoadedOperation(operation: any) {
+      this.startOperation.emit(operation);
+      this.clearLoadedOperation();
+    }
+
+
 }
 

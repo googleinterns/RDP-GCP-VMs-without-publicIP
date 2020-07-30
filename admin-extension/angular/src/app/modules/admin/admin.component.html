@@ -38,7 +38,7 @@ limitations under the License. -->
         </div>
         <div *ngIf="!configError" class="container">
             <div class="top" *ngIf="config && config.enable_rdp">
-                <sub-rdp (instance)="instanceEmitted($event)"></sub-rdp>
+                <sub-rdp [instanceOperations]="config.instance_operations" (instance)="instanceEmitted($event)" (startOperation)="startLoadedInstanceOperation($event)"></sub-rdp>
             </div>
 
             <mat-divider></mat-divider>
@@ -100,8 +100,9 @@ limitations under the License. -->
                   </mat-tab-group>
             </div>
 
-            <div id="output-view" class="bottom" *ngIf="config && config.operations">
-                <mat-tab-group (selectedTabChange)="tabChanged($event)" [selectedIndex]="operationsRunning.length-1" backgroundColor="primary" color="accent" class="output-tabs">
+            <div id="output-view" mwlResizable class="bottom" *ngIf="config && config.operations"       [enableGhostResize]="true"
+            [resizeEdges]="{ top: true }" (resizeEnd)="onResizeEnd($event)" [ngStyle]="style" >
+                <mat-tab-group dynamicHeight id="tab-group" (selectedTabChange)="tabChanged($event)" [selectedIndex]="operationsRunning.length-1" backgroundColor="primary" color="accent" class="output-tabs">
                     <mat-tab class="output" label="{{operation.label}}" *ngFor="let operation of operationsRunning; index as i"> 
                         <output [close]="operation.close" [closeRdp]="operation.rdpClose" [operationToRun]="operation" (outputClosed)="outputTabClosed(i)"></output>
                     </mat-tab>

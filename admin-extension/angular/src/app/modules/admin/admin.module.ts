@@ -31,10 +31,12 @@ import { MatGridListModule} from '@angular/material/grid-list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSelectModule } from '@angular/material/select';
+import { MatMenuModule } from '@angular/material/menu';
+import { ResizableModule } from 'angular-resizable-element';
+
 
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatDialogModule } from '@angular/material/dialog';
 
 import { OutputComponent } from './output/output.component';
 import { SubRdpComponent } from './sub-rdp/subrdp.component';
@@ -60,7 +62,8 @@ import { SubRdpComponent } from './sub-rdp/subrdp.component';
     MatSelectModule,
     MatTableModule,
     MatPaginatorModule,
-    MatDialogModule
+    MatMenuModule,
+    ResizableModule
   ]
 })
 
