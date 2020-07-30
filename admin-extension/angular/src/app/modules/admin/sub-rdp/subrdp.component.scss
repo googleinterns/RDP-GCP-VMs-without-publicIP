@@ -19,7 +19,8 @@ limitations under the License.
     flex-grow: 1;
     padding: 1.5rem;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
+    flex-wrap: wrap;
 }
 
 .err {
@@ -30,14 +31,15 @@ limitations under the License.
     display: flex;
     flex-direction: column;
     width: 20%;
+    margin-bottom: 1rem;
+    margin-right: 3rem;
+
+    button {
+        width: auto;
+    }
 }
 
 .table-container {
     width: 75%;
-}
-
-.title {
-    margin: 0;
-    font-weight: bold;
-    font-size: 12px;
+    min-width: 700px;
 }

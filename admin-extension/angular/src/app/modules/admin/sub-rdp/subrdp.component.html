@@ -16,18 +16,22 @@ limitations under the License.
 
 <div class="container">
     <div class="project-info">
-        <h4 class="title">PRIVATE RDP INTO WINDOWS INSTANCES</h4>
+        <h3 class="title">GCloud Instances Private RDP</h3>
+        <div *ngIf="getInstancesError" class="err">
+          {{getInstancesError}}
+        </div>
         <mat-form-field appearance="standard">
-            <mat-label>GCloud Project</mat-label>
+            <mat-label>Google Cloud Project</mat-label>
             <input matInput [(ngModel)]="project">
           </mat-form-field>
-          <button type="button" [disabled]="!project" (click)="getComputeInstances()" mat-raised-button color="primary">GET INSTANCES</button>
-    </div>
-    <div *ngIf="getInstancesError" class="err">
-        {{getInstancesError}}
+          <button type="button" [disabled]="!project" (click)="getComputeInstances()" mat-raised-button color="accent">GET INSTANCES</button>
     </div>
 
-    <div *ngIf="instances" class="table-container mat-elevation-z1">
+    <div *ngIf="instancesLoading">
+      <mat-spinner color="accent"></mat-spinner>
+    </div>
+
+    <div *ngIf="instances && instances.length > 0" class="table-container mat-elevation-z1">
         <mat-table [dataSource]="dataSource">      
           <ng-container matColumnDef="name">
             <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
@@ -37,25 +41,28 @@ limitations under the License.
             <mat-header-cell *matHeaderCellDef> Zone </mat-header-cell>
             <mat-cell *matCellDef="let instance"> {{instance.zone}} </mat-cell>
           </ng-container>
-          <ng-container matColumnDef="status">
-            <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
-            <mat-cell *matCellDef="let instance"> {{instance.rdpStatus}} </mat-cell>
+          <ng-container matColumnDef="networkIp">
+            <mat-header-cell *matHeaderCellDef> Network IP </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.networkInterfaces[0].networkIP}} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="network">
+            <mat-header-cell *matHeaderCellDef> Network </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.networkInterfaces[0].network}} </mat-cell>
           </ng-container>
           <ng-container matColumnDef="port">
             <mat-header-cell *matHeaderCellDef> IAP Port </mat-header-cell>
             <mat-cell *matCellDef="let instance"> {{instance.portRunning}} </mat-cell>
           </ng-container>
-          <ng-container matColumnDef="start-rdp">
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> {{instance.rdpStatus}} </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="rdp-button">
             <mat-header-cell *matHeaderCellDef> </mat-header-cell>
             <mat-cell *matCellDef="let instance"> 
-                <button type="button" [disabled]="instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="primary">START RDP</button>
-            </mat-cell>
-          </ng-container>
-          <ng-container matColumnDef="end-rdp">
-            <mat-header-cell *matHeaderCellDef> </mat-header-cell>
-            <mat-cell *matCellDef="let instance">
-                <button type="button" [disabled]="!instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="warn">END RDP</button>
-            </mat-cell>
+                <button *ngIf="!instance.rdpRunning" type="button" [disabled]="instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="accent">START RDP</button>
+                <button *ngIf="instance.rdpRunning" type="button" [disabled]="!instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="warn">END RDP</button>
+              </mat-cell>
           </ng-container>
 
           <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>

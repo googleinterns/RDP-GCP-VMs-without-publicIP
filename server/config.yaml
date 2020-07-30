@@ -7,7 +7,7 @@ commonParams:
     optional: true
 operations: 
   - name: echo-vm
-    description: Creates a Gcloud VM
+    description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
     operation: >
       echo $NAME
     params:
@@ -68,3 +68,11 @@ operations:
       NAME:
       TCP:
       NETWORK:
+  - name: Get-Domain-Cred
+    description: Get domain cred
+    operation: >
+      /google/data/ro/teams/cloud-ad/api_cli
+      --env=staging
+      --sandbox_bns=/abns/cloud-activedirectory-test-jobs/sandbox-sakhatri.mixer:esf
+      --resource_name=projects/cloud-ad-staging-bake-test/locations/global/domains/ad.europe-north1-1.com
+      GetDomainAdminCredentials

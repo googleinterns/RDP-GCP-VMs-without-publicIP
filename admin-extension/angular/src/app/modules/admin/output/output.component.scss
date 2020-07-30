@@ -6,17 +6,25 @@
     flex-grow: 1;
     padding: 1.5rem;
     font-size: 1rem;
+    font-family: monospace;
+    font-weight: bold;
 }
 
 .stdout {
-    color: #76ff03;
+    color: #6ab7ff;
+    font-family: monospace;
+    font-weight: bold;
 }
 
 .stderr {
-    color: #ba000d;;
+    color: #e91e63;
+    font-family: monospace;
+    font-weight: bold;
 }
 
 .err {
-    color: #ba000d;
+    color: #e91e63;
+    font-family: monospace;
+    font-weight: bold;
 }
 

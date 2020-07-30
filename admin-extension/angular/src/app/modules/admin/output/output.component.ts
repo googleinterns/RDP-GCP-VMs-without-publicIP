@@ -68,7 +68,6 @@ export class OutputComponent {
         }
     }
 
-
     // Send end RDP command and remove port
     endRdp() {
       const msg = new SocketCmd()
@@ -139,6 +138,7 @@ export class OutputComponent {
               this.operationToRun.instance.rdpStatus = 'Shut down';
               this.operationToRun.instance.rdpRunning = false;
             }
+
           },
           (err) => {
             // Handle error from connection

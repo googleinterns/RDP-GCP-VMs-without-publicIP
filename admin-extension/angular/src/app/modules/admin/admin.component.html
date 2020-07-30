@@ -37,22 +37,21 @@ limitations under the License. -->
             <h2>{{configError}}</h2>
         </div>
         <div *ngIf="!configError" class="container">
-            <div class="top" *ngIf="config.enable_rdp">
+            <div class="top" *ngIf="config && config.enable_rdp">
                 <sub-rdp (instance)="instanceEmitted($event)"></sub-rdp>
             </div>
 
             <mat-divider></mat-divider>
 
-            <div class="middle" *ngIf="config.operations">
-                <mat-tab-group class="operation-tabs" color="accent">
+            <div class="middle" *ngIf="config && config.operations">
+                <mat-tab-group class="operation-tabs" backgroundColor="primary" color="accent">
 
                     <mat-tab id="Test" label="{{operation.name}}" *ngFor="let operation of operations">
                         
                         <div class="operation">
-                            <h3>{{operation.description}}</h3>
+                            <h3 class="description">{{operation.description}}</h3>
                             
-                            <h4 *ngIf="commonParams.length > 0" class="param-title">COMMON PARAMS: </h4>
-                            
+                            <h3 class="param-title">Common Parameters:</h3>
                             <div *ngIf="commonParams.length > 0" class="param-form">
                                 <mat-form-field appearance="standard" *ngFor="let param of commonParams">
                                     <mat-label>{{param.name}}</mat-label>
@@ -66,11 +65,11 @@ limitations under the License. -->
                                 </mat-form-field>
                             </div>
                             
-                            <mat-divider></mat-divider>
+                            <mat-divider class="divider" color="primary"></mat-divider>
                             
-                            <h4 *ngIf="operation.paramsToLoad" class="param-title margin-top-2rem">OPERATION PARAMS: </h4>
-                            
+                            <h3 class="param-title">Operation Parameters:</h3>
                             <div *ngIf="operation.paramsToLoad" class="param-form">
+                                
                                 <mat-form-field appearance="standard" *ngFor="let param of operation.paramsToLoad">
                                     <mat-label>{{param.name}}</mat-label>
                                     <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="operation.paramsToSet[param.name]">
@@ -83,7 +82,7 @@ limitations under the License. -->
                                 </mat-form-field>
                             </div>
                             
-                            <button type="button" (click)="sendOperation(operation)" mat-raised-button color="primary">START</button>
+                            <button type="button" (click)="sendOperation(operation)" mat-raised-button color="accent">START</button>
                             
                             <mat-error *ngIf="operation.error" class="operation-error">{{operation.error}}</mat-error>
                             
@@ -91,7 +90,7 @@ limitations under the License. -->
                                 <mat-card-content class="loaded-operation">{{operation.loadedOperation.operation}}</mat-card-content>
                                 <mat-card-footer class="loaded-operation-footer">                            
                                     <button type="button" (click)="clearLoadedOperation(operation)" mat-raised-button color="warn">CLEAR</button>
-                                    <button type="button" (click)="startLoadedOperation(operation)" mat-raised-button color="primary">RUN</button>
+                                    <button type="button" (click)="startLoadedOperation(operation)" mat-raised-button color="accent">RUN</button>
                                 </mat-card-footer>
                             </mat-card>
                         
@@ -101,7 +100,7 @@ limitations under the License. -->
                   </mat-tab-group>
             </div>
 
-            <div id="output-view" class="bottom" *ngIf="config.operations">
+            <div id="output-view" class="bottom" *ngIf="config && config.operations">
                 <mat-tab-group (selectedTabChange)="tabChanged($event)" [selectedIndex]="operationsRunning.length-1" backgroundColor="primary" color="accent" class="output-tabs">
                     <mat-tab class="output" label="{{operation.label}}" *ngFor="let operation of operationsRunning; index as i"> 
                         <output [close]="operation.close" [closeRdp]="operation.rdpClose" [operationToRun]="operation" (outputClosed)="outputTabClosed(i)"></output>
