@@ -77,8 +77,8 @@ const (
 )
 
 const (
-	rdpContextTimeout      time.Duration = 1 * time.Minute
-	firewallContextTimeout time.Duration = 30 * time.Second
+	rdpContextTimeout      time.Duration = 1 * time.Hour
+	firewallContextTimeout time.Duration = 2 * time.Minute
 )
 
 type osFeatures struct {

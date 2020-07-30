@@ -95,23 +95,23 @@ export class SubRdpComponent {
     startInstanceOperation(instance: Instance, instanceOperation: ConfigAdminOperationInterface) {
       console.log(instance)
       console.log(instanceOperation)
-      const data = {name: instanceOperation.name, instance: instance}
+      const data = {name: instanceOperation.name, instance}
 
       this.subRdpService.sendOperation(data)
       .subscribe((response: any) => {
         console.log(response)
-  
+
         // If operation returned, set loadedOperation to response
         if (response.operation) {
           this.operationError = '';
           this.loadedOperation = response;
         }
-  
+
         // If error returned, set operation.error to error
         if (response.error) {
           this.operationError = response.error;
         }
-  
+
       }, error => {
         this.operationError = error;
       })

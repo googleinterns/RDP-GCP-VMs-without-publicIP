@@ -19,7 +19,7 @@ import { Config, ConfigInterface, Instance } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminService } from './admin.service';
-import { ResizeEvent } from "angular-resizable-element";
+import { ResizeEvent } from 'angular-resizable-element';
 
 @Component({
   selector: 'app-admin',

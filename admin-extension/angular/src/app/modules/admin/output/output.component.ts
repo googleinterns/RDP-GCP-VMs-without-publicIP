@@ -97,9 +97,9 @@ export class OutputComponent {
             // Handle messages from the connection
             console.log(msg)
             const receivedMessage = msg as AdminOperationSocketOutput;
-            msg.message = msg.message.replace(/\s/g, "&#160;");
-            msg.stdout = msg.stdout.replace(/\s/g, "&#160;")
-            msg.stderr = msg.stderr.replace(/\s/g, "&#160;");
+            msg.message = msg.message.replace(/\s/g, '&#160;');
+            msg.stdout = msg.stdout.replace(/\s/g, '&#160;')
+            msg.stderr = msg.stderr.replace(/\s/g, '&#160;');
             this.messages.push(receivedMessage);
             console.log(this.messages)
           },
@@ -135,7 +135,7 @@ export class OutputComponent {
               const port = receivedMessage.message.split(': ')[1];
               this.operationToRun.instance.portRunning = port;
             }
-            
+
             // Set status to ready if received ready for RDP message
             if (receivedMessage.message === readyForRdpCommandSocket) {
               this.operationToRun.instance.rdpStatus = 'Ready to RDP';
@@ -163,7 +163,7 @@ export class OutputComponent {
             // Handle error from connection
             console.log(err);
             if (!this.rdpFirewallDeleted) {
-              this.operationToRun.instance.rdpError = "Server couldn't delete firewall rule for " + this.operationToRun.instance.name + ", please delete manually";
+              this.operationToRun.instance.rdpError = 'Server couldn\'t delete firewall rule for ' + this.operationToRun.instance.name + ', please delete manually';
               this.operationToRun.instance.rdpStatus = null;
             } else {
               this.operationToRun.instance.rdpStatus = 'Connection closed';
@@ -173,7 +173,7 @@ export class OutputComponent {
           },
           () => {
             if (!this.rdpFirewallDeleted) {
-              this.operationToRun.instance.rdpError = "Server couldn't delete firewall rule for " + this.operationToRun.instance.name + ", please delete manually";
+              this.operationToRun.instance.rdpError = 'Server couldn\'t delete firewall rule for ' + this.operationToRun.instance.name + ', please delete manually';
               this.operationToRun.instance.rdpStatus = null;
             } else {
               this.operationToRun.instance.rdpStatus = 'Closed from server';
