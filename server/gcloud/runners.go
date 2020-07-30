@@ -51,8 +51,10 @@ func writeToSocket(ws conn, message string, err error) error {
 // StartPrivateRdp is a task runner that runs all the individual functions for automated RDP.
 func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn) {
 	ctx, cancel := context.WithTimeout(context.Background(), rdpContextTimeout)
+	firewallCtx, firewallCancel := context.WithTimeout(context.Background(), firewallContextTimeout)
 	iapOutputChan := make(chan iapResult)
 	endRdpChan := make(chan bool)
+	firewallDeleted := false
 
 	instanceToConn, err := getComputeInstanceFromConn(ws)
 	if err != nil {
@@ -87,19 +89,28 @@ func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn) {
 		writeToSocket(ws, "", errors.New(createIapFailed))
 		gcloudExecutor.cleanUpRdp(ws, instanceToConn, true, false, cancel)
 		return
-	} else {
-		writeToSocket(ws, readyForCommandOutput, nil)
 	}
+
+	writeToSocket(ws, readyForCommandOutput, nil)
 
 	go gcloudExecutor.listenForCmd(ws, instanceToConn, freePort, endRdpChan)
 
-	if endRdp := <-endRdpChan; endRdp {
-		gcloudExecutor.cleanUpRdp(ws, instanceToConn, true, true, cancel)
-		return
+	for {
+		select {
+		case <-endRdpChan:
+			gcloudExecutor.cleanUpRdp(ws, instanceToConn, !firewallDeleted, true, cancel)
+			return
+		case <-firewallCtx.Done():
+			if !firewallDeleted {
+				gcloudExecutor.deleteIapFirewall(ws, instanceToConn)
+				firewallDeleted = true
+				firewallCancel()
+			}
+		case <-ctx.Done():
+			gcloudExecutor.cleanUpRdp(ws, instanceToConn, !firewallDeleted, false, cancel)
+			return
+		}
 	}
-
-	cancel()
-	return
 }
 
 // getComputeInstancesFromConn reads the instance that is sent at the start of the websocket connection
@@ -168,9 +179,7 @@ func (gcloudExecutor *GcloudExecutor) listenForCmd(ws conn, instance *Instance, 
 func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws conn, instance *Instance, cleanFirewall bool, cleanIap bool, cancelFunc context.CancelFunc) {
 	log.Println("clean up rdp for ", instance.Name)
 	if cleanFirewall {
-		writeToSocket(ws, fmt.Sprintf(deletingIapFirewall, instance.Name), nil)
-		log.Println("deleting iap firewall for ", instance.Name)
-		gcloudExecutor.deleteIapFirewall(instance)
+		gcloudExecutor.deleteIapFirewall(ws, instance)
 	}
 	if cleanIap {
 		writeToSocket(ws, fmt.Sprintf(endingIapTunnel, instance.Name), nil)

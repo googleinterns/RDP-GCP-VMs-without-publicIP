@@ -105,10 +105,22 @@ func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws conn, instance *Insta
 }
 
 // deleteIapFirewall creates the firewall rule created for that instance
-func (gcloudExecutor *GcloudExecutor) deleteIapFirewall(instance *Instance) {
+func (gcloudExecutor *GcloudExecutor) deleteIapFirewall(ws conn, instance *Instance) {
 	log.Println("Deleting firewall for ", instance.Name)
+	writeToSocket(ws, fmt.Sprintf(deletingIapFirewall, instance.Name), nil)
+
 	cmd := fmt.Sprintf(iapFirewallDeleteCmd, instance.Name, instance.ProjectName)
-	gcloudExecutor.shell.ExecuteCmd(cmd)
+	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(cmd)
+	log.Println(string(instanceOutput))
+	if err != nil {
+		if stringOutput := strings.ToLower(string(instanceOutput)); strings.Contains(stringOutput, gcloudAuthError) {
+			writeToSocket(ws, "", fmt.Errorf(deleteFirewallAuthError, instance.Name))
+		} else if strings.Contains(stringOutput, projectCmdError) {
+			writeToSocket(ws, "", fmt.Errorf(deleteFirewallProjectError, instance.Name))
+		} else {
+			writeToSocket(ws, "", err)
+		}
+	}
 }
 
 // readIapTunnelOutput is used as an helper to parse the output from starting the IAP tunnel

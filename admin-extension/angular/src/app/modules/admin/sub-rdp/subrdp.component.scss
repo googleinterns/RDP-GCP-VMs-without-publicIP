@@ -40,12 +40,12 @@ limitations under the License.
 }
 
 .table-container {
-    width: 75%;
+    width: calc(80% - 3rem);
     min-width: 700px;
 }
 
 .center {
-    margin: 0 auto;
+    margin-left: auto;
 }
 
 .loaded-operation-card {
@@ -64,4 +64,13 @@ limitations under the License.
     button {
         margin: 0 0.5rem;
     }
+}
+
+.error {
+    color: #ba000d;
+    font-weight: 500;
+}
+
+mat-cell:last-of-type {
+    padding-right: 0;
 }

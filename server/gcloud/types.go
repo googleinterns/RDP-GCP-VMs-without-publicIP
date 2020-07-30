@@ -42,6 +42,8 @@ const (
 	didntCreateFirewallOutput       string = "Could not create firewall for %v"
 	createdFirewallOutput           string = "Created firewall for %v"
 	multipleNetworksError           string = "%v has 0 or more than 1 network interface"
+	deleteFirewallAuthError         string = "Couldn't delete IAP firewall rule: admin-extension-private-rdp-%v due to auth error, please delete it manually"
+	deleteFirewallProjectError      string = "Couldn't delete IAP firewall rule: admin-extension-private-rdp-%v due to project error, please delete it manually"
 )
 
 // iap tunnel and websocket consts
@@ -74,7 +76,10 @@ const (
 	startRdpSocketCmd string = "start-rdp"
 )
 
-const rdpContextTimeout time.Duration = 1 * time.Hour
+const (
+	rdpContextTimeout      time.Duration = 1 * time.Minute
+	firewallContextTimeout time.Duration = 30 * time.Second
+)
 
 type osFeatures struct {
 	Type string `json:"type"`

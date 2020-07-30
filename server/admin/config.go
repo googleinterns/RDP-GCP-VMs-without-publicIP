@@ -105,9 +105,9 @@ func checkConfigForMissingParams(config Config) map[string][]string {
 }
 
 // LoadConfig reads the config file and unmarshals the data to structs
-func LoadConfig() (*Config, error) {
+func LoadConfig(configPath *string) (*Config, error) {
 	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(*configPath)
 	viper.SetConfigType("yml")
 
 	var config Config

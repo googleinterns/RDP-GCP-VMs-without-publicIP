@@ -40,19 +40,19 @@ export class AdminComponent {
   instanceToUpdate: Instance;
   style: {};
 
-  constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) {};
+  constructor(private snackbar: MatSnackBar, private adminService: AdminService) {};
 
   ngOnInit() {
    this.loadConfig();
   };
 
-  onResizeEnd(event: ResizeEvent): void {
-    this.style = {
-      position: 'fixed',
-      top: `${event.rectangle.top}px`,
-      height: `${event.rectangle.height}px`
-    };
-  }
+  // onResizeEnd(event: ResizeEvent): void {
+  //   this.style = {
+  //     position: 'fixed',
+  //     top: `${event.rectangle.top}px`,
+  //     height: `${event.rectangle.height}px`,
+  //   };
+  // }
 
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {

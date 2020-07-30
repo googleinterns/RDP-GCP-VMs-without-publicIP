@@ -19,7 +19,8 @@ const loginRdpCmd = 'start-rdp';
 const endOperationCmd = 'end_operation';
 
 const readyForRdpCommandSocket = 'Ready for command';
-const rdpShutdownMessage = 'Shutdown private RDP for %v'
+const rdpShutdownMessage = 'Shutdown private RDP for ';
+const rdpFirewallDeletedMessage = 'Deleting IAP firewall for ';
 
 // Need to change in Chrome Extension constants as well.
 const errorConnectingToServer = 'Error connecting to server, are you sure the companion server is running?';
@@ -27,9 +28,9 @@ const errorConnectingToServer = 'Error connecting to server, are you sure the co
 const statusUrl = 'http://localhost:23966/health'
 const getConfigEndpoint = 'http://localhost:23966/admin/get-config'
 const rdpSocketEndpoint = 'ws://localhost:23966/gcloud/start-private-rdp';
-const sendOperationEndpoint = 'http://localhost:23966/admin/command-to-run';
+const sendOperationEndpoint = 'http://localhost:23966/admin/operation-to-run';
 const runOperationSocketEndpoint = 'ws://localhost:23966/admin/run-operation';
 const getComputeInstancesEndpoint = 'http://localhost:23966/gcloud/compute-instances';
 const sendInstanceOperationEndpoint = 'http://localhost:23966/admin/instance-operation-to-run';
 
-export {endRdpCmd, loginRdpCmd, endOperationCmd, readyForRdpCommandSocket, rdpShutdownMessage, errorConnectingToServer, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint, runOperationSocketEndpoint, getComputeInstancesEndpoint, sendInstanceOperationEndpoint};
+export {endRdpCmd, loginRdpCmd, endOperationCmd, readyForRdpCommandSocket, rdpFirewallDeletedMessage, rdpShutdownMessage, errorConnectingToServer, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint, runOperationSocketEndpoint, getComputeInstancesEndpoint, sendInstanceOperationEndpoint};

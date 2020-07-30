@@ -49,9 +49,10 @@ limitations under the License.
             <mat-header-cell *matHeaderCellDef> IAP Port </mat-header-cell>
             <mat-cell *matCellDef="let instance"> {{instance.portRunning}} </mat-cell>
           </ng-container>
+
           <ng-container matColumnDef="rdp-button">
             <mat-header-cell *matHeaderCellDef> </mat-header-cell>
-            <mat-cell *matCellDef="let instance"> 
+            <mat-cell *matCellDef="let instance">
                 <button *ngIf="!instance.rdpRunning" type="button" [disabled]="instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="accent">START RDP</button>
                 <button *ngIf="instance.rdpRunning" type="button" [disabled]="!instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="warn">END RDP</button>
               </mat-cell>
@@ -59,6 +60,8 @@ limitations under the License.
           <ng-container matColumnDef="operations">
             <mat-header-cell *matHeaderCellDef> </mat-header-cell>
             <mat-cell *matCellDef="let instance"> 
+              <span *ngIf="instance.rdpError" class="error">{{instance.rdpError}}</span>
+              <span *ngIf="instance.rdpStatus" class="status">{{instance.rdpStatus}}</span>
               <button class="center" mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
                 <mat-icon>more_vert</mat-icon>
               </button>
@@ -69,7 +72,6 @@ limitations under the License.
               </mat-menu>
               </mat-cell>
           </ng-container>
-
           <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
           <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
         </mat-table>
