@@ -20,7 +20,7 @@ const endOperationCmd = 'end_operation';
 
 const readyForRdpCommandSocket = 'Ready for command';
 const rdpShutdownMessage = 'Shutdown private RDP for ';
-const rdpFirewallDeletedMessage = 'Deleting IAP firewall for ';
+const rdpFirewallDeletedMessage = 'Deleting firewall for ';
 
 // Need to change in Chrome Extension constants as well.
 const errorConnectingToServer = 'Error connecting to server, are you sure the companion server is running?';

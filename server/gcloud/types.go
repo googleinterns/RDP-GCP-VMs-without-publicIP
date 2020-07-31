@@ -56,12 +56,12 @@ const (
 	iapTunnelStarted                    string = "Started IAP tunnel for %v on port: %v"
 	receivedEndCmd                      string = "Received end RDP command from connection"
 	receivedStartRdpCmd                 string = "Received command to start RDP program with credentials"
-	deletingIapFirewall                 string = "Deleting IAP firewall for %v"
 	endingIapTunnel                     string = "Ending IAP tunnel for %v"
 	createIapFailed                     string = "Creating IAP tunnel failed"
 	// IMPORTANT: IF CHANGED, NEEDS TO BE CHANGED IN EXTENSION AS WELL
 	readyForCommandOutput string = "Ready for command"
 	shutDownRdp           string = "Shutdown private RDP for %v"
+	deletingFirewall      string = "Deleting firewall for %v"
 )
 
 // automated rdp program consts

@@ -51,8 +51,8 @@ limitations under the License. -->
                         <div class="operation">
                             <h3 class="description">{{operation.description}}</h3>
                             
-                            <h3 class="param-title">Common Parameters:</h3>
-                            <div *ngIf="commonParams.length > 0" class="param-form">
+                            <h3 *ngIf="commonParams && commonParams.length > 0" class="param-title">Common Parameters:</h3>
+                            <div *ngIf="commonParams && commonParams.length > 0" class="param-form">
                                 <mat-form-field appearance="standard" *ngFor="let param of commonParams">
                                     <mat-label>{{param.name}}</mat-label>
                                     <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
@@ -65,10 +65,10 @@ limitations under the License. -->
                                 </mat-form-field>
                             </div>
                             
-                            <mat-divider class="divider" color="primary"></mat-divider>
+                            <mat-divider *ngIf="operation.paramsToLoad && operation.paramsToLoad.length > 0" class="divider" color="primary"></mat-divider>
                             
-                            <h3 class="param-title">Operation Parameters:</h3>
-                            <div *ngIf="operation.paramsToLoad" class="param-form">
+                            <h3 *ngIf="operation.paramsToLoad && operation.paramsToLoad.length > 0" class="param-title">Operation Parameters:</h3>
+                            <div *ngIf="operation.paramsToLoad && operation.paramsToLoad.length > 0" class="param-form">
                                 
                                 <mat-form-field appearance="standard" *ngFor="let param of operation.paramsToLoad">
                                     <mat-label>{{param.name}}</mat-label>

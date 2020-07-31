@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -37,6 +38,11 @@ type CmdShell struct{}
 // ExecuteCmd runs a shell command and waits for its output before returning the output
 func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 	parsedCmd := strings.Fields(cmd)
+
+	for i := 0; i < len(parsedCmd); i++ {
+		parsedCmd[i] = os.ExpandEnv(parsedCmd[i])
+	}
+
 	out, err := exec.Command(parsedCmd[0], parsedCmd[1:]...).CombinedOutput()
 	return out, err
 }
@@ -49,6 +55,10 @@ func (*CmdShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFu
 	if err != nil {
 		cancel()
 		return nil, nil, err
+	}
+
+	for i := 0; i < len(parsedCmd); i++ {
+		parsedCmd[i] = os.ExpandEnv(parsedCmd[i])
 	}
 
 	asyncCmd := exec.CommandContext(ctx, parsedCmd[0], parsedCmd[1:]...)
