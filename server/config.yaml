@@ -6,6 +6,9 @@ instanceOperations:
   - name: serial-port-output
     operation: >
       gcloud compute instances get-serial-port-output ${{NAME}} --zone=${{ZONE}} --format=json
+  - name: connect-serial-port-output
+    operation: >
+      gcloud compute connect-to-serial-port ${{NAME}} --zone=${{ZONE}} --format=json
 commonParams:
   PROJECT:
     type: string

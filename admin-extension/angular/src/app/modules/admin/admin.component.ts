@@ -189,6 +189,7 @@ export class AdminComponent {
     this.configError = null;
     this.commonParams = [];
     this.loading = true;
+    this.operationsRunning = [];
     this.loadConfig();
   }
 

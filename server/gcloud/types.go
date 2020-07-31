@@ -36,7 +36,7 @@ const (
 // iap firewall consts
 const (
 	iapFirewallCreateCmd            string = "gcloud compute firewall-rules create admin-extension-private-rdp-%v --direction=INGRESS   --action=allow   --rules=tcp:3389   --source-ranges=35.235.240.0/20 --source-tags=%s --project=%s --network=%s"
-	iapFirewallDeleteCmd            string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q --project=%s"
+	firewallDeleteCmd               string = "gcloud compute firewall-rules delete admin-extension-private-rdp-%v -q --project=%s"
 	firewallRuleExistsCmdOutput     string = "resource 'projects/%s/global/firewalls/admin-extension-private-rdp-%v' already exists"
 	firewallRuleAlreadyExistsOutput string = "Firewall rule already exists for %v"
 	didntCreateFirewallOutput       string = "Could not create firewall for %v"
@@ -77,7 +77,7 @@ const (
 )
 
 const (
-	rdpContextTimeout      time.Duration = 1 * time.Hour
+	rdpContextTimeout      time.Duration = 2 * time.Hour
 	firewallContextTimeout time.Duration = 2 * time.Minute
 )
 

@@ -68,7 +68,7 @@ func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn) {
 
 	log.Println("Got instance", instanceToConn.Name)
 
-	if err := gcloudExecutor.createIapFirewall(ws, instanceToConn); err != nil {
+	if err := gcloudExecutor.createFirewall(ws, instanceToConn); err != nil {
 		gcloudExecutor.cleanUpRdp(ws, instanceToConn, false, false, cancel)
 		return
 	}
@@ -102,7 +102,7 @@ func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn) {
 			return
 		case <-firewallCtx.Done():
 			if !firewallDeleted {
-				gcloudExecutor.deleteIapFirewall(ws, instanceToConn)
+				gcloudExecutor.deleteFirewall(ws, instanceToConn)
 				firewallDeleted = true
 				firewallCancel()
 			}
@@ -179,7 +179,7 @@ func (gcloudExecutor *GcloudExecutor) listenForCmd(ws conn, instance *Instance, 
 func (gcloudExecutor *GcloudExecutor) cleanUpRdp(ws conn, instance *Instance, cleanFirewall bool, cleanIap bool, cancelFunc context.CancelFunc) {
 	log.Println("clean up rdp for ", instance.Name)
 	if cleanFirewall {
-		gcloudExecutor.deleteIapFirewall(ws, instance)
+		gcloudExecutor.deleteFirewall(ws, instance)
 	}
 	if cleanIap {
 		writeToSocket(ws, fmt.Sprintf(endingIapTunnel, instance.Name), nil)
