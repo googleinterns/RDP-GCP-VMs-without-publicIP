@@ -95,13 +95,11 @@ export class OutputComponent {
         this.socket.subscribe(
           (msg) => {
             // Handle messages from the connection
-            console.log(msg)
             const receivedMessage = msg as AdminOperationSocketOutput;
             msg.message = msg.message.replace(/\s/g, '&#160;');
             msg.stdout = msg.stdout.replace(/\s/g, '&#160;')
             msg.stderr = msg.stderr.replace(/\s/g, '&#160;');
             this.messages.push(receivedMessage);
-            console.log(this.messages)
           },
           (err) => {
             // Handle error from connection
@@ -122,8 +120,6 @@ export class OutputComponent {
         this.rdpSocket.next(this.operationToRun.instance)
         this.rdpSocket.subscribe(
           (msg) => {
-
-            console.log(msg)
             // Handle messages from the connection
             this.operationToRun.instance.rdpStatus = 'Connected to server'
 
@@ -142,7 +138,7 @@ export class OutputComponent {
             }
 
             if (receivedMessage.message === rdpFirewallDeletedMessage + this.operationToRun.instance.name) {
-              this.operationToRun.instance.rdpStatus = 'Firewall has closed, restart RDP if you wish to connect';
+              this.operationToRun.instance.rdpStatus = 'Firewall has been deleted, restart RDP if you want to reconnect';
               this.rdpFirewallDeleted = true;
               this.operationToRun.instance.portRunning = null;
             }

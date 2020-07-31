@@ -56,10 +56,12 @@ export class AdminComponent {
 
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {
-    for (const [name, paramValue] of Object.entries(this.config.common_params)) {
-      paramValue.name = name;
-      paramValue.value = paramValue.default;
-      this.commonParams.push(paramValue);
+    if (this.config.common_params) {
+      for (const [name, paramValue] of Object.entries(this.config.common_params)) {
+        paramValue.name = name;
+        paramValue.value = paramValue.default;
+        this.commonParams.push(paramValue);
+      }
     }
   }
 
@@ -127,10 +129,6 @@ export class AdminComponent {
 
   // startLoadedOperation will start the loadedOperation, clears the form.
   startLoadedOperation(operation: any) {
-    Object.keys(operation.paramsToSet).forEach((param) => {
-      operation.paramsToSet[param] = null
-    });
-
     const operationFull = operation.name;
     operation.loadedOperation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');
     this.operationsRunning.push(operation.loadedOperation)

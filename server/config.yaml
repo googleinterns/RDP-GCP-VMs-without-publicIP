@@ -9,21 +9,11 @@ instanceOperations:
   - name: connect-serial-port-output
     operation: >
       gcloud compute connect-to-serial-port ${{NAME}} --zone=${{ZONE}} --format=json
-commonParams:
-  PROJECT:
-    type: string
-    description: Used to define which project to run admin command
-    sample: xxxx-xxxx
-    optional: true
 operations: 
   - name: echo-vm
     description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
     operation: >
-      echo ${{NAME}}
-    params:
-      NAME: 
-        type: string
-        default: new-instance
+      echo $EXTENSION_DEV_KEY
   - name: echo-vm2
     description: Creates a Gcloud VM
     operation: >
@@ -37,7 +27,6 @@ operations:
     description: Creates a Gcloud VM
     operation: >
       gcloud beta compute
-      --project=${{PROJECT}}
       instances create ${{NAME}} 
       --zone=us-central1-a 
       --machine-type=${{MACHINE_TYPE}}
@@ -68,7 +57,7 @@ operations:
   - name: create-firewall
     description: creates a firewall
     operation: >
-      gcloud compute firewall-rules create ${{NAME
+      gcloud compute firewall-rules create ${{NAME}}
       --direction=INGRESS
       --action=allow
       --rules=tcp:${{TCP}}

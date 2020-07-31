@@ -107,7 +107,7 @@ func (gcloudExecutor *GcloudExecutor) createFirewall(ws conn, instance *Instance
 // deleteIapFirewall deletes the firewall rule created for that instance
 func (gcloudExecutor *GcloudExecutor) deleteFirewall(ws conn, instance *Instance) {
 	log.Println("Deleting firewall for ", instance.Name)
-	writeToSocket(ws, fmt.Sprintf(deletingIapFirewall, instance.Name), nil)
+	writeToSocket(ws, fmt.Sprintf(deletingFirewall, instance.Name), nil)
 
 	cmd := fmt.Sprintf(firewallDeleteCmd, instance.Name, instance.ProjectName)
 	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(cmd)
