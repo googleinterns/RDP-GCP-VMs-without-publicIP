@@ -42,31 +42,47 @@ limitations under the License.
             <mat-cell *matCellDef="let instance"> {{instance.zone}} </mat-cell>
           </ng-container>
           <ng-container matColumnDef="networkIp">
-            <mat-header-cell *matHeaderCellDef> Network IP </mat-header-cell>
+            <mat-header-cell *matHeaderCellDef> Internal IP </mat-header-cell>
             <mat-cell *matCellDef="let instance"> {{instance.networkInterfaces[0].networkIP}} </mat-cell>
-          </ng-container>
-          <ng-container matColumnDef="network">
-            <mat-header-cell *matHeaderCellDef> Network </mat-header-cell>
-            <mat-cell *matCellDef="let instance"> {{instance.networkInterfaces[0].network}} </mat-cell>
           </ng-container>
           <ng-container matColumnDef="port">
             <mat-header-cell *matHeaderCellDef> IAP Port </mat-header-cell>
             <mat-cell *matCellDef="let instance"> {{instance.portRunning}} </mat-cell>
           </ng-container>
-          <ng-container matColumnDef="status">
-            <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
-            <mat-cell *matCellDef="let instance"> {{instance.rdpStatus}} </mat-cell>
-          </ng-container>
+
           <ng-container matColumnDef="rdp-button">
             <mat-header-cell *matHeaderCellDef> </mat-header-cell>
-            <mat-cell *matCellDef="let instance"> 
+            <mat-cell *matCellDef="let instance">
                 <button *ngIf="!instance.rdpRunning" type="button" [disabled]="instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="accent">START RDP</button>
                 <button *ngIf="instance.rdpRunning" type="button" [disabled]="!instance.rdpRunning" (click)="rdp(instance)" mat-raised-button color="warn">END RDP</button>
               </mat-cell>
           </ng-container>
-
+          <ng-container matColumnDef="operations">
+            <mat-header-cell *matHeaderCellDef> </mat-header-cell>
+            <mat-cell *matCellDef="let instance"> 
+              <span *ngIf="instance.rdpError" class="error">{{instance.rdpError}}</span>
+              <span *ngIf="instance.rdpStatus" class="status">{{instance.rdpStatus}}</span>
+              <button class="center" mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item *ngFor="let instanceOperation of instanceOperations" (click)="startInstanceOperation(instance, instanceOperation)">
+                  <span>{{instanceOperation.name | uppercase}}</span>
+                </button>
+              </mat-menu>
+              </mat-cell>
+          </ng-container>
           <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
           <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
         </mat-table>
     </div>
+
+    <mat-card class="loaded-operation-card" *ngIf="loadedOperation">
+      <mat-card-content class="loaded-operation">{{loadedOperation.operation}}</mat-card-content>
+      <mat-card-footer class="loaded-operation-footer">                            
+          <button type="button" (click)="clearLoadedOperation()" mat-raised-button color="warn">CLEAR</button>
+          <button type="button" (click)="startLoadedOperation(loadedOperation)" mat-raised-button color="accent">RUN</button>
+      </mat-card-footer>
+    </mat-card>
+
 </div>

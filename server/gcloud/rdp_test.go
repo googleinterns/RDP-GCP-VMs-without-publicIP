@@ -227,7 +227,7 @@ func TestStartRdpProgram(t *testing.T) {
 	}
 }
 
-func TestCreateIapFirewall(t *testing.T) {
+func TestCreateFirewall(t *testing.T) {
 	message := []byte(nil)
 	messageErr := errors.New("test error")
 
@@ -253,7 +253,7 @@ func TestCreateIapFirewall(t *testing.T) {
 	g := NewGcloudExecutor(&mockShell{})
 
 	instanceToUse.ProjectName = "auth-error"
-	err := g.createIapFirewall(ws, &instanceToUse)
+	err := g.createFirewall(ws, &instanceToUse)
 	if expected := fmt.Sprintf(didntCreateFirewallOutput, instanceToUse.Name); socketOutput.Message != expected {
 		t.Errorf("createIapFirewall didn't send message to socket about not creating firewall due to auth error, got %v, expected %v", socketOutput.Message, expected)
 	}
@@ -262,7 +262,7 @@ func TestCreateIapFirewall(t *testing.T) {
 	}
 
 	instanceToUse.ProjectName = "project-error"
-	err = g.createIapFirewall(ws, &instanceToUse)
+	err = g.createFirewall(ws, &instanceToUse)
 	if expected := fmt.Sprintf(didntCreateFirewallOutput, instanceToUse.Name); socketOutput.Message != expected {
 		t.Errorf("createIapFirewall didn't send message to socket about not creating firewall due to invalid project error, got %v, expected %v", socketOutput.Message, expected)
 	}
@@ -271,7 +271,7 @@ func TestCreateIapFirewall(t *testing.T) {
 	}
 
 	instanceToUse.ProjectName = "exists"
-	err = g.createIapFirewall(ws, &instanceToUse)
+	err = g.createFirewall(ws, &instanceToUse)
 	if expected := fmt.Sprintf(firewallRuleAlreadyExistsOutput, instanceToUse.Name); socketOutput.Message != expected {
 		t.Errorf("createIapFirewall didn't send message to socket about firewall existing, got %v, expected %v", socketOutput.Message, expected)
 	}
@@ -280,7 +280,7 @@ func TestCreateIapFirewall(t *testing.T) {
 	}
 
 	instanceToUse.ProjectName = "valid"
-	err = g.createIapFirewall(ws, &instanceToUse)
+	err = g.createFirewall(ws, &instanceToUse)
 	if expected := fmt.Sprintf(createdFirewallOutput, instanceToUse.Name); socketOutput.Message != expected {
 		t.Errorf("createIapFirewall didn't send message to socket about creating firewall, got %v, expected %v", socketOutput.Message, expected)
 	}

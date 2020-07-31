@@ -56,7 +56,7 @@ func (gcloudExecutor *GcloudExecutor) GetComputeInstances(projectName string) ([
 }
 
 // createIapFirewall creates the firewall rule for the instance to allow starting IAP tunnels
-func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws conn, instance *Instance) error {
+func (gcloudExecutor *GcloudExecutor) createFirewall(ws conn, instance *Instance) error {
 	log.Println("Creating firewall for ", instance.Name)
 
 	if len(instance.NetworkInterfaces) != 1 {
@@ -104,11 +104,23 @@ func (gcloudExecutor *GcloudExecutor) createIapFirewall(ws conn, instance *Insta
 	return returnErr
 }
 
-// deleteIapFirewall creates the firewall rule created for that instance
-func (gcloudExecutor *GcloudExecutor) deleteIapFirewall(instance *Instance) {
+// deleteIapFirewall deletes the firewall rule created for that instance
+func (gcloudExecutor *GcloudExecutor) deleteFirewall(ws conn, instance *Instance) {
 	log.Println("Deleting firewall for ", instance.Name)
-	cmd := fmt.Sprintf(iapFirewallDeleteCmd, instance.Name, instance.ProjectName)
-	gcloudExecutor.shell.ExecuteCmd(cmd)
+	writeToSocket(ws, fmt.Sprintf(deletingIapFirewall, instance.Name), nil)
+
+	cmd := fmt.Sprintf(firewallDeleteCmd, instance.Name, instance.ProjectName)
+	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(cmd)
+	log.Println(string(instanceOutput))
+	if err != nil {
+		if stringOutput := strings.ToLower(string(instanceOutput)); strings.Contains(stringOutput, gcloudAuthError) {
+			writeToSocket(ws, "", fmt.Errorf(deleteFirewallAuthError, instance.Name))
+		} else if strings.Contains(stringOutput, projectCmdError) {
+			writeToSocket(ws, "", fmt.Errorf(deleteFirewallProjectError, instance.Name))
+		} else {
+			writeToSocket(ws, "", err)
+		}
+	}
 }
 
 // readIapTunnelOutput is used as an helper to parse the output from starting the IAP tunnel

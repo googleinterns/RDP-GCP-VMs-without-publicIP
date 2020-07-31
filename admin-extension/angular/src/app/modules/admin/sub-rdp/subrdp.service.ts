@@ -17,7 +17,7 @@ limitations under the License.
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { getComputeInstancesEndpoint } from 'src/constants';
+import { getComputeInstancesEndpoint, sendInstanceOperationEndpoint } from 'src/constants';
 
 @Injectable()
 export class SubRdpService {
@@ -25,5 +25,9 @@ export class SubRdpService {
 
     getComputeInstances (data: object): Observable<object> {
         return this.http.post(getComputeInstancesEndpoint, data)
+    }
+
+    sendOperation (data: object): Observable<object> {
+        return this.http.post(sendInstanceOperationEndpoint, data)
     }
 }

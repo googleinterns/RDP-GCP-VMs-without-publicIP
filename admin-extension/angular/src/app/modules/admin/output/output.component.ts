@@ -18,7 +18,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 
 import { AdminOperationSocketOutput, AdminOperationInterface, SocketCmd} from 'src/classes';
-import { runOperationSocketEndpoint, readyForRdpCommandSocket, endRdpCmd, rdpShutdownMessage, rdpSocketEndpoint, endOperationCmd } from 'src/constants';
+import { runOperationSocketEndpoint, readyForRdpCommandSocket, endRdpCmd, rdpShutdownMessage, rdpSocketEndpoint, endOperationCmd, rdpFirewallDeletedMessage } from 'src/constants';
 
 @Component({
   selector: 'output',
@@ -30,6 +30,7 @@ export class OutputComponent {
     messages = [] as AdminOperationSocketOutput[];
     socket: WebSocketSubject<any> = webSocket(runOperationSocketEndpoint);
     rdpSocket: WebSocketSubject<any> = webSocket(rdpSocketEndpoint);
+    rdpFirewallDeleted = false;
 
     @Input() operationToRun: AdminOperationInterface;
 
@@ -94,8 +95,13 @@ export class OutputComponent {
         this.socket.subscribe(
           (msg) => {
             // Handle messages from the connection
+            console.log(msg)
             const receivedMessage = msg as AdminOperationSocketOutput;
+            msg.message = msg.message.replace(/\s/g, '&#160;');
+            msg.stdout = msg.stdout.replace(/\s/g, '&#160;')
+            msg.stderr = msg.stderr.replace(/\s/g, '&#160;');
             this.messages.push(receivedMessage);
+            console.log(this.messages)
           },
           (err) => {
             // Handle error from connection
@@ -116,8 +122,10 @@ export class OutputComponent {
         this.rdpSocket.next(this.operationToRun.instance)
         this.rdpSocket.subscribe(
           (msg) => {
+
+            console.log(msg)
             // Handle messages from the connection
-            this.operationToRun.instance.rdpStatus = 'Connected'
+            this.operationToRun.instance.rdpStatus = 'Connected to server'
 
             const receivedMessage = msg as AdminOperationSocketOutput;
             this.messages.push(receivedMessage);
@@ -127,29 +135,51 @@ export class OutputComponent {
               const port = receivedMessage.message.split(': ')[1];
               this.operationToRun.instance.portRunning = port;
             }
-            
+
             // Set status to ready if received ready for RDP message
             if (receivedMessage.message === readyForRdpCommandSocket) {
-              this.operationToRun.instance.rdpStatus = 'Ready';
+              this.operationToRun.instance.rdpStatus = 'Ready to RDP';
+            }
+
+            if (receivedMessage.message === rdpFirewallDeletedMessage + this.operationToRun.instance.name) {
+              this.operationToRun.instance.rdpStatus = 'Firewall has closed, restart RDP if you wish to connect';
+              this.rdpFirewallDeleted = true;
+              this.operationToRun.instance.portRunning = null;
             }
 
             // Set instance to not running when shut down message received.
-            if (receivedMessage.message === rdpShutdownMessage) {
+            if (receivedMessage.message === rdpShutdownMessage + this.operationToRun.instance.name) {
               this.operationToRun.instance.rdpStatus = 'Shut down';
               this.operationToRun.instance.rdpRunning = false;
+            }
+
+            if (receivedMessage.error) {
+              this.operationToRun.instance.rdpError = receivedMessage.error;
+              this.operationToRun.instance.rdpStatus = null;
             }
 
           },
           (err) => {
             // Handle error from connection
             console.log(err);
-            this.operationToRun.instance.rdpStatus = 'Closed';
+            if (!this.rdpFirewallDeleted) {
+              this.operationToRun.instance.rdpError = 'Server couldn\'t delete firewall rule for ' + this.operationToRun.instance.name + ', please delete manually';
+              this.operationToRun.instance.rdpStatus = null;
+            } else {
+              this.operationToRun.instance.rdpStatus = 'Connection closed';
+            }
             this.operationToRun.instance.rdpRunning = false;
+            this.operationToRun.instance.portRunning = null;
           },
           () => {
-            // Handle connection closed from server
-            this.operationToRun.instance.rdpStatus = 'Closed from server';
+            if (!this.rdpFirewallDeleted) {
+              this.operationToRun.instance.rdpError = 'Server couldn\'t delete firewall rule for ' + this.operationToRun.instance.name + ', please delete manually';
+              this.operationToRun.instance.rdpStatus = null;
+            } else {
+              this.operationToRun.instance.rdpStatus = 'Closed from server';
+            }
             this.operationToRun.instance.rdpRunning = false;
+            this.operationToRun.instance.portRunning = null;
           },
        );
       }

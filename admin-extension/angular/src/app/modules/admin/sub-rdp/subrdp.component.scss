@@ -40,6 +40,37 @@ limitations under the License.
 }
 
 .table-container {
-    width: 75%;
+    width: calc(80% - 3rem);
     min-width: 700px;
+}
+
+.center {
+    margin-left: auto;
+}
+
+.loaded-operation-card {
+    margin-top: 2rem;
+}
+
+.loaded-operation {
+    word-wrap: break-word;
+}
+
+.loaded-operation-footer {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+        margin: 0 0.5rem;
+    }
+}
+
+.error {
+    color: #ba000d;
+    font-weight: 500;
+}
+
+mat-cell:last-of-type {
+    padding-right: 0;
 }

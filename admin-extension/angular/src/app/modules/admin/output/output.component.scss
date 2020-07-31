@@ -1,11 +1,12 @@
 .container {
     background-color: #212121;
-    height: 300px;
     overflow-y: auto;
+    overflow-x: auto;
+    height: 300px;
     color: #fafafa;
     flex-grow: 1;
     padding: 1.5rem;
-    font-size: 1rem;
+    font-size: 14px;
     font-family: monospace;
     font-weight: bold;
 }

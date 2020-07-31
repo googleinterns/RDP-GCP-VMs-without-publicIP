@@ -31,19 +31,7 @@ const createAdminTab = () => {
 // adminTabIconClickListener listens for an icon click to open the admin tab.
 const adminTabIconClickListener = () => {
   chrome.browserAction.onClicked.addListener((activeTab) => {
-    if (!adminTabId) {
-      // if no adminTabId set, create a new one
-      createAdminTab();
-    } else {
-      // check if tab is still open, if it is, switch to it, else open new one.
-      chrome.tabs.get(adminTabId, () => {
-        if (chrome.runtime.lastError) {
-          createAdminTab();
-        } else {
-          chrome.tabs.update(adminTabId, {highlighted: true});
-        }
-      })
-    }
+    createAdminTab();
   })
 }
 

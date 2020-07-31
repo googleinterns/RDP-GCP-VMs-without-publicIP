@@ -21,6 +21,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -38,6 +39,8 @@ const (
 	allowedHeaders string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
 )
 
+var configPath *string
+
 // loadedConfig points to the config currently in use.
 var loadedConfig *admin.Config
 
@@ -54,6 +57,14 @@ func newErrorRequest(err error) errorRequest {
 
 // main defines the routes of the HTTP server and starts listening on port 23966
 func main() {
+	configPath = flag.String("path", ".", "Path of the config file")
+	enableLogs := flag.Bool("v", false, "Enable logging")
+	flag.Parse()
+
+	if !*enableLogs {
+		log.SetOutput(ioutil.Discard)
+	}
+
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
 	router.HandleFunc("/health", setCorsHeaders).Methods("OPTIONS")
@@ -62,8 +73,10 @@ func main() {
 	router.HandleFunc("/gcloud/start-private-rdp", startPrivateRdp)
 	router.HandleFunc("/admin/get-config", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/get-config", getConfigFileAndSendJson).Methods("GET")
-	router.HandleFunc("/admin/command-to-run", validateAdminOperationParams).Methods("POST")
-	router.HandleFunc("/admin/command-to-run", setCorsHeaders).Methods("OPTIONS")
+	router.HandleFunc("/admin/operation-to-run", validateAdminOperationParams).Methods("POST")
+	router.HandleFunc("/admin/operation-to-run", setCorsHeaders).Methods("OPTIONS")
+	router.HandleFunc("/admin/instance-operation-to-run", validateInstanceOperationParams).Methods("POST")
+	router.HandleFunc("/admin/instance-operation-to-run", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/run-operation", runAdminOperation)
 
 	log.Fatal(http.ListenAndServe(":23966", router))
@@ -99,7 +112,7 @@ func getConfigFileAndSendJson(w http.ResponseWriter, r *http.Request) {
 		Error string `json:"error"`
 	}
 
-	config, err := admin.LoadConfig()
+	config, err := admin.LoadConfig(configPath)
 	if err != nil {
 		var req request
 		req.Error = err.Error()
@@ -134,6 +147,38 @@ func validateAdminOperationParams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	operationReady, err := admin.ReadAdminOperation(reqBody, loadedConfig)
+	if err != nil {
+		json.NewEncoder(w).Encode(newErrorRequest(err))
+		return
+	}
+
+	operationPool = append(operationPool, operationReady)
+
+	json.NewEncoder(w).Encode(operationReady)
+	return
+}
+
+func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
+	setCorsHeaders(w, nil)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	var reqBody admin.InstanceOperationToFill
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if loadedConfig == nil {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New("config not loaded")))
+		return
+	}
+
+	operationReady, err := admin.ReadInstanceOperation(reqBody, loadedConfig)
 	if err != nil {
 		json.NewEncoder(w).Encode(newErrorRequest(err))
 		return
