@@ -65,6 +65,7 @@ export class SubRdpComponent {
             instance.project = this.project;
             instance.zone = instance.zone.split('/').pop();
             instance.networkInterfaces[0].network = instance.networkInterfaces[0].network.split('/').pop();
+            instance.displayPrivateRdpDom = this.canDisplayRdpDom(instance);
           })
           console.log(this.instances)
           this.getInstancesError = null;
@@ -133,6 +134,16 @@ export class SubRdpComponent {
       this.clearLoadedOperation();
     }
 
+    canDisplayRdpDom(instance: Instance) {
+      for (let i = 0; i < instance.disks.length; i++) {
+        for (let j = 0; j < instance.disks[i].guestOsFeatures.length; j++) {
+          if (instance.disks[i].guestOsFeatures[j].type === 'WINDOWS') {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
 
 }
 

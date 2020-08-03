@@ -132,7 +132,7 @@ export class AdminComponent {
     operation.loadedOperation = null;
   }
 
-  // startLoadedOperation will start the loadedOperation, clears the form.
+  // startLoadedOperation will start the loadedOperation.
   startLoadedOperation(operation: any) {
     const operationFull = operation.name;
     operation.loadedOperation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');
@@ -144,6 +144,7 @@ export class AdminComponent {
     operation.loadedOperation = null;
   }
 
+  // startLoadedInstanceOperation will start an instance operation from the subrdp component.
   startLoadedInstanceOperation(operation: any) {
     const operationFull = operation.operation;
     operation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');

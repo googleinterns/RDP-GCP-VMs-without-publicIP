@@ -18,6 +18,7 @@ limitations under the License.
 package shell
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -48,7 +49,7 @@ func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 }
 
 // ExecuteCmd runs a shell command and waits for its output before returning the output
-func (*CmdShell) ExecuteCmdWithContext(endContext context.Context, cmd string) ([]io.ReadCloser, error) {
+func (*CmdShell) ExecuteCmdWithContext(endContext context.Context, cmd string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), cmdReaderContextTimeout)
 	parsedCmd, err := shlex.Split(cmd)
 
@@ -63,18 +64,9 @@ func (*CmdShell) ExecuteCmdWithContext(endContext context.Context, cmd string) (
 
 	c := exec.CommandContext(ctx, parsedCmd[0], parsedCmd[1:]...)
 
-	stdout, err := c.StdoutPipe()
-	if err != nil {
-		cancel()
-		return nil, err
-	}
-
-	stderr, err := c.StderrPipe()
-	if err != nil {
-		cancel()
-		return nil, err
-	}
-
+	var b bytes.Buffer
+	c.Stdout = &b
+	c.Stderr = &b
 	err = c.Start()
 	if err != nil {
 		cancel()
@@ -99,8 +91,7 @@ func (*CmdShell) ExecuteCmdWithContext(endContext context.Context, cmd string) (
 	}()
 
 	<-done
-
-	return []io.ReadCloser{stdout, stderr}, returnErr
+	return b.Bytes(), returnErr
 }
 
 // ExecuteCmdReader runs a shell command and pipes the stdout and stderr into ReadClosers

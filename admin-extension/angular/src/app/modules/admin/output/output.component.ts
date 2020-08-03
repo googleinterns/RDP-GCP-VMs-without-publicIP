@@ -96,9 +96,6 @@ export class OutputComponent {
           (msg) => {
             // Handle messages from the connection
             const receivedMessage = msg as AdminOperationSocketOutput;
-            msg.message = msg.message.replace(/\s/g, '&#160;');
-            msg.stdout = msg.stdout.replace(/\s/g, '&#160;')
-            msg.stderr = msg.stderr.replace(/\s/g, '&#160;');
             this.messages.push(receivedMessage);
           },
           (err) => {

@@ -1,8 +1,16 @@
 <div #scrollMe [scrollTop]="scrollMe.scrollHeight" class="container">
     <div class="list" *ngFor="let socketMessage of messages">
-        <div *ngIf="socketMessage.message" class="server-message" [innerHTML]="socketMessage.message"></div>
-        <div *ngIf="socketMessage.stdout" class="stdout" [innerHTML]="socketMessage.stdout"></div>
-        <div *ngIf="socketMessage.stderr" class="stderr" [innerHTML]="socketMessage.stderr"></div>
-        <div *ngIf="socketMessage.err" class="err" [innerHTML]="socketMessage.err"></div>
+        <div class="server-message">
+            {{socketMessage.message}}
+        </div>
+        <div class="stdout">
+            {{socketMessage.stdout}}
+        </div>
+        <div class="stderr">
+            {{socketMessage.stderr}}
+        </div>
+        <div class="err">
+            {{socketMessage.err}}
+        </div>
     </div>    
 </div>

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"strings"
 	"sync"
 	"time"
 )
@@ -134,34 +133,7 @@ func sendOutputToConn(ws conn, scanner *bufio.Scanner, stdout bool, wg *sync.Wai
 	wg.Done()
 }
 
-// sendOutputToConnOnce sends the output from the operation to the websocket
-func sendOutputToConnOnce(ws conn, scanner *bufio.Scanner, stdout bool, wg *sync.WaitGroup) {
-	var lines []string
-	for scanner.Scan() {
-		line := scanner.Text()
-		log.Println(line)
-
-		lines = append(lines, line)
-	}
-
-	if err := scanner.Err(); err != nil {
-		WriteToSocket(ws, "", "", "", err)
-	}
-
-	if stdout {
-		if err := WriteToSocket(ws, "", strings.Join(lines, "\n"), "", nil); err != nil {
-			log.Println(err)
-		}
-	} else {
-		if err := WriteToSocket(ws, "", "", strings.Join(lines, "\n"), nil); err != nil {
-			log.Println(err)
-		}
-	}
-
-	wg.Done()
-}
-
-// executeOperation executes the actual operation and pipes the stdout and stderr
+// executeOperationInstant executes the actual operation, waits till termination and sends one output
 func (adminExecutor *AdminExecutor) executeOperationInstant(ctx context.Context, ws conn, operation *OperationToRun, operationDoneChan chan<- bool) {
 	log.Println("Running operation", operation.Operation)
 
@@ -174,14 +146,8 @@ func (adminExecutor *AdminExecutor) executeOperationInstant(ctx context.Context,
 		return
 	}
 
-	stdoutScanner, stderrScanner := bufio.NewScanner(output[0]), bufio.NewScanner(output[1])
+	WriteToSocket(ws, "", string(output), "", nil)
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go sendOutputToConnOnce(ws, stdoutScanner, true, &wg)
-	go sendOutputToConnOnce(ws, stderrScanner, false, &wg)
-
-	wg.Wait()
 	operationDoneChan <- true
 }
 
