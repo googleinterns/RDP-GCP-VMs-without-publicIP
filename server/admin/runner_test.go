@@ -404,6 +404,7 @@ func TestRunOperation(t *testing.T) {
 	socketOutput = []socketMessage{}
 
 	operation.Operation = "output"
+	operation.RealtimeOutput = true
 	adminExecutor.RunOperation(ws, &operation)
 
 	var expectedServerMessage bool
@@ -419,6 +420,8 @@ func TestRunOperation(t *testing.T) {
 			expectedStderr = true
 		}
 	}
+
+	log.Println(socketOutput)
 
 	if !expectedServerMessage {
 		t.Errorf("RunOperation didn't write proper acknowledgement to socket, expected %v", fmt.Sprintf(serverReceivedOperation, "output"))
