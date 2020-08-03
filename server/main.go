@@ -35,8 +35,9 @@ import (
 )
 
 const (
-	allowedMethods string = "POST, GET, OPTIONS"
-	allowedHeaders string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
+	allowedMethods  string = "POST, GET, OPTIONS"
+	allowedHeaders  string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
+	configNotLoaded string = "Unable to load configuration file from server, try refreshing the page."
 )
 
 var configPath *string
@@ -142,7 +143,7 @@ func validateAdminOperationParams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if loadedConfig == nil {
-		json.NewEncoder(w).Encode(newErrorRequest(errors.New("config not loaded")))
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New(configNotLoaded)))
 		return
 	}
 
@@ -174,7 +175,7 @@ func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if loadedConfig == nil {
-		json.NewEncoder(w).Encode(newErrorRequest(errors.New("config not loaded")))
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New(configNotLoaded)))
 		return
 	}
 

@@ -50,10 +50,11 @@ type configParam struct {
 
 // configAdminOperation points to a configured admin operation
 type configAdminOperation struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Operation   string                 `json:"operation"`
-	Params      map[string]configParam `json:"params"`
+	Name           string                 `json:"name"`
+	Description    string                 `json:"description"`
+	Operation      string                 `json:"operation"`
+	Params         map[string]configParam `json:"params"`
+	RealtimeOutput bool                   `mapstructure:"realtime_output"`
 }
 
 // Config is the fully loaded config represented as structures
@@ -77,9 +78,10 @@ type InstanceOperationToFill struct {
 
 // OperationToRun contains a ready to run operation with its status and a unique
 type OperationToRun struct {
-	Operation string `json:"operation"`
-	Hash      string `json:"hash"`
-	Status    string `json:"status"`
+	Operation      string `json:"operation"`
+	Hash           string `json:"hash"`
+	Status         string `json:"status"`
+	RealtimeOutput bool
 }
 
 func checkConfigForMissingParams(config Config) map[string][]string {
@@ -215,6 +217,7 @@ func ReadAdminOperation(operation OperationToFill, config *Config) (OperationToR
 	operationToRun.Operation = strings.TrimSpace(strings.TrimSuffix(configuredAdminOperation.Operation, "\n"))
 	operationToRun.Status = "ready"
 	operationToRun.Hash = fmt.Sprintf("%x", sha256.Sum256([]byte(operationToRun.Operation)))
+	operationToRun.RealtimeOutput = configuredAdminOperation.RealtimeOutput
 
 	return operationToRun, nil
 }
@@ -266,6 +269,6 @@ func ReadInstanceOperation(operation InstanceOperationToFill, config *Config) (O
 	operationToRun.Operation = strings.TrimSpace(strings.TrimSuffix(configuredAdminOperation.Operation, "\n"))
 	operationToRun.Status = "ready"
 	operationToRun.Hash = fmt.Sprintf("%x", sha256.Sum256([]byte(operationToRun.Operation)))
-
+	operationToRun.RealtimeOutput = configuredAdminOperation.RealtimeOutput
 	return operationToRun, nil
 }

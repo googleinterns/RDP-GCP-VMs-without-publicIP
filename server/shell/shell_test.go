@@ -19,13 +19,17 @@ package shell
 import (
 	"bufio"
 	"bytes"
+	"context"
+	"regexp"
 	"testing"
+	"time"
 )
 
 const (
-	invalidCmd     string = "foo"
-	validCmd       string = `echo hello`
-	validReaderCmd string = `echo stdout; echo stderr >&2;`
+	invalidCmd      string = "foo"
+	validCmd        string = `echo hello`
+	validContextCmd string = `bash -c 'while true; do "echo hello"; sleep 1; done'`
+	validReaderCmd  string = `echo stdout; echo stderr >&2;`
 )
 
 // TestExecuteCmd tests the ExecuteCmd method which runs a shell cmd and waits for it output before testing
@@ -36,6 +40,26 @@ func TestExecuteCmd(t *testing.T) {
 	}
 
 	if validOutput, err := shell.ExecuteCmd(validCmd); validOutput == nil || err != nil || bytes.Equal(validOutput, []byte("hello")) {
+		t.Errorf("Cmd failed, expected %v, got %v", "hello", string(validOutput))
+	}
+}
+
+func TestExecuteCmdWithContext(t *testing.T) {
+	shell := CmdShell{}
+	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
+	if invalidOutput, err := shell.ExecuteCmdWithContext(ctx, invalidCmd); invalidOutput != nil && err == nil {
+		t.Errorf("ExecuteCmdWithContext didn't error on invalid cmd")
+	}
+
+	r := regexp.MustCompile("hello")
+
+	if output, err := shell.ExecuteCmdWithContext(ctx, validContextCmd); len(r.FindAllStringIndex(string(output), -1)) != 2 && err != nil {
+		t.Errorf("ExecuteCmdWithContext didn't stop execution on context expiry, got %v occurences of hello, expecting %v", len(r.FindAllStringIndex(string(output), -1)), 2)
+	}
+
+	ctx, _ = context.WithTimeout(context.Background(), 2*time.Second)
+
+	if validOutput, err := shell.ExecuteCmdWithContext(ctx, validCmd); validOutput == nil || err != nil || bytes.Equal(validOutput, []byte("hello")) {
 		t.Errorf("Cmd failed, expected %v, got %v", "hello", string(validOutput))
 	}
 }

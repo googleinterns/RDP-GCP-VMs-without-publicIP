@@ -44,7 +44,7 @@ limitations under the License. -->
             <mat-divider></mat-divider>
 
             <div class="middle" *ngIf="config && config.operations">
-                <mat-tab-group class="operation-tabs" backgroundColor="primary" color="accent">
+                <mat-tab-group class="operation-tabs" backgroundColor="primary" color="accent" animationDuration="0ms">
 
                     <mat-tab id="Test" label="{{operation.name}}" *ngFor="let operation of operations">
                         
@@ -65,19 +65,19 @@ limitations under the License. -->
                                 </mat-form-field>
                             </div>
                             
-                            <mat-divider *ngIf="operation.paramsToLoad && operation.paramsToLoad.length > 0" class="divider" color="primary"></mat-divider>
+                            <mat-divider *ngIf="operation.params && operation.params.length > 0 && commonParams && commonParams.length > 0" class="divider" color="primary"></mat-divider>
                             
-                            <h3 *ngIf="operation.paramsToLoad && operation.paramsToLoad.length > 0" class="param-title">Operation Parameters:</h3>
-                            <div *ngIf="operation.paramsToLoad && operation.paramsToLoad.length > 0" class="param-form">
+                            <h3 *ngIf="operation.params && operation.params.length > 0" class="param-title">Operation Parameters:</h3>
+                            <div *ngIf="operation.params && operation.params.length > 0" class="param-form">
                                 
-                                <mat-form-field appearance="standard" *ngFor="let param of operation.paramsToLoad">
+                                <mat-form-field appearance="standard" *ngFor="let param of operation.params">
                                     <mat-label>{{param.name}}</mat-label>
-                                    <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="operation.paramsToSet[param.name]">
+                                    <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
                                         <mat-option *ngFor="let choice of param.choices" [value]="choice">
                                           {{choice}}
                                         </mat-option>
                                       </mat-select>
-                                    <textarea *ngIf="!param.choices" matInput [(ngModel)]="operation.paramsToSet[param.name]" [placeholder]="param.sample" [required]="!param.optional"></textarea>
+                                    <textarea *ngIf="!param.choices" matInput [(ngModel)]="param.value" [placeholder]="param.sample" [required]="!param.optional"></textarea>
                                     <mat-hint>{{param.description}}</mat-hint>
                                 </mat-form-field>
                             </div>
@@ -101,7 +101,7 @@ limitations under the License. -->
             </div>
 
             <div id="output-view" class="bottom" *ngIf="config && config.operations">
-                <mat-tab-group id="tab-group" (selectedTabChange)="tabChanged($event)" [selectedIndex]="operationsRunning.length-1" backgroundColor="primary" color="accent" class="output-tabs">
+                <mat-tab-group id="tab-group" (selectedTabChange)="tabChanged($event)" [selectedIndex]="operationsRunning.length-1" backgroundColor="primary" color="accent" class="output-tabs" animationDuration="0ms">
                     <mat-tab class="output" label="{{operation.label}}" *ngFor="let operation of operationsRunning; index as i"> 
                         <output [close]="operation.close" [closeRdp]="operation.rdpClose" [operationToRun]="operation" (outputClosed)="outputTabClosed(i)"></output>
                     </mat-tab>

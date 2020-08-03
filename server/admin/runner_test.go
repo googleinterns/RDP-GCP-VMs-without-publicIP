@@ -28,6 +28,16 @@ func (*mockShell) ExecuteCmd(cmd string) ([]byte, error) {
 	return nil, nil
 }
 
+func (*mockShell) ExecuteCmdWithContext(ctx context.Context, cmd string) ([]byte, error) {
+	if cmd == "output" {
+		return []byte("output"), nil
+	}
+	if cmd == testErr {
+		return nil, errors.New(testErr)
+	}
+	return nil, nil
+}
+
 func (*mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
 	if cmd == "output" {
 		return []io.ReadCloser{ioutil.NopCloser(strings.NewReader("stdout")), ioutil.NopCloser(strings.NewReader("stderr"))}, nil, nil
@@ -219,6 +229,71 @@ func TestSendOutputToConn(t *testing.T) {
 	}
 }
 
+func TestExecuteOperationInstant(t *testing.T) {
+	var socketOutput []socketMessage
+
+	readMessage := func() (messageType int, p []byte, err error) {
+		return websocket.TextMessage, nil, nil
+	}
+
+	writeJSON := func(v interface{}) error {
+		socketOutput = append(socketOutput, *(v.(*socketMessage)))
+		return nil
+	}
+
+	closeFunc := func() error {
+		return nil
+	}
+
+	ws := newMockWebSocket(readMessage, writeJSON, closeFunc)
+
+	adminExecutor := NewAdminExecutor(&mockShell{})
+	operation := mockOperationToRun
+	ctx, _ := context.WithTimeout(context.Background(), operationContextTimeout)
+	operationDoneChan := make(chan bool)
+	operation.Operation = testErr
+
+	go adminExecutor.executeOperationInstant(ctx, ws, &operation, operationDoneChan)
+	operationDone := <-operationDoneChan
+
+	if operationDone != true {
+		t.Errorf("executeOperationInstant didn't set operation done channel to true on error")
+	}
+	if socketOutput[0].Err != testErr {
+		t.Errorf("executeOperationInstant didn't write proper error to socket, got %v, expected %v", socketOutput[0].Err, testErr)
+	}
+
+	operationDoneChan = make(chan bool)
+	operation.Operation = "output"
+
+	socketOutput = []socketMessage{}
+
+	go adminExecutor.executeOperationInstant(ctx, ws, &operation, operationDoneChan)
+	operationDone = <-operationDoneChan
+	if operationDone != true {
+		t.Errorf("executeOperationInstant didn't set operation done channel to true after output waitgroup finished")
+	}
+
+	var expectedStdout bool
+	for _, output := range socketOutput {
+		if output.Stdout == "output" {
+			expectedStdout = true
+		}
+	}
+
+	if !expectedStdout {
+		t.Errorf("executeOperationInstant didn't write proper stdout message to socket, expected %v", "stdout")
+	}
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), operationContextTimeout)
+	go adminExecutor.executeOperationInstant(ctx, ws, &operation, operationDoneChan)
+	cancelFunc()
+	operationDone = <-operationDoneChan
+	if operationDone != true {
+		t.Errorf("executeOperationInstant didn't set operation done channel to true after ctx cancelFunc called")
+	}
+}
+
 func TestExecuteOperation(t *testing.T) {
 	var socketOutput []socketMessage
 
@@ -329,6 +404,7 @@ func TestRunOperation(t *testing.T) {
 	socketOutput = []socketMessage{}
 
 	operation.Operation = "output"
+	operation.RealtimeOutput = true
 	adminExecutor.RunOperation(ws, &operation)
 
 	var expectedServerMessage bool
@@ -344,6 +420,8 @@ func TestRunOperation(t *testing.T) {
 			expectedStderr = true
 		}
 	}
+
+	log.Println(socketOutput)
 
 	if !expectedServerMessage {
 		t.Errorf("RunOperation didn't write proper acknowledgement to socket, expected %v", fmt.Sprintf(serverReceivedOperation, "output"))

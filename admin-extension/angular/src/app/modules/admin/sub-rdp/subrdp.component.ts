@@ -33,6 +33,7 @@ export class SubRdpComponent {
     getInstancesError: string;
     instances: Instance[];
     displayedColumns: string[] = ['name', 'zone', 'networkIp', 'port', 'rdp-button', 'operations'];
+    projectsLoaded = [];
     dataSource: MatTableDataSource<Instance>;
     instancesLoading = false;
     operationError: string;
@@ -59,31 +60,38 @@ export class SubRdpComponent {
           this.instances = [];
           this.dataSource = new MatTableDataSource<Instance>(this.instances);
         } else {
-          this.instances = response;
-          this.instances.forEach((instance) => {
+          let instances = response;
+          instances.forEach((instance) => {
             instance.project = this.project;
             instance.zone = instance.zone.split('/').pop();
             instance.networkInterfaces[0].network = instance.networkInterfaces[0].network.split('/').pop();
+            instance.displayPrivateRdpDom = this.canDisplayRdpDom(instance);
           })
           console.log(this.instances)
-          this.project = '';
           this.getInstancesError = null;
           this.instancesLoading = false;
-          this.dataSource = new MatTableDataSource<Instance>(this.instances);
-          console.log(this.instanceOperations)
+
+          let alreadyLoaded = false;
+          this.projectsLoaded.forEach((project) => {
+            if (project.name === this.project) {
+              project.dataSource = new MatTableDataSource<Instance>(instances);
+              alreadyLoaded = true;
+            }
+          })
+
+          if (!alreadyLoaded) {
+            this.projectsLoaded.push({name: this.project, dataSource: new MatTableDataSource<Instance>(instances)})
+          }
+
         }
 
       }, error => {
         if (error.status === 0) {
           this.getInstancesError = errorConnectingToServer;
-          this.instances = [];
           this.instancesLoading = false;
-          this.dataSource = new MatTableDataSource<Instance>(this.instances);
         } else {
           this.getInstancesError = error.error.error;
-          this.instances = [];
           this.instancesLoading = false;
-          this.dataSource = new MatTableDataSource<Instance>(this.instances);
         }
       })
     }
@@ -126,6 +134,16 @@ export class SubRdpComponent {
       this.clearLoadedOperation();
     }
 
+    canDisplayRdpDom(instance: Instance) {
+      for (let i = 0; i < instance.disks.length; i++) {
+        for (let j = 0; j < instance.disks[i].guestOsFeatures.length; j++) {
+          if (instance.disks[i].guestOsFeatures[j].type === 'WINDOWS') {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
 
 }
 

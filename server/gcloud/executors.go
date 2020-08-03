@@ -39,12 +39,13 @@ func NewGcloudExecutor(shell shell) *GcloudExecutor {
 func (gcloudExecutor *GcloudExecutor) GetComputeInstances(projectName string) ([]Instance, error) {
 	instanceOutput, err := gcloudExecutor.shell.ExecuteCmd(getComputeInstancesForProjectPrefix + projectName)
 	if err != nil {
+		log.Println(string(instanceOutput))
 		if stringOutput := strings.ToLower(string(instanceOutput)); strings.Contains(stringOutput, gcloudAuthError) {
 			return nil, errors.New(SdkAuthError)
 		} else if strings.Contains(stringOutput, projectCmdError) {
 			return nil, errors.New(SdkProjectError)
 		}
-		return nil, err
+		return nil, errors.New(string(instanceOutput))
 	}
 
 	var instances []Instance

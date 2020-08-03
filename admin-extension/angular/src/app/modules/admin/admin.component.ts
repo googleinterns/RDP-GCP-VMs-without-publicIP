@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { Component, NgZone } from '@angular/core';
+import { Component } from '@angular/core';
 import { Config, ConfigInterface, Instance } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -69,19 +69,16 @@ export class AdminComponent {
   setOperations() {
     if (this.config.operations) {
       this.config.operations.forEach((operation) => {
-        // paramsToSet consists of a name-value pair, this is the data sent to the server.
-        const paramsToSet = {};
-        // paramsToLoad consists of parameters' names, choices, default values and descriptions, used to build the forms.
-        const paramsToLoad = [];
+        const params = [];
 
         if (operation.params) {
           for (const [name, paramValue] of Object.entries(operation.params)) {
-            paramsToSet[name] = paramValue.default;
+            paramValue.value = paramValue.default;
             paramValue.name = name;
-            paramsToLoad.push(paramValue);
+            params.push(paramValue);
           }
         }
-        this.operations.push({name: operation.name, description: operation.description, paramsToSet, paramsToLoad});
+        this.operations.push({name: operation.name, description: operation.description, params});
     })
 
     console.log(this.operations)
@@ -97,10 +94,14 @@ export class AdminComponent {
 
   // sendOperation sends the operation and its params to the server to get an ready operation.
   sendOperation(operation: any) {
-    const data = {name: operation.name, variables: operation.paramsToSet}
-    console.log(this.commonParams)
+    let variables = {};
+    operation.params.forEach(param => {
+      variables[param.name] = param.value;
+    });
+    const data = {name: operation.name, variables}
+
     this.loadCommonParams(data.variables)
-    console.log(data)
+
     this.adminService.sendOperation(data)
     .subscribe((response: any) => {
       console.log(response)
@@ -118,7 +119,11 @@ export class AdminComponent {
       }
 
     }, error => {
-      operation.error = error;
+      if (error.status === 0) {
+        operation.error = errorConnectingToServer;
+      } else {
+        operation.error = error.error.error;
+      }
     })
   }
 
@@ -127,7 +132,7 @@ export class AdminComponent {
     operation.loadedOperation = null;
   }
 
-  // startLoadedOperation will start the loadedOperation, clears the form.
+  // startLoadedOperation will start the loadedOperation.
   startLoadedOperation(operation: any) {
     const operationFull = operation.name;
     operation.loadedOperation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');
@@ -139,6 +144,7 @@ export class AdminComponent {
     operation.loadedOperation = null;
   }
 
+  // startLoadedInstanceOperation will start an instance operation from the subrdp component.
   startLoadedInstanceOperation(operation: any) {
     const operationFull = operation.operation;
     operation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');
