@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { Component, NgZone } from '@angular/core';
+import { Component } from '@angular/core';
 import { Config, ConfigInterface, Instance } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -99,9 +99,9 @@ export class AdminComponent {
       variables[param.name] = param.value;
     });
     const data = {name: operation.name, variables}
-    console.log(this.commonParams)
+
     this.loadCommonParams(data.variables)
-    console.log(data)
+
     this.adminService.sendOperation(data)
     .subscribe((response: any) => {
       console.log(response)
@@ -119,7 +119,11 @@ export class AdminComponent {
       }
 
     }, error => {
-      operation.error = error;
+      if (error.status === 0) {
+        operation.error = errorConnectingToServer;
+      } else {
+        operation.error = error.error.error;
+      }
     })
   }
 

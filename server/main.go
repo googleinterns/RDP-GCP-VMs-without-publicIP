@@ -185,7 +185,7 @@ func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	operationPool = append(operationPool, operationReady)
-
+	log.Println(operationPool)
 	json.NewEncoder(w).Encode(operationReady)
 	return
 }

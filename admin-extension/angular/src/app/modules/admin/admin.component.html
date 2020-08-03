@@ -65,7 +65,7 @@ limitations under the License. -->
                                 </mat-form-field>
                             </div>
                             
-                            <mat-divider *ngIf="operation.params && operation.params.length > 0" class="divider" color="primary"></mat-divider>
+                            <mat-divider *ngIf="operation.params && operation.params.length > 0 && commonParams && commonParams.length > 0" class="divider" color="primary"></mat-divider>
                             
                             <h3 *ngIf="operation.params && operation.params.length > 0" class="param-title">Operation Parameters:</h3>
                             <div *ngIf="operation.params && operation.params.length > 0" class="param-form">
