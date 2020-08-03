@@ -65,7 +65,7 @@ limitations under the License.
               <mat-cell *matCellDef="let instance"> 
                 <span *ngIf="instance.rdpError" class="error">{{instance.rdpError}}</span>
                 <span *ngIf="instance.rdpStatus" class="status">{{instance.rdpStatus}}</span>
-                <button class="center" mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
+                <button *ngIf="instanceOperations && instanceOperations.length > 0" class="center" mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
                   <mat-icon>more_vert</mat-icon>
                 </button>
                 <mat-menu #menu="matMenu">

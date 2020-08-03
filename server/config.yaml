@@ -1,15 +1,5 @@
 enableRdp: true
-instanceOperations:
-  - name: describe-instance
-    operation: >
-      gcloud compute instances describe ${{NAME}} --zone=${{ZONE}} --project=${{PROJECT}} --format=json
-    realtime_output: true
-  - name: serial-port-output
-    operation: >
-      gcloud compute instances get-serial-port-output ${{NAME}} --zone=${{ZONE}} --format=json
-  - name: connect-serial-port-output
-    operation: >
-      gcloud compute connect-to-serial-port ${{NAME}} --zone=${{ZONE}} --format=json
+
 operations: 
   - name: echo-vm
     description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.

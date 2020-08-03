@@ -37,7 +37,7 @@ import (
 const (
 	allowedMethods  string = "POST, GET, OPTIONS"
 	allowedHeaders  string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
-	configNotLoaded string = "Config file is not loaded due to server restart, refresh the page."
+	configNotLoaded string = "Unable to load configuration file from server, try refreshing the page."
 )
 
 var configPath *string
@@ -186,7 +186,7 @@ func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	operationPool = append(operationPool, operationReady)
-	log.Println(operationPool)
+
 	json.NewEncoder(w).Encode(operationReady)
 	return
 }

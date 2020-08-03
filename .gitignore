@@ -15,7 +15,6 @@
 admin-extension/npm-debug.log
 admin-extension/yarn-error.log
 admin-extension/node_modules/
-admin-extension/dist/
 admin-extension/tmp/
 admin-extension/coverage/
 gcloud-private-rdp/npm-debug.log

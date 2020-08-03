@@ -95,7 +95,7 @@ func (adminExecutor *AdminExecutor) RunOperation(ws conn, operationToRun *Operat
 	go listenForEndCmd(ws, operationToRun, endOperationChan)
 
 	if operationToRun.RealtimeOutput {
-		log.Println("Realtime")
+		log.Println("Sending real time output as the realtimeoutput is turned ON.")
 		go adminExecutor.executeOperation(ctx, ws, operationToRun, endOperationChan)
 	} else {
 		go adminExecutor.executeOperationInstant(ctx, ws, operationToRun, endOperationChan)
