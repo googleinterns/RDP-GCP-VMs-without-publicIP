@@ -69,19 +69,16 @@ export class AdminComponent {
   setOperations() {
     if (this.config.operations) {
       this.config.operations.forEach((operation) => {
-        // paramsToSet consists of a name-value pair, this is the data sent to the server.
-        const paramsToSet = {};
-        // paramsToLoad consists of parameters' names, choices, default values and descriptions, used to build the forms.
-        const paramsToLoad = [];
+        const params = [];
 
         if (operation.params) {
           for (const [name, paramValue] of Object.entries(operation.params)) {
-            paramsToSet[name] = paramValue.default;
+            paramValue.value = paramValue.default;
             paramValue.name = name;
-            paramsToLoad.push(paramValue);
+            params.push(paramValue);
           }
         }
-        this.operations.push({name: operation.name, description: operation.description, paramsToSet, paramsToLoad});
+        this.operations.push({name: operation.name, description: operation.description, params});
     })
 
     console.log(this.operations)
@@ -97,7 +94,11 @@ export class AdminComponent {
 
   // sendOperation sends the operation and its params to the server to get an ready operation.
   sendOperation(operation: any) {
-    const data = {name: operation.name, variables: operation.paramsToSet}
+    let variables = {};
+    operation.params.forEach(param => {
+      variables[param.name] = param.value;
+    });
+    const data = {name: operation.name, variables}
     console.log(this.commonParams)
     this.loadCommonParams(data.variables)
     console.log(data)

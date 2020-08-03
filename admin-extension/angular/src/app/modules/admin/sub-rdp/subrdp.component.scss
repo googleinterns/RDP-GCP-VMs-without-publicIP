@@ -42,6 +42,7 @@ limitations under the License.
 .table-container {
     width: calc(80% - 3rem);
     min-width: 700px;
+    height: 100%;
 }
 
 .center {
@@ -70,7 +71,16 @@ limitations under the License.
     color: #ba000d;
     font-weight: 500;
 }
-
+mat-header-cell:first-of-type {
+    padding-left: 0;
+}
+mat-cell:first-of-type {
+    padding-left: 0;
+}
 mat-cell:last-of-type {
     padding-right: 0;
 }
+
+mat-header-cell, mat-cell {
+    justify-content: center;
+  }

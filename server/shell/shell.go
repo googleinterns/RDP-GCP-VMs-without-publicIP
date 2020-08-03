@@ -18,6 +18,7 @@ limitations under the License.
 package shell
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -45,6 +46,53 @@ func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 
 	out, err := exec.Command(parsedCmd[0], parsedCmd[1:]...).CombinedOutput()
 	return out, err
+}
+
+// ExecuteCmd runs a shell command and waits for its output before returning the output
+func (*CmdShell) ExecuteCmdWithContext(endContext context.Context, cmd string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), cmdReaderContextTimeout)
+	parsedCmd, err := shlex.Split(cmd)
+
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+
+	for i := 0; i < len(parsedCmd); i++ {
+		parsedCmd[i] = os.ExpandEnv(parsedCmd[i])
+	}
+
+	c := exec.CommandContext(ctx, parsedCmd[0], parsedCmd[1:]...)
+
+	var b bytes.Buffer
+	c.Stdout = &b
+	c.Stderr = &b
+	err = c.Start()
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+
+	var returnErr error
+	// Use a channel to signal completion so we can use a select statement
+	done := make(chan bool)
+	go func() {
+		if err = c.Wait(); err != nil {
+			returnErr = err
+		}
+		done <- true
+	}()
+
+	go func() {
+		// Wait for context to be done
+		<-endContext.Done()
+		cancel()
+		done <- true
+	}()
+
+	<-done
+
+	return b.Bytes(), returnErr
 }
 
 // ExecuteCmdReader runs a shell command and pipes the stdout and stderr into ReadClosers

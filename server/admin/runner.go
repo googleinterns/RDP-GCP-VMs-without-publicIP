@@ -22,6 +22,7 @@ const (
 
 type shell interface {
 	ExecuteCmd(string) ([]byte, error)
+	ExecuteCmdWithContext(context.Context, string) ([]byte, error)
 	ExecuteCmdReader(string) ([]io.ReadCloser, context.CancelFunc, error)
 }
 
@@ -92,7 +93,7 @@ func (adminExecutor *AdminExecutor) RunOperation(ws conn, operationToRun *Operat
 	}
 
 	go listenForEndCmd(ws, operationToRun, endOperationChan)
-	go adminExecutor.executeOperation(ctx, ws, operationToRun, endOperationChan)
+	go adminExecutor.executeOperationInstant(ctx, ws, operationToRun, endOperationChan)
 	<-endOperationChan
 	cancel()
 	WriteToSocket(ws, fmt.Sprintf(operationEnded, operationToRun.Hash), "", "", nil)
@@ -124,6 +125,24 @@ func sendOutputToConn(ws conn, scanner *bufio.Scanner, stdout bool, wg *sync.Wai
 	}
 
 	wg.Done()
+}
+
+// executeOperation executes the actual operation and pipes the stdout and stderr
+func (adminExecutor *AdminExecutor) executeOperationInstant(ctx context.Context, ws conn, operation *OperationToRun, operationDoneChan chan<- bool) {
+	log.Println("Running operation", operation.Operation)
+
+	output, err := adminExecutor.shell.ExecuteCmdWithContext(ctx, operation.Operation)
+	if err != nil {
+		log.Println(err)
+		WriteToSocket(ws, "", string(output), "", err)
+
+		operationDoneChan <- true
+		return
+	}
+
+	WriteToSocket(ws, "", string(output), "", nil)
+
+	operationDoneChan <- true
 }
 
 // executeOperation executes the actual operation and pipes the stdout and stderr
