@@ -36,40 +36,50 @@ limitations under the License. -->
         <div *ngIf="configError">
             <h2>{{configError}}</h2>
         </div>
-        <div *ngIf="!configError" class="container">
-            <div class="top" *ngIf="config && config.enable_rdp">
-                <sub-rdp [instanceOperations]="config.instance_operations" (instance)="instanceEmitted($event)" (startOperation)="startLoadedInstanceOperation($event)"></sub-rdp>
+        <div *ngIf="!configError && config" class="container">
+            <div class="top">
+                <mat-radio-group aria-label="Select an option" [(ngModel)]="useCommonParameters" [disabled]="!commonParams || initializeInstances">
+                    <mat-radio-button [value]="true">Get Project from Parameters</mat-radio-button>
+                    <mat-radio-button [value]="false">Validate Project</mat-radio-button>
+                </mat-radio-group>
+                <div class="project-field">
+                    <mat-form-field appearance="standard" *ngIf="!useCommonParameters">
+                        <mat-label>Google Cloud Project</mat-label>
+                        <input [disabled]="initializeInstances" matInput [(ngModel)]="projectToValidate">
+                    </mat-form-field>
+                    <h3 *ngIf="commonParams && commonParams.length > 0" class="param-title">Resource Parameters:</h3>
+                    <div *ngIf="commonParams && commonParams.length > 0" class="param-form">
+                        <mat-form-field appearance="standard" *ngFor="let param of commonParams">
+                            <mat-label>{{param.name}}</mat-label>
+                            <mat-select [disabled]="initializeInstances" *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
+                                <mat-option *ngFor="let choice of param.choices" [value]="choice">
+                                  {{choice}}
+                                </mat-option>
+                              </mat-select>
+                            <textarea [disabled]="initializeInstances" *ngIf="!param.choices" matInput [(ngModel)]="param.value" [placeholder]="param.sample" [required]="!param.optional"></textarea>
+                            <mat-hint>{{param.description}}</mat-hint>
+                        </mat-form-field>
+                    </div>
+                </div>
+
+                <button type="button" [disabled]="(!useCommonParameters && !projectToValidate) || initializeInstances" (click)="getProject()" mat-raised-button color="accent">GET INSTANCES</button>
+                <mat-error *ngIf="getProjectError" class="operation-error">{{getProjectError}}</mat-error>
+                <div *ngIf="initializeInstances" class="instances">
+                    <app-instances [instances]="instances" [instanceOperations]="config.instance_operations" (instance)="instanceEmitted($event)" (startOperation)="startLoadedInstanceOperation($event)"></app-instances>
+                </div>
+                <mat-error *ngIf="preRdpError" class="operation-error">{{preRdpError}}</mat-error>
             </div>
 
-            <mat-divider></mat-divider>
-
-            <div class="middle" *ngIf="config && config.operations">
+            <div class="middle" *ngIf="config.operations && initializeInstances && useCommonParameters">
                 <mat-tab-group class="operation-tabs" backgroundColor="primary" color="accent" animationDuration="0ms">
 
-                    <mat-tab id="Test" label="{{operation.name}}" *ngFor="let operation of operations">
+                    <mat-tab label="{{operation.name}}" *ngFor="let operation of operations">
                         
                         <div class="operation">
-                            <h3 class="description">{{operation.description}}</h3>
-                            
-                            <h3 *ngIf="commonParams && commonParams.length > 0" class="param-title">Common Parameters:</h3>
-                            <div *ngIf="commonParams && commonParams.length > 0" class="param-form">
-                                <mat-form-field appearance="standard" *ngFor="let param of commonParams">
-                                    <mat-label>{{param.name}}</mat-label>
-                                    <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
-                                        <mat-option *ngFor="let choice of param.choices" [value]="choice">
-                                          {{choice}}
-                                        </mat-option>
-                                      </mat-select>
-                                    <textarea *ngIf="!param.choices" matInput [(ngModel)]="param.value" [placeholder]="param.sample" [required]="!param.optional"></textarea>
-                                    <mat-hint>{{param.description}}</mat-hint>
-                                </mat-form-field>
-                            </div>
-                            
-                            <mat-divider *ngIf="operation.params && operation.params.length > 0 && commonParams && commonParams.length > 0" class="divider" color="primary"></mat-divider>
+                            <h3 class="description">{{operation.description}}</h3>                            
                             
                             <h3 *ngIf="operation.params && operation.params.length > 0" class="param-title">Operation Parameters:</h3>
-                            <div *ngIf="operation.params && operation.params.length > 0" class="param-form">
-                                
+                            <div *ngIf="operation.params && operation.params.length > 0" class="param-form">                                
                                 <mat-form-field appearance="standard" *ngFor="let param of operation.params">
                                     <mat-label>{{param.name}}</mat-label>
                                     <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">

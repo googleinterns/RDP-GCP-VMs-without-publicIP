@@ -15,7 +15,7 @@ limitations under the License.
 ***/
 
 import { Component } from '@angular/core';
-import { Config, ConfigInterface, Instance } from 'src/classes';
+import { canDisplayRdpDom, Config, ConfigInterface, Instance } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminService } from './admin.service';
@@ -39,6 +39,14 @@ export class AdminComponent {
   outputTabIndex: number;
   instanceToUpdate: Instance;
   style: {};
+  useCommonParameters: boolean;
+  project: string;
+  projectToValidate: string;
+  instancesLoading: boolean;
+  instances = [] as Instance[];
+  getProjectError: string;
+  initializeInstances = false;
+  preRdpError: string;
 
   constructor(private snackbar: MatSnackBar, private adminService: AdminService) {};
 
@@ -57,11 +65,14 @@ export class AdminComponent {
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {
     if (this.config.common_params) {
+      this.useCommonParameters = true;
       for (const [name, paramValue] of Object.entries(this.config.common_params)) {
         paramValue.name = name;
         paramValue.value = paramValue.default;
         this.commonParams.push(paramValue);
       }
+    } else {
+      this.useCommonParameters = false;
     }
   }
 
@@ -84,6 +95,83 @@ export class AdminComponent {
     console.log(this.operations)
     }
   }
+
+  getProject() {
+    const data = {type: "", project_name: "", variables: {}};
+    if (this.useCommonParameters) {
+      data.type = "get";
+    } else {
+      data.type = "validate";
+      data.project_name = this.projectToValidate;
+    }
+
+    this.loadCommonParams(data.variables)
+
+    this.adminService.sendProjectOperation(data)
+    .subscribe((response: any) => {
+      console.log(response)
+
+      // If operation returned, set loadedOperation to response
+      if (response.project) {
+        this.project = response.project;
+        console.log(this.project)
+        this.getComputeInstances();
+      }
+
+      // If error returned, set operation.error to error
+      if (response.error) {
+        this.getProjectError = response.error;
+      }
+
+    }, error => {
+      if (error.status === 0) {
+        this.getProjectError  = errorConnectingToServer;
+      } else {
+        this.getProjectError  = error.error.error;
+      }
+    })
+  }
+
+  getComputeInstances() {
+    this.instancesLoading = true;
+    const data = {project: this.project}
+    this.adminService.getComputeInstances(data)
+    .subscribe((response: any) => {
+      console.log(response)
+
+      // If error returned, set getInstancesError to error
+      if (response.error) {
+        this.getProjectError = response.error;
+        this.instances = [];
+      } else {
+        let instances = response;
+        instances.forEach((instance) => {
+          instance.project = this.project;
+          instance.zone = instance.zone.split('/').pop();
+          instance.networkInterfaces[0].network = instance.networkInterfaces[0].network.split('/').pop();
+          instance.displayPrivateRdpDom = canDisplayRdpDom(instance);
+        })
+        this.instances = instances;
+        console.log(this.instances);
+        if (instances.length > 0) {
+          this.initializeInstances = true;
+        }
+        this.getProjectError = null;
+        this.instancesLoading = false;
+
+      }
+
+    }, error => {
+      if (error.status === 0) {
+        this.getProjectError = errorConnectingToServer;
+        this.instancesLoading = false;
+      } else {
+        this.getProjectError = error.error.error;
+        this.instancesLoading = false;
+      }
+    })
+  }
+
 
   // loadCommonParams adds the commonParams to a variables object.
   loadCommonParams(variables: any) {
@@ -167,7 +255,7 @@ export class AdminComponent {
         console.log(this.config)
 
         // If no operations defined and rdp not enabled, set a configError
-        if (!this.config.operations && !this.config.enable_rdp) {
+        if (!this.config) {
           this.configError = 'Your configuration file is empty.'
         }
       }
@@ -194,6 +282,9 @@ export class AdminComponent {
     this.commonParams = [];
     this.loading = true;
     this.operationsRunning = [];
+    this.initializeInstances = false;
+    this.preRdpError = null;
+    this.getProjectError = null;
     this.loadConfig();
   }
 
@@ -218,9 +309,32 @@ export class AdminComponent {
   // instanceEmitted handles cases from the subrdp component including starting and ending the RDP websocket connection.
   instanceEmitted(instance: Instance) {
     if (!instance.rdpRunning) {
-      instance.rdpRunning = true;
-      const operation = {type: 'rdp', label: 'RDP '+instance.name, instance}
-      this.operationsRunning.push(operation);
+      if (this.config.pre_rdp_operations) {
+        const data = {type: "pre_rdp", project_name: "", variables: {}};
+        this.loadCommonParams(data.variables)
+        this.adminService.runPreRDPOperations(data)
+        .subscribe((response: any) => {
+          console.log(response)
+    
+          // If error returned, set getInstancesError to error
+          if (response.error) {
+            this.preRdpError = response.error;
+          } else {
+            this.preRdpError = null;
+            instance.rdpRunning = true;
+            const operation = {type: 'rdp', label: 'RDP '+instance.name, instance}
+            this.operationsRunning.push(operation);
+          }
+    
+        }, error => {
+          if (error.status === 0) {
+            this.preRdpError = errorConnectingToServer;
+          } else {
+            this.preRdpError = error.error.error;
+          }
+        })
+      }
+
     } else {
       this.operationsRunning.forEach((operation => {
         if (operation.instance === instance) {

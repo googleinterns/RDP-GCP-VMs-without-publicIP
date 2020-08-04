@@ -20,12 +20,8 @@ import { Observable } from 'rxjs';
 import { getComputeInstancesEndpoint, sendInstanceOperationEndpoint } from 'src/constants';
 
 @Injectable()
-export class SubRdpService {
+export class InstancesService {
     constructor(private http: HttpClient){}
-
-    getComputeInstances (data: object): Observable<object> {
-        return this.http.post(getComputeInstancesEndpoint, data)
-    }
 
     sendOperation (data: object): Observable<object> {
         return this.http.post(sendInstanceOperationEndpoint, data)

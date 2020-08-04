@@ -59,16 +59,25 @@ type configAdminOperation struct {
 
 // Config is the fully loaded config represented as structures
 type Config struct {
-	InstanceOperations []configAdminOperation `json:"instance_operations"`
-	Operations         []configAdminOperation `json:"operations"`
-	CommonParams       map[string]configParam `json:"common_params"`
-	EnableRdp          bool                   `json:"enable_rdp"`
+	InstanceOperations       []configAdminOperation `json:"instance_operations"`
+	Operations               []configAdminOperation `json:"operations"`
+	CommonParams             map[string]configParam `json:"common_params"`
+	ProjectOperation         string                 `json:"project_operation"`
+	ValidateProjectOperation string                 `json:"validate_project_operation"`
+	PreRDPOperations         []string               `json:"pre_rdp_operations"`
 }
 
 // OperationToFill is sent by the extension detailing a operation and the variables to be filled
 type OperationToFill struct {
 	Name   string            `json:"name"`
 	Params map[string]string `json:"variables"`
+}
+
+// ProjectOperationParams is sent by the extension detailing a operation and the variables to be filled
+type ProjectOperationParams struct {
+	Type        string            `json:"type"`
+	ProjectName string            `json:"project_name"`
+	Params      map[string]string `json:"variables"`
 }
 
 type InstanceOperationToFill struct {
@@ -148,6 +157,7 @@ func LoadConfig(configPath *string) (*Config, error) {
 }
 
 func checkIfParamInChoices(value string, variableName string, variablesToCheck map[string]configParam) bool {
+	log.Println(variablesToCheck[variableName].Choices)
 	for _, choice := range variablesToCheck[variableName].Choices {
 		if choice == value {
 			return true
@@ -163,6 +173,7 @@ func getMissingParams(variablesFound map[string]string, variablesInCommand map[s
 		if value, ok := variablesInCommand[variableName]; value != "" && ok {
 			if variablesToCheck[variableName].Choices != nil {
 				paramValid := checkIfParamInChoices(value, variableName, variablesToCheck)
+				log.Println(paramValid)
 				if paramValid {
 					variablesFound[variableName] = value
 				} else {
@@ -177,6 +188,30 @@ func getMissingParams(variablesFound map[string]string, variablesInCommand map[s
 			*missingParams = append(*missingParams, variableName)
 		}
 	}
+}
+
+func ReadOperationFromCommonParams(operation ProjectOperationParams, operationToFill string, config *Config) (string, error) {
+	variables := make(map[string]string)
+	var missingParams []string
+
+	getMissingParams(variables, operation.Params, config.CommonParams, &missingParams)
+	if len(missingParams) > 0 {
+		return "", fmt.Errorf(missingParamsError, strings.Join(missingParams, ", "))
+	}
+
+	filledOperation := operationToFill
+
+	for name, value := range variables {
+		if value == "" {
+			r := regexp.MustCompile(fmt.Sprintf(`((--[^=]+=)*\${{%s}})`, name))
+
+			filledOperation = r.ReplaceAllString(filledOperation, "")
+		} else {
+			filledOperation = strings.Replace(filledOperation, "${{"+name+"}}", value, -1)
+		}
+	}
+
+	return strings.TrimSpace(strings.TrimSuffix(filledOperation, "\n")), nil
 }
 
 // ReadAdminOperation takes a operationToFill and a config and returns a ready to go operation
@@ -205,7 +240,8 @@ func ReadAdminOperation(operation OperationToFill, config *Config) (OperationToR
 
 	for name, value := range variables {
 		if value == "" {
-			r := regexp.MustCompile(fmt.Sprintf(`(--[^=]+=\${{%s}})`, name))
+			log.Println(name)
+			r := regexp.MustCompile(fmt.Sprintf(`((--[^=]+=)*\${{%s}})`, name))
 
 			configuredAdminOperation.Operation = r.ReplaceAllString(configuredAdminOperation.Operation, "")
 		} else {

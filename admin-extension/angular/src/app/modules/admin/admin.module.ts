@@ -34,16 +34,16 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatMenuModule } from '@angular/material/menu';
 import { ResizableModule } from 'angular-resizable-element';
 
-
+import { MatRadioModule } from '@angular/material/radio';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 
 import { OutputComponent } from './output/output.component';
-import { SubRdpComponent } from './sub-rdp/subrdp.component';
+import { InstancesComponent } from './instances/instances.component';
 
 
 @NgModule({
-  declarations: [AdminComponent, OutputComponent, SubRdpComponent],
+  declarations: [AdminComponent, OutputComponent, InstancesComponent],
   imports: [
     CommonModule,
     FormsModule,
@@ -63,7 +63,8 @@ import { SubRdpComponent } from './sub-rdp/subrdp.component';
     MatTableModule,
     MatPaginatorModule,
     MatMenuModule,
-    ResizableModule
+    ResizableModule,
+    MatRadioModule
   ]
 })
 

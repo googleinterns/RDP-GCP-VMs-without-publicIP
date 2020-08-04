@@ -92,7 +92,7 @@ interface ConfigInterface {
   instance_operations: ConfigAdminOperationInterface[];
   operations: ConfigAdminOperationInterface[];
   common_params: Map<string, ConfigParamInterface>;
-  enable_rdp: boolean;
+  pre_rdp_operations: string[];
 }
 
 interface AdminOperationInterface {
@@ -115,13 +115,24 @@ class Config implements ConfigInterface {
     this.instance_operations = config.instance_operations;
     this.operations = config.operations;
     this.common_params = config.common_params;
-    this.enable_rdp = config.enable_rdp;
+    this.pre_rdp_operations = config.pre_rdp_operations;
   }
 
   instance_operations: ConfigAdminOperationInterface[];
   operations: ConfigAdminOperationInterface[];
   common_params = new Map<string, ConfigParamInterface>();
-  enable_rdp: boolean;
+  pre_rdp_operations: string[];
 }
 
-export {Instance, SocketMessageInterface, SocketMessage, SocketCmd, AdminOperationInterface, Config, ConfigInterface, ConfigParamInterface, AdminOperationSocketOutput, ConfigAdminOperationInterface};
+const canDisplayRdpDom = (instance: Instance) => {
+  for (let i = 0; i < instance.disks.length; i++) {
+    for (let j = 0; j < instance.disks[i].guestOsFeatures.length; j++) {
+      if (instance.disks[i].guestOsFeatures[j].type === 'WINDOWS') {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export {Instance, canDisplayRdpDom, SocketMessageInterface, SocketMessage, SocketCmd, AdminOperationInterface, Config, ConfigInterface, ConfigParamInterface, AdminOperationSocketOutput, ConfigAdminOperationInterface};

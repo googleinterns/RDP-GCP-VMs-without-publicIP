@@ -22,9 +22,11 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/admin"
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
@@ -74,6 +76,10 @@ func main() {
 	router.HandleFunc("/gcloud/start-private-rdp", startPrivateRdp)
 	router.HandleFunc("/admin/get-config", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/get-config", getConfigFileAndSendJson).Methods("GET")
+	router.HandleFunc("/admin/get-project", setCorsHeaders).Methods("OPTIONS")
+	router.HandleFunc("/admin/get-project", getProjectFromParameters).Methods("POST")
+	router.HandleFunc("/admin/run-prerdp", setCorsHeaders).Methods("OPTIONS")
+	router.HandleFunc("/admin/run-prerdp", runPreRDPOperations).Methods("POST")
 	router.HandleFunc("/admin/operation-to-run", validateAdminOperationParams).Methods("POST")
 	router.HandleFunc("/admin/operation-to-run", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/instance-operation-to-run", validateInstanceOperationParams).Methods("POST")
@@ -125,6 +131,64 @@ func getConfigFileAndSendJson(w http.ResponseWriter, r *http.Request) {
 	loadedConfig = config
 	json.NewEncoder(w).Encode(config)
 	return
+}
+
+func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
+	type response struct {
+		ProjectName string `json:"project"`
+	}
+	setCorsHeaders(w, nil)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	var reqBody admin.ProjectOperationParams
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if loadedConfig == nil {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New(configNotLoaded)))
+		return
+	}
+
+	if loadedConfig.ValidateProjectOperation == "" && reqBody.Type == "validate" {
+		json.NewEncoder(w).Encode(response{ProjectName: reqBody.ProjectName})
+		return
+	}
+
+	if reqBody.Type == "validate" && reqBody.ProjectName == "" {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New("Project missing for validation")))
+		return
+	}
+
+	operation, err := admin.ReadOperationFromCommonParams(reqBody, loadedConfig.ProjectOperation, loadedConfig)
+	if err != nil {
+		json.NewEncoder(w).Encode(newErrorRequest(err))
+		return
+	}
+
+	shell := &shell.CmdShell{}
+	output, err := shell.ExecuteCmd(operation)
+
+	if err != nil{
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(newErrorRequest(err))
+	}
+
+	if (reqBody.Type == "validate") {
+		if (strings.Contains(string(output), reqBody.ProjectName)) {
+			json.NewEncoder(w).Encode(response{ProjectName: reqBody.ProjectName})
+		} else {
+			json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf("Project %s not found in validation", reqBody.ProjectName)))
+		}
+		return
+	}
+
+	json.NewEncoder(w).Encode(response{ProjectName: strings.TrimSuffix(string(output), "\n")})
 }
 
 // validateAdminOperationParams reads requests from the server that fill in the command's variables
@@ -191,6 +255,52 @@ func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
+	setCorsHeaders(w, nil)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	var reqBody admin.ProjectOperationParams
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if loadedConfig == nil {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New(configNotLoaded)))
+		return
+	}
+
+	shell := &shell.CmdShell{}
+
+
+	for _, operation := range loadedConfig.PreRDPOperations {
+		filledOperation, err := admin.ReadOperationFromCommonParams(reqBody, operation, loadedConfig)
+		if err != nil {
+			json.NewEncoder(w).Encode(newErrorRequest(err))
+			return
+		}
+
+		_, err = shell.ExecuteCmd(filledOperation)
+
+		if err != nil{
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(newErrorRequest(err))
+			return
+		}
+	}
+
+	type response struct {
+		Status string `json:"status"`
+	}
+
+	json.NewEncoder(w).Encode(response{Status: "ready"})
+}
+
 func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
 
@@ -220,7 +330,6 @@ func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-
 }
 
 // getComputeInstances gets the current compute instances for the project passed in.
