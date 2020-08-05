@@ -34,13 +34,14 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/rs/cors"
 )
 
 const (
-	allowedMethods  string = "POST, GET, OPTIONS"
-	allowedHeaders  string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
 	configNotLoaded string = "Unable to load configuration file from server, try refreshing the page."
 )
+
+var allowedOrigins = []string{"chrome-extension://aibhgfeeenaelgkgefjmlmdiehldgekn"}
 
 var configPath *string
 
@@ -70,31 +71,23 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
-	router.HandleFunc("/health", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/gcloud/compute-instances", getComputeInstances).Methods("POST")
-	router.HandleFunc("/gcloud/compute-instances", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/gcloud/start-private-rdp", startPrivateRdp)
-	router.HandleFunc("/admin/get-config", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/get-config", getConfigFileAndSendJson).Methods("GET")
-	router.HandleFunc("/admin/get-project", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/get-project", getProjectFromParameters).Methods("POST")
-	router.HandleFunc("/admin/run-prerdp", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/run-prerdp", runPreRDPOperations).Methods("POST")
 	router.HandleFunc("/admin/operation-to-run", validateAdminOperationParams).Methods("POST")
-	router.HandleFunc("/admin/operation-to-run", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/instance-operation-to-run", validateInstanceOperationParams).Methods("POST")
-	router.HandleFunc("/admin/instance-operation-to-run", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/run-operation", runAdminOperation)
+	
+	c := cors.New(cors.Options{
+		AllowedOrigins: allowedOrigins,
+		AllowCredentials: true,
+	})
 
-	log.Fatal(http.ListenAndServe(":23966", router))
-}
-
-// setCorsHeaders is used to set the headers for CORS requests from the Chrome Extension.
-// All preflight requests are handled by this function and it is also used in the HTTP functions.
-func setCorsHeaders(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", allowedMethods)
-	w.Header().Set("Access-Control-Allow-Headers", allowedHeaders)
+	handler := c.Handler(router)	
+	log.Println("AdminOPs server has started on port 23966")
+	log.Fatal(http.ListenAndServe(":23966", handler))
 }
 
 // health is a HTTP route that prints a simple string to check if the server is running.
@@ -106,13 +99,11 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	resp := response{Status: "server is running"}
 
 	w.Header().Set("Content-Type", "application/json")
-	setCorsHeaders(w, nil)
 	json.NewEncoder(w).Encode(resp)
 }
 
 // getConfigFileAndSendJson calls the functions to load the config file and set loadedConfig to it
 func getConfigFileAndSendJson(w http.ResponseWriter, r *http.Request) {
-	setCorsHeaders(w, nil)
 	w.Header().Set("Content-Type", "application/json")
 
 	type request struct {
@@ -137,7 +128,6 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 	type response struct {
 		ProjectName string `json:"project"`
 	}
-	setCorsHeaders(w, nil)
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -179,7 +169,6 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shell := &shell.CmdShell{}
-	log.Println(operation)
 	output, err := shell.ExecuteCmd(operation)
 
 	if err != nil{
@@ -201,8 +190,6 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 
 // validateAdminOperationParams reads requests from the server that fill in the command's variables
 func validateAdminOperationParams(w http.ResponseWriter, r *http.Request) {
-	setCorsHeaders(w, nil)
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -232,8 +219,6 @@ func validateAdminOperationParams(w http.ResponseWriter, r *http.Request) {
 }
 
 func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
-	setCorsHeaders(w, nil)
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -264,8 +249,6 @@ func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
 }
 
 func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
-	setCorsHeaders(w, nil)
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -302,8 +285,6 @@ func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		log.Println(runOperation)
-
 		if (runOperation) {
 	
 			_, err = shell.ExecuteCmd(filledOperation)
@@ -325,9 +306,18 @@ func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
 
 func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
-
-	// To-do, make sure origin for websocket is only chrome extension
-	upgrader.CheckOrigin = func(_ *http.Request) bool { return true }
+	upgrader.CheckOrigin = func(r *http.Request) bool { 
+		if origin := r.Header.Get("Origin"); origin != "" {
+			log.Println(origin)
+			for _, allowedOrigin := range allowedOrigins {
+				if allowedOrigin == origin {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -356,7 +346,6 @@ func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 
 // getComputeInstances gets the current compute instances for the project passed in.
 func getComputeInstances(w http.ResponseWriter, r *http.Request) {
-	setCorsHeaders(w, nil)
 	type request struct {
 		ProjectName string `json:"project"`
 	}
@@ -396,12 +385,22 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 
 func startPrivateRdp(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
+	upgrader.CheckOrigin = func(r *http.Request) bool { 
+		if origin := r.Header.Get("Origin"); origin != "" {
+			log.Println(origin)
+			for _, allowedOrigin := range allowedOrigins {
+				if allowedOrigin == origin {
+					return true
+				}
+			}
+		}
+		return false
+	}
 
-	// To-do, make sure origin for websocket is only chrome extension
-	upgrader.CheckOrigin = func(_ *http.Request) bool { return true }
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
+		return
 	}
 
 	log.Println("Starting RDP socket connection")

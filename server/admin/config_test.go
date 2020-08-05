@@ -75,15 +75,20 @@ func buildTestConfig() Config {
 
 	configInstanceOperation := configAdminOperation{Name: "test-instance", Operation: "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}}"}
 
-	return Config{Operations: []configAdminOperation{configOperation}, CommonParams: commonParams, InstanceOperations: []configAdminOperation{configInstanceOperation}}
+	configPreRDPOperation := preRdpOperation{Name: "test-rdp", Operation: "hello"}
+
+	return Config{Operations: []configAdminOperation{configOperation}, CommonParams: commonParams, InstanceOperations: []configAdminOperation{configInstanceOperation}, PreRDPOperations: []preRdpOperation{configPreRDPOperation}}
 }
 
 func TestCheckConfigForMissingParams(t *testing.T) {
 	config := buildTestConfig()
 	config.Operations[0].Operation = "${{TEST_COMMON}} ${{TEST_COMMAND}} ${{TEST_MISSING}}"
-
+	config.ProjectOperation = "${{MISSING_PROJECT}}"
+	config.ValidateProjectOperation = "${{MISSING_VALIDATE}}"
 	expected := make(map[string][]string)
 	expected["test-cmd"] = []string{"TEST_MISSING"}
+	expected["config-project-operation"] = []string{"MISSING_PROJECT"}
+	expected["config-validate-project-operation"] = []string{"MISSING_VALIDATE"}
 
 	if missing := checkConfigForMissingParams(config); !reflect.DeepEqual(expected, missing) {
 		t.Errorf("checkConfigForMissingParams didn't return the right value, got %v, expected %v", missing, expected)
@@ -96,6 +101,45 @@ func TestCheckConfigForMissingParams(t *testing.T) {
 	if missing := checkConfigForMissingParams(config); !reflect.DeepEqual(expected, missing) {
 		t.Errorf("checkConfigForMissingParams didn't return the right value, got %v, expected %v", missing, expected)
 	}
+}
+
+func TestValidateConfigDependencies(t *testing.T) {
+	config := buildTestConfig()
+
+	commonDeps := make(map[string]string)
+	commonDeps["MISSING"] = "yes"
+
+	config.CommonParams["TEST_COMMON"] = configParam{Optional: true, Dependencies: commonDeps}
+
+	operationDeps := make(map[string]string)
+	operationDeps["PARAM1"] = "yes"
+	config.Operations[0].Operation = "${{PARAM1}} ${{PARAM2}}"
+
+	paramWithDeps := configParam{Optional: true, Dependencies: operationDeps}
+	config.Operations[0].Params["PARAM2"] = paramWithDeps
+
+	config.PreRDPOperations[0].Dependencies = operationDeps
+
+	expected := make(map[string][]string)
+	expected["TEST_COMMON"] = []string{"MISSING"}
+	expected["test-cmd"] = []string{"PARAM1"}
+	expected["test-rdp"] = []string{"PARAM1"}
+
+	if missing := validateConfigDependencies(config); !reflect.DeepEqual(expected, missing) {
+		t.Errorf("validateConfigDependencies didn't return the right value, got %v, expected %v", missing, expected)
+	}
+
+	config.CommonParams["PARAM1"] = configParam{}
+	config.CommonParams["MISSING"] = configParam{}
+
+	delete(expected, "TEST_COMMON")
+	delete(expected, "test-cmd")
+	delete(expected, "test-rdp")
+
+	if missing := validateConfigDependencies(config); !reflect.DeepEqual(expected, missing) {
+		t.Errorf("validateConfigDependencies didn't return the right value, got %v, expected %v", missing, expected)
+	}
+
 }
 
 func TestGetMissingParams(t *testing.T) {
@@ -142,6 +186,35 @@ func TestGetMissingParams(t *testing.T) {
 	}
 }
 
+func TestCheckMissingDependencies(t *testing.T) {
+	config := buildTestConfig()
+	params := make(map[string]string)
+	params["REQUIRED_DEP"] = "true"
+	params["OPTIONAL"] = ""
+
+	deps := make(map[string]string)
+	deps["REQUIRED_DEP"] = "true"
+
+	config.Operations[0].Params["OPTIONAL"] = configParam{Optional: true, Dependencies: deps}
+
+	var missingDependencies []string
+	expected := []string{"OPTIONAL"}
+
+	checkMissingDependencies(params, config.CommonParams, config.Operations[0].Params, &missingDependencies)
+	if !reflect.DeepEqual(missingDependencies, expected) {
+		t.Errorf("checkMissingDependencies didn't set proper missing deps, got %v, expected %v", missingDependencies, expected)
+	}
+
+	missingDependencies = []string{}
+	expected = []string{}
+	params["OPTIONAL"] = "value"
+
+	checkMissingDependencies(params, config.CommonParams, config.Operations[0].Params, &missingDependencies)
+	if !reflect.DeepEqual(missingDependencies, expected) {
+		t.Errorf("checkMissingDependencies didn't set proper missing deps, got %v, expected %v", missingDependencies, expected)
+	}
+}
+
 func TestReadAdminOperation(t *testing.T) {
 	config := buildTestConfig()
 	params := make(map[string]string)
@@ -176,11 +249,16 @@ func TestCaptureParamsFromInstanceOperation(t *testing.T) {
 
 	json.Unmarshal(validComputeInstance, &instance)
 
-	expected := fmt.Sprintf("%s %s %s %s", instance.Name, instance.Zone, instance.NetworkInterfaces[0].IP, instance.ProjectName)
+	params := make(map[string]string)
+	params["COMMON"] = "COMMON"
 
-	successOperation := "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}}"
+	instanceOperation := InstanceOperationToFill{Instance: instance, Params: params}
 
-	missingParams := captureParamsFromInstanceOperation(instance, &successOperation)
+	expected := fmt.Sprintf("%s %s %s %s %s", instance.Name, instance.Zone, instance.NetworkInterfaces[0].IP, instance.ProjectName, "COMMON")
+
+	successOperation := "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}} ${{COMMON}}"
+
+	missingParams := captureParamsFromInstanceOperation(instanceOperation, &successOperation)
 	if len(missingParams) != 0 {
 		t.Errorf("captureParamsFromInstanceOperation had missingParams for a proper operation: %s", strings.Join(missingParams, ", "))
 	}
@@ -191,7 +269,7 @@ func TestCaptureParamsFromInstanceOperation(t *testing.T) {
 
 	missingParamInOperation := "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}} ${{MISSING}}"
 
-	missingParams = captureParamsFromInstanceOperation(instance, &missingParamInOperation)
+	missingParams = captureParamsFromInstanceOperation(instanceOperation, &missingParamInOperation)
 	if len(missingParams) != 1 {
 		t.Errorf("captureParamsFromInstanceOperation didn't had correct number missingParams for a proper operation: %s", strings.Join(missingParams, ", "))
 	}

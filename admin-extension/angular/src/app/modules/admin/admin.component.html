@@ -75,10 +75,10 @@ limitations under the License. -->
 
                     <mat-tab label="{{operation.name}}" *ngFor="let operation of operations">
                         
-                        <div class="operation">
+                        <div class="operation" *ngIf="operation.type=='single'">
                             <h3 class="description">{{operation.description}}</h3>                            
                             
-                            <h3 *ngIf="operation.params && operation.params.length > 0" class="param-title">Operation Parameters:</h3>
+                            <!-- <h3 *ngIf="operation.params && operation.params.length > 0" class="param-title">Operation Parameters:</h3> -->
                             <div *ngIf="operation.params && operation.params.length > 0" class="param-form">                                
                                 <mat-form-field appearance="standard" *ngFor="let param of operation.params">
                                     <mat-label>{{param.name}}</mat-label>
@@ -104,6 +104,47 @@ limitations under the License. -->
                                 </mat-card-footer>
                             </mat-card>
                         
+                        </div>
+                        <div class="operation" *ngIf="operation.type=='workflow'">
+                            <h3 class="description">{{operation.description}}</h3>
+                            <mat-horizontal-stepper [linear]="true" #stepper>
+                                <mat-step *ngFor="let subOperation of operation.operations" [editable]="false">
+                                    <ng-template matStepLabel>{{subOperation.name}}</ng-template>
+                                    <h3 class="description">{{subOperation.description}}</h3>
+                                    <div *ngIf="subOperation.params && subOperation.params.length > 0" class="param-form">                                
+                                        <mat-form-field appearance="standard" *ngFor="let param of subOperation.params">
+                                            <mat-label>{{param.name}}</mat-label>
+                                            <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
+                                                <mat-option *ngFor="let choice of param.choices" [value]="choice">
+                                                {{choice}}
+                                                </mat-option>
+                                            </mat-select>
+                                            <textarea *ngIf="!param.choices" matInput [(ngModel)]="param.value" [placeholder]="param.sample" [required]="!param.optional"></textarea>
+                                            <mat-hint>{{param.description}}</mat-hint>
+                                        </mat-form-field>
+                                    </div>
+
+                                    <div class="button-container">
+                                        <button type="button" (click)="sendOperation(subOperation)" mat-raised-button color="accent">START</button>
+                                        <div class="step-button-container">
+                                            <button mat-raised-button color="warm" (click)="stepper.reset()">RESET</button>
+                                            <button mat-raised-button color="accent"matStepperNext>NEXT</button>  
+                                        </div>
+                                    </div>
+
+                                    <mat-error *ngIf="subOperation.error" class="operation-error">{{subOperation.error}}</mat-error>
+
+                                    <mat-card class="loaded-operation-card" *ngIf="subOperation.loadedOperation">
+                                        <mat-card-content class="loaded-operation">{{subOperation.loadedOperation.operation}}</mat-card-content>
+                                        <mat-card-footer class="loaded-operation-footer">                            
+                                            <button type="button" (click)="clearLoadedOperation(subOperation)" mat-raised-button color="warn">CLEAR</button>
+                                            <button type="button" (click)="startLoadedOperation(subOperation)" mat-raised-button color="accent">RUN</button>
+                                        </mat-card-footer>
+                                    </mat-card>
+                                    
+                    
+                                </mat-step>
+                            </mat-horizontal-stepper>
                         </div>
                     </mat-tab>
 

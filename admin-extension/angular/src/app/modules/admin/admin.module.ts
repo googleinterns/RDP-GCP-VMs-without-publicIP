@@ -36,7 +36,8 @@ import { ResizableModule } from 'angular-resizable-element';
 
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatStepperModule } from '@angular/material/stepper';
+
 
 import { OutputComponent } from './output/output.component';
 import { InstancesComponent } from './instances/instances.component';
@@ -61,10 +62,10 @@ import { InstancesComponent } from './instances/instances.component';
     MatDividerModule,
     MatSelectModule,
     MatTableModule,
-    MatPaginatorModule,
     MatMenuModule,
     ResizableModule,
-    MatRadioModule
+    MatRadioModule,
+    MatStepperModule
   ]
 })
 

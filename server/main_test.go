@@ -55,28 +55,3 @@ func TestHealth(t *testing.T) {
 		t.Errorf("HEALTH failed, got: %v, expected: %v", gotResp, expectedResp)
 	}
 }
-
-// TestCorsHeaders tests the /health HTTP CORS Headers with a OPTIONS Request using the setCorsHeaders function
-func TestCorsHeaders(t *testing.T) {
-	req, err := http.NewRequest("OPTIONS", "/health", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(setCorsHeaders)
-
-	handler.ServeHTTP(rr, req)
-
-	if gotOrigin := rr.Header().Get("Access-Control-Allow-Origin"); gotOrigin != "*" {
-		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotOrigin, "*")
-	}
-
-	if gotMethods := rr.Header().Get("Access-Control-Allow-Methods"); gotMethods != allowedMethods {
-		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotMethods, allowedMethods)
-	}
-
-	if gotHeaders := rr.Header().Get("Access-Control-Allow-Headers"); gotHeaders != allowedHeaders {
-		t.Errorf("CORSRESPONSE origin failed, got: %v, want: %v", gotHeaders, allowedHeaders)
-	}
-}

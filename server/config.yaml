@@ -88,3 +88,7 @@ operations:
       NAME:
       TCP:
       NETWORK:
+workflows:
+  - name: instance-unhealthy
+    description: workflow for unhealthy instances
+    operations: echo-vm2,create-vm2

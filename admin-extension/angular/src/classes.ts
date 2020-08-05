@@ -89,12 +89,19 @@ interface ConfigAdminOperationInterface {
   description: string;
 }
 
+interface ConfigWorkFlowInterface {
+  name: string;
+  operations: string[];
+  description: string;
+}
+
 interface ConfigInterface {
   instance_operations: ConfigAdminOperationInterface[];
   operations: ConfigAdminOperationInterface[];
   common_params: Map<string, ConfigParamInterface>;
   pre_rdp_operations: string[];
   project_operation: string;
+  workflows: ConfigWorkFlowInterface[];
 }
 
 interface AdminOperationInterface {
@@ -119,6 +126,7 @@ class Config implements ConfigInterface {
     this.common_params = config.common_params;
     this.pre_rdp_operations = config.pre_rdp_operations;
     this.project_operation = config.project_operation;
+    this.workflows = config.workflows;
   }
 
   instance_operations: ConfigAdminOperationInterface[];
@@ -126,6 +134,7 @@ class Config implements ConfigInterface {
   common_params = new Map<string, ConfigParamInterface>();
   pre_rdp_operations: string[];
   project_operation: string;
+  workflows: ConfigWorkFlowInterface[];
 }
 
 const canDisplayRdpDom = (instance: Instance) => {

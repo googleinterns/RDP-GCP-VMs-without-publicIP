@@ -151,3 +151,12 @@ limitations under the License.
 .instances {
     margin-top: 1rem;
 }
+
+::ng-deep.mat-ink-bar {
+    height: 5px !important;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}

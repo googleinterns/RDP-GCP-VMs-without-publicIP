@@ -91,10 +91,31 @@ export class AdminComponent {
             params.push(paramValue);
           }
         }
-        this.operations.push({name: operation.name, description: operation.description, params});
+        this.operations.push({type: "single", name: operation.name, description: operation.description, params});
     })
 
     console.log(this.operations)
+    }
+  }
+
+  setWorkFlows() {
+    if (this.config.workflows) {
+      const workflows = [];
+      this.config.workflows.forEach((workflow) => {
+        console.log(workflow);
+        const operations = [];
+
+        workflow.operations.forEach(operation => {
+          for (let i = 0; i < this.operations.length; i++) {
+            if (this.operations[i].name === operation) {
+              operations.push(this.operations[i]);
+            }
+          }
+        });
+        workflows.push({type: "workflow", name: workflow.name, description: workflow.description, operations: operations})
+      })
+
+      this.operations = workflows.concat(this.operations);
     }
   }
 
@@ -253,6 +274,7 @@ export class AdminComponent {
         this.config = new Config(response as ConfigInterface);
         this.setCommonParams();
         this.setOperations();
+        this.setWorkFlows();
 
         console.log(this.config)
 

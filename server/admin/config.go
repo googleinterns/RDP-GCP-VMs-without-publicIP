@@ -66,6 +66,12 @@ type preRdpOperation struct {
 	Dependencies map[string]string `json:"dependencies"`
 }
 
+type configWorkflow struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Operations  []string `json:"operations"`
+}
+
 // Config is the fully loaded config represented as structures
 type Config struct {
 	InstanceOperations       []configAdminOperation `json:"instance_operations"`
@@ -74,6 +80,7 @@ type Config struct {
 	ProjectOperation         string                 `json:"project_operation"`
 	ValidateProjectOperation string                 `json:"validate_project_operation"`
 	PreRDPOperations         []preRdpOperation      `json:"pre_rdp_operations"`
+	Workflows                []configWorkflow       `json:"workflows"`
 }
 
 // OperationToFill is sent by the extension detailing a operation and the variables to be filled
@@ -112,7 +119,6 @@ func checkConfigForMissingParams(config Config) map[string][]string {
 		// Get all variables in the operation
 		matches := r.FindAllStringSubmatch(operation.Operation, -1)
 		for _, match := range matches {
-
 			// Check if variable is defined in either common variables or the operation's variables
 			if _, inCommonParams := config.CommonParams[match[1]]; !inCommonParams {
 				if _, inCommandParams := operation.Params[match[1]]; !inCommandParams {
@@ -126,7 +132,6 @@ func checkConfigForMissingParams(config Config) map[string][]string {
 		// Get all variables in the operation
 		matches := r.FindAllStringSubmatch(config.ProjectOperation, -1)
 		for _, match := range matches {
-
 			// Check if variable is defined in commonparams
 			if _, inCommonParams := config.CommonParams[match[1]]; !inCommonParams {
 				missingParams["config-project-operation"] = append(missingParams["config-project-operation"], match[1])
@@ -138,7 +143,6 @@ func checkConfigForMissingParams(config Config) map[string][]string {
 		// Get all variables in the operation
 		matches := r.FindAllStringSubmatch(config.ValidateProjectOperation, -1)
 		for _, match := range matches {
-
 			// Check if variable is defined in either commonparams
 			if _, inCommonParams := config.CommonParams[match[1]]; !inCommonParams {
 				missingParams["config-validate-project-operation"] = append(missingParams["config-validate-project-operation"], match[1])
@@ -150,10 +154,7 @@ func checkConfigForMissingParams(config Config) map[string][]string {
 
 		// Get all variables in the operation
 		matches := r.FindAllStringSubmatch(operation.Operation, -1)
-		log.Println(matches)
-		log.Println(operation.Operation)
 		for _, match := range matches {
-
 			// Check if variable is defined in common variables
 			if _, inCommonParams := config.CommonParams[match[1]]; !inCommonParams {
 				missingParams[operation.Name] = append(missingParams[operation.Name], match[1])
@@ -162,12 +163,8 @@ func checkConfigForMissingParams(config Config) map[string][]string {
 	}
 
 	for _, operation := range config.InstanceOperations {
-
 		// Get all variables in the operation
 		matches := r.FindAllStringSubmatch(operation.Operation, -1)
-		log.Println(matches)
-		log.Println(operation.Operation)
-
 		instanceParams := []string{"NAME", "ZONE", "PROJECT", "NETWORKIP"}
 		for _, match := range matches {
 
@@ -253,8 +250,6 @@ func LoadConfig(configPath *string) (*Config, error) {
 		}
 	}
 
-	log.Println(config.CommonParams)
-
 	missingParams := checkConfigForMissingParams(config)
 
 	if len(missingParams) > 0 {
@@ -283,7 +278,6 @@ func LoadConfig(configPath *string) (*Config, error) {
 }
 
 func checkIfParamInChoices(value string, variableName string, variablesToCheck map[string]configParam) bool {
-	log.Println(variablesToCheck[variableName].Choices)
 	for _, choice := range variablesToCheck[variableName].Choices {
 		if choice == value {
 			return true
@@ -299,7 +293,6 @@ func getMissingParams(variablesFound map[string]string, variablesInCommand map[s
 		if value, ok := variablesInCommand[variableName]; value != "" && ok {
 			if variablesToCheck[variableName].Choices != nil {
 				paramValid := checkIfParamInChoices(value, variableName, variablesToCheck)
-				log.Println(paramValid)
 				if paramValid {
 					variablesFound[variableName] = value
 				} else {
@@ -322,9 +315,6 @@ func checkMissingDependencies(variables map[string]string, commonParams map[stri
 			if _, isCommonParam := commonParams[name]; isCommonParam {
 				for dependency, requiredValue := range commonParams[name].Dependencies {
 					dependency = strings.ToUpper(dependency)
-					log.Println(dependency)
-					log.Println(variables[dependency])
-					log.Println(requiredValue)
 					if variables[dependency] == requiredValue {
 						*missingDependencies = append(*missingDependencies, name)
 						break
