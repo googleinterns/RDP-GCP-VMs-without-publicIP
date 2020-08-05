@@ -19,7 +19,7 @@ commonParams:
   BUG_REASON:
     optional: true
     dependencies:
-      ENV: prod
+      ENV: '*'
 projectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
 validateProjectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
 preRDPOperations:
@@ -91,4 +91,4 @@ operations:
 workflows:
   - name: instance-unhealthy
     description: workflow for unhealthy instances
-    operations: echo-vm2,create-vm2
+    operations: echo-vm2,create-vm2, bad

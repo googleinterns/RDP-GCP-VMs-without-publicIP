@@ -38,7 +38,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatTableModule } from '@angular/material/table';
 import { MatStepperModule } from '@angular/material/stepper';
 
-
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { OutputComponent } from './output/output.component';
 import { InstancesComponent } from './instances/instances.component';
 
@@ -65,7 +65,8 @@ import { InstancesComponent } from './instances/instances.component';
     MatMenuModule,
     ResizableModule,
     MatRadioModule,
-    MatStepperModule
+    MatStepperModule,
+    MatCheckboxModule
   ]
 })
 

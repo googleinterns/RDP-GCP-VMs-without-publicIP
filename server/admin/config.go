@@ -315,14 +315,14 @@ func checkMissingDependencies(variables map[string]string, commonParams map[stri
 			if _, isCommonParam := commonParams[name]; isCommonParam {
 				for dependency, requiredValue := range commonParams[name].Dependencies {
 					dependency = strings.ToUpper(dependency)
-					if variables[dependency] == requiredValue {
+					if variables[dependency] == requiredValue || (requiredValue == "*" && variables[dependency] != "") {
 						*missingDependencies = append(*missingDependencies, name)
 						break
 					}
 				}
 			} else if _, isOperationParam := operationParams[name]; isOperationParam {
 				for dependency, requiredValue := range operationParams[name].Dependencies {
-					if variables[dependency] == requiredValue {
+					if variables[dependency] == requiredValue || (requiredValue == "*" && variables[dependency] != "") {
 						*missingDependencies = append(*missingDependencies, name)
 						break
 					}

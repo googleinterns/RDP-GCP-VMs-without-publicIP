@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { Component } from '@angular/core';
+import { Component, NgZone } from '@angular/core';
 import { canDisplayRdpDom, Config, ConfigInterface, Instance, ConfigParamInterface } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -39,7 +39,7 @@ export class AdminComponent {
   outputTabIndex: number;
   instanceToUpdate: Instance;
   style: {};
-  useCommonParameters: boolean;
+  specifyProject: boolean;
   project: string;
   projectToValidate: string;
   instancesLoading: boolean;
@@ -48,7 +48,7 @@ export class AdminComponent {
   initializeInstances = false;
   preRdpError: string;
 
-  constructor(private snackbar: MatSnackBar, private adminService: AdminService) { };
+  constructor(public ngZone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) { };
 
   ngOnInit() {
     this.loadConfig();
@@ -65,9 +65,9 @@ export class AdminComponent {
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {
     if (this.config.project_operation) {
-      this.useCommonParameters = true;
+      this.specifyProject = false;
     } else {
-      this.useCommonParameters = false;
+      this.specifyProject = true;
     }
     if (this.config.common_params) {
       for (const [name, paramValue] of Object.entries(this.config.common_params)) {
@@ -121,7 +121,7 @@ export class AdminComponent {
 
   getProject() {
     const data = { type: '', project_name: '', variables: {} };
-    if (this.useCommonParameters) {
+    if (!this.specifyProject) {
       data.type = 'get';
     } else {
       data.type = 'validate';
@@ -370,21 +370,4 @@ export class AdminComponent {
       }))
     }
   }
-
-  // checkRequired(operation: any, param: ConfigParamInterface) {
-  //   console.log(param);
-  //   if (param.optional) {
-  //     for (const [name, paramValue] of Object.entries(param.dependencies)) {
-  //       this.commonParams.forEach((commonParam) => {
-  //         if (commonParam.name == name.toUpperCase() && paramValue == commonParam.value) {
-  //           console.log(commonParam.name)
-  //           return true;
-  //         }
-  //       })
-  //     };
-  //     return false;
-  //   } else {
-  //     return true;
-  //   }
-  // }
 }

@@ -40,16 +40,8 @@ limitations under the License. -->
         <div *ngIf="!configError && config" class="container">
             <div class="top">
                 <div class="get-project">
-                <mat-radio-group aria-label="Select an option" [(ngModel)]="useCommonParameters"
-                    [disabled]="!config.project_operation || initializeInstances">
-                    <mat-radio-button [value]="true">Get Project from Parameters</mat-radio-button>
-                    <mat-radio-button [value]="false">Validate Project</mat-radio-button>
-                </mat-radio-group>
+
                 <div class="project-field">
-                    <mat-form-field appearance="standard" *ngIf="!useCommonParameters">
-                        <mat-label>Google Cloud Project</mat-label>
-                        <input [disabled]="initializeInstances" matInput [(ngModel)]="projectToValidate">
-                    </mat-form-field>
                     <h3 *ngIf="commonParams && commonParams.length > 0" class="param-title">Resource Parameters:</h3>
                     <div *ngIf="commonParams && commonParams.length > 0" class="param-form">
                         <mat-form-field appearance="standard" *ngFor="let param of commonParams">
@@ -66,9 +58,21 @@ limitations under the License. -->
                             <mat-hint>{{param.description}}</mat-hint>
                         </mat-form-field>
                     </div>
+                    <div class="specify-project">
+                        <div class="checkbox">
+                            <mat-checkbox indeterminate=false [(ngModel)]="specifyProject" [disabled]="!config.project_operation || initializeInstances">
+                                Specify project name
+                            </mat-checkbox>
+                            <mat-hint>This will disable admin operations</mat-hint>
+                        </div>
+                        <mat-form-field appearance="standard" *ngIf="specifyProject">
+                            <mat-label>Google Cloud Project</mat-label>
+                            <input [disabled]="initializeInstances" matInput [(ngModel)]="projectToValidate">
+                        </mat-form-field>
+                    </div>
                 </div>
 
-                <button type="button" [disabled]="(!useCommonParameters && !projectToValidate) || initializeInstances"
+                <button type="button" [disabled]="(specifyProject && !projectToValidate) || initializeInstances"
                     (click)="getProject()" mat-raised-button color="accent">GET INSTANCES</button>
                 <mat-error *ngIf="getProjectError" class="operation-error">{{getProjectError}}</mat-error>
                 </div>
@@ -82,7 +86,7 @@ limitations under the License. -->
                 <mat-error *ngIf="preRdpError" class="operation-error">{{preRdpError}}</mat-error>
             </div>
 
-            <div class="middle" *ngIf="config.operations && initializeInstances && useCommonParameters">
+            <div class="middle" *ngIf="config.operations && initializeInstances && !specifyProject">
                 <mat-tab-group class="operation-tabs" backgroundColor="primary" color="accent" animationDuration="0ms">
 
                     <mat-tab label="{{operation.name}}" *ngFor="let operation of operations">
