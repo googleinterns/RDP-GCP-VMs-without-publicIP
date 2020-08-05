@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { Component, NgZone } from '@angular/core';
+import { Component } from '@angular/core';
 import { canDisplayRdpDom, Config, ConfigInterface, Instance, ConfigParamInterface } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -48,7 +48,7 @@ export class AdminComponent {
   initializeInstances = false;
   preRdpError: string;
 
-  constructor(public ngZone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) { };
+  constructor(private snackbar: MatSnackBar, private adminService: AdminService) { };
 
   ngOnInit() {
     this.loadConfig();
