@@ -420,19 +420,19 @@ func captureParamsFromInstanceOperation(operationToFill InstanceOperationToFill,
 	// Get all variables in the operation
 	matches := r.FindAllStringSubmatch(*operation, -1)
 	for _, match := range matches {
-		switch match[1] {
-		case "NAME":
-			*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.Name, -1)
-		case "ZONE":
-			*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.Zone, -1)
-		case "NETWORKIP":
-			*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.NetworkInterfaces[0].IP, -1)
-		case "PROJECT":
-			*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.ProjectName, -1)
-		default:
-			if value, inParams := operationToFill.Params[match[1]]; inParams {
-				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", value, -1)
-			} else {
+		if value, inParams := operationToFill.Params[match[1]]; inParams {
+			*operation = strings.Replace(*operation, "${{"+match[1]+"}}", value, -1)
+		} else {
+			switch match[1] {
+			case "NAME":
+				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.Name, -1)
+			case "ZONE":
+				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.Zone, -1)
+			case "NETWORKIP":
+				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.NetworkInterfaces[0].IP, -1)
+			case "PROJECT":
+				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.ProjectName, -1)
+			default:
 				missingParams = append(missingParams, match[1])
 			}
 		}

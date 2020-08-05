@@ -41,15 +41,14 @@ const (
 	configNotLoaded string = "Unable to load configuration file from server, try refreshing the page."
 )
 
-var allowedOrigins = []string{"chrome-extension://aibhgfeeenaelgkgefjmlmdiehldgekn"}
-
-var configPath *string
-
-// loadedConfig points to the config currently in use.
-var loadedConfig *admin.Config
-
-// operationPool keeps track of all the custom commands that are setup and running
-var operationPool []admin.OperationToRun
+var (
+	allowedOrigins = []string{"chrome-extension://aibhgfeeenaelgkgefjmlmdiehldgekn"}
+	configPath *string
+	// loadedConfig points to the config currently in use.
+	loadedConfig *admin.Config
+	// operationPool keeps track of all the custom commands that are setup and running
+	operationPool []admin.OperationToRun
+)
 
 type errorRequest struct {
 	Error string `json:"error"`
@@ -180,7 +179,7 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 		if (strings.Contains(string(output), reqBody.ProjectName)) {
 			json.NewEncoder(w).Encode(response{ProjectName: reqBody.ProjectName})
 		} else {
-			json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf("Project %s not found in validation", reqBody.ProjectName)))
+			json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf("Project %s not found in validateProjectOperation output", reqBody.ProjectName)))
 		}
 		return
 	}
@@ -317,7 +316,7 @@ func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 		}
 		return false
 	}
-	
+
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
