@@ -17,7 +17,7 @@ limitations under the License.
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { getConfigEndpoint, sendOperationEndpoint } from 'src/constants';
+import { getConfigEndpoint, getComputeInstancesEndpoint, sendOperationEndpoint, sendProjectOperationEndpoint, runPreRDPOperationsEndpoint } from 'src/constants';
 
 @Injectable()
 export class AdminService {
@@ -27,7 +27,19 @@ export class AdminService {
         return this.http.get(getConfigEndpoint)
     }
 
+    getComputeInstances (data: object): Observable<object> {
+        return this.http.post(getComputeInstancesEndpoint, data)
+    }
+
     sendOperation (data: object): Observable<object> {
         return this.http.post(sendOperationEndpoint, data)
+    }
+
+    sendProjectOperation(data: object): Observable<object> {
+        return this.http.post(sendProjectOperationEndpoint, data)
+    }
+
+    runPreRDPOperations(data: object): Observable<object> {
+        return this.http.post(runPreRDPOperationsEndpoint, data)
     }
 }

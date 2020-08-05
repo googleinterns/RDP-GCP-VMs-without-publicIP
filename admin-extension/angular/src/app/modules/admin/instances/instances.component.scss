@@ -17,32 +17,17 @@ limitations under the License.
 .container {
     overflow-y: auto;
     flex-grow: 1;
-    padding: 1.5rem;
     display: flex;
-    justify-content: flex-start;
-    flex-wrap: wrap;
+    flex-direction: column;
 }
 
 .err {
     color: #ba000d;
 }
 
-.project-info {
-    display: flex;
-    flex-direction: column;
-    width: 20%;
-    margin-bottom: 1rem;
-    margin-right: 3rem;
-
-    button {
-        width: auto;
-    }
-}
-
 .table-container {
-    width: calc(80% - 3rem);
-    min-width: 700px;
-    height: 100%;
+    width: 95%;
+    margin: 0 auto 1.5rem auto;
 }
 
 .center {
@@ -50,7 +35,8 @@ limitations under the License.
 }
 
 .loaded-operation-card {
-    margin-top: 2rem;
+    margin: 0 auto 1.5rem auto;
+    width: 90%;
 }
 
 .loaded-operation {
@@ -81,7 +67,8 @@ mat-cell:last-of-type {
     padding-right: 0;
 }
 
-mat-header-cell, mat-cell {
+mat-header-cell,
+mat-cell {
     justify-content: center;
 }
 

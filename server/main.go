@@ -22,9 +22,11 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/admin"
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
@@ -32,21 +34,21 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/rs/cors"
 )
 
 const (
-	allowedMethods  string = "POST, GET, OPTIONS"
-	allowedHeaders  string = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
 	configNotLoaded string = "Unable to load configuration file from server, try refreshing the page."
 )
 
-var configPath *string
-
-// loadedConfig points to the config currently in use.
-var loadedConfig *admin.Config
-
-// operationPool keeps track of all the custom commands that are setup and running
-var operationPool []admin.OperationToRun
+var (
+	allowedOrigins = []string{"chrome-extension://aibhgfeeenaelgkgefjmlmdiehldgekn"}
+	configPath *string
+	// loadedConfig points to the config currently in use.
+	loadedConfig *admin.Config
+	// operationPool keeps track of all the custom commands that are setup and running
+	operationPool []admin.OperationToRun
+)
 
 type errorRequest struct {
 	Error string `json:"error"`
@@ -68,27 +70,23 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
-	router.HandleFunc("/health", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/gcloud/compute-instances", getComputeInstances).Methods("POST")
-	router.HandleFunc("/gcloud/compute-instances", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/gcloud/start-private-rdp", startPrivateRdp)
-	router.HandleFunc("/admin/get-config", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/get-config", getConfigFileAndSendJson).Methods("GET")
+	router.HandleFunc("/admin/get-project", getProjectFromParameters).Methods("POST")
+	router.HandleFunc("/admin/run-prerdp", runPreRDPOperations).Methods("POST")
 	router.HandleFunc("/admin/operation-to-run", validateAdminOperationParams).Methods("POST")
-	router.HandleFunc("/admin/operation-to-run", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/instance-operation-to-run", validateInstanceOperationParams).Methods("POST")
-	router.HandleFunc("/admin/instance-operation-to-run", setCorsHeaders).Methods("OPTIONS")
 	router.HandleFunc("/admin/run-operation", runAdminOperation)
+	
+	c := cors.New(cors.Options{
+		AllowedOrigins: allowedOrigins,
+		AllowCredentials: true,
+	})
 
-	log.Fatal(http.ListenAndServe(":23966", router))
-}
-
-// setCorsHeaders is used to set the headers for CORS requests from the Chrome Extension.
-// All preflight requests are handled by this function and it is also used in the HTTP functions.
-func setCorsHeaders(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", allowedMethods)
-	w.Header().Set("Access-Control-Allow-Headers", allowedHeaders)
+	handler := c.Handler(router)	
+	log.Println("AdminOPs server has started on port 23966")
+	log.Fatal(http.ListenAndServe(":23966", handler))
 }
 
 // health is a HTTP route that prints a simple string to check if the server is running.
@@ -100,13 +98,11 @@ func health(w http.ResponseWriter, _ *http.Request) {
 	resp := response{Status: "server is running"}
 
 	w.Header().Set("Content-Type", "application/json")
-	setCorsHeaders(w, nil)
 	json.NewEncoder(w).Encode(resp)
 }
 
 // getConfigFileAndSendJson calls the functions to load the config file and set loadedConfig to it
 func getConfigFileAndSendJson(w http.ResponseWriter, r *http.Request) {
-	setCorsHeaders(w, nil)
 	w.Header().Set("Content-Type", "application/json")
 
 	type request struct {
@@ -127,10 +123,72 @@ func getConfigFileAndSendJson(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
+	type response struct {
+		ProjectName string `json:"project"`
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	var reqBody admin.ProjectOperationParams
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if loadedConfig == nil {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New(configNotLoaded)))
+		return
+	}
+
+	if loadedConfig.ValidateProjectOperation == "" && reqBody.Type == "validate" {
+		json.NewEncoder(w).Encode(response{ProjectName: reqBody.ProjectName})
+		return
+	}
+
+	if reqBody.Type == "validate" && reqBody.ProjectName == "" {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New("Project missing for validation")))
+		return
+	}
+
+	var operation string
+
+	if reqBody.Type == "validate" {
+		operation, _, err = admin.ReadOperationFromCommonParams(reqBody, loadedConfig.ValidateProjectOperation, loadedConfig)
+	} else {
+		operation, _, err = admin.ReadOperationFromCommonParams(reqBody, loadedConfig.ProjectOperation, loadedConfig)
+	}
+
+	if err != nil {
+		json.NewEncoder(w).Encode(newErrorRequest(err))
+		return
+	}
+
+	shell := &shell.CmdShell{}
+	output, err := shell.ExecuteCmd(operation)
+
+	if err != nil{
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(newErrorRequest(err))
+	}
+
+	if (reqBody.Type == "validate") {
+		if (strings.Contains(string(output), reqBody.ProjectName)) {
+			json.NewEncoder(w).Encode(response{ProjectName: reqBody.ProjectName})
+		} else {
+			json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf("Project %s not found in validateProjectOperation output", reqBody.ProjectName)))
+		}
+		return
+	}
+
+	json.NewEncoder(w).Encode(response{ProjectName: strings.TrimSuffix(string(output), "\n")})
+}
+
 // validateAdminOperationParams reads requests from the server that fill in the command's variables
 func validateAdminOperationParams(w http.ResponseWriter, r *http.Request) {
-	setCorsHeaders(w, nil)
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -160,8 +218,6 @@ func validateAdminOperationParams(w http.ResponseWriter, r *http.Request) {
 }
 
 func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
-	setCorsHeaders(w, nil)
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -191,11 +247,76 @@ func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	var reqBody admin.ProjectOperationParams
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if loadedConfig == nil {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New(configNotLoaded)))
+		return
+	}
+
+	shell := &shell.CmdShell{}
+
+
+	for _, operation := range loadedConfig.PreRDPOperations {
+		runOperation := false
+
+		filledOperation, variables, err := admin.ReadOperationFromCommonParams(reqBody, operation.Operation, loadedConfig)
+		if err != nil {
+			json.NewEncoder(w).Encode(newErrorRequest(err))
+			return
+		}
+
+		for dependency, value := range operation.Dependencies {
+			dependency = strings.ToUpper(dependency)
+			if variables[dependency] == value {
+				runOperation = true
+			}
+		}
+
+		if (runOperation) {
+	
+			_, err = shell.ExecuteCmd(filledOperation)
+	
+			if err != nil{
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(newErrorRequest(err))
+				return
+			}
+		}
+	}
+
+	type response struct {
+		Status string `json:"status"`
+	}
+
+	json.NewEncoder(w).Encode(response{Status: "ready"})
+}
+
 func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
+	upgrader.CheckOrigin = func(r *http.Request) bool { 
+		if origin := r.Header.Get("Origin"); origin != "" {
+			log.Println(origin)
+			for _, allowedOrigin := range allowedOrigins {
+				if allowedOrigin == origin {
+					return true
+				}
+			}
+		}
+		return false
+	}
 
-	// To-do, make sure origin for websocket is only chrome extension
-	upgrader.CheckOrigin = func(_ *http.Request) bool { return true }
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -220,12 +341,10 @@ func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-
 }
 
 // getComputeInstances gets the current compute instances for the project passed in.
 func getComputeInstances(w http.ResponseWriter, r *http.Request) {
-	setCorsHeaders(w, nil)
 	type request struct {
 		ProjectName string `json:"project"`
 	}
@@ -265,12 +384,22 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 
 func startPrivateRdp(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
+	upgrader.CheckOrigin = func(r *http.Request) bool { 
+		if origin := r.Header.Get("Origin"); origin != "" {
+			log.Println(origin)
+			for _, allowedOrigin := range allowedOrigins {
+				if allowedOrigin == origin {
+					return true
+				}
+			}
+		}
+		return false
+	}
 
-	// To-do, make sure origin for websocket is only chrome extension
-	upgrader.CheckOrigin = func(_ *http.Request) bool { return true }
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
+		return
 	}
 
 	log.Println("Starting RDP socket connection")

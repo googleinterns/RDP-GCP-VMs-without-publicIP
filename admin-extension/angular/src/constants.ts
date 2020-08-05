@@ -32,5 +32,8 @@ const sendOperationEndpoint = 'http://localhost:23966/admin/operation-to-run';
 const runOperationSocketEndpoint = 'ws://localhost:23966/admin/run-operation';
 const getComputeInstancesEndpoint = 'http://localhost:23966/gcloud/compute-instances';
 const sendInstanceOperationEndpoint = 'http://localhost:23966/admin/instance-operation-to-run';
+const sendProjectOperationEndpoint = 'http://localhost:23966/admin/get-project';
+const runPreRDPOperationsEndpoint = 'http://localhost:23966/admin/run-prerdp';
 
-export {endRdpCmd, loginRdpCmd, endOperationCmd, readyForRdpCommandSocket, rdpFirewallDeletedMessage, rdpShutdownMessage, errorConnectingToServer, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint, runOperationSocketEndpoint, getComputeInstancesEndpoint, sendInstanceOperationEndpoint};
+
+export {endRdpCmd, loginRdpCmd, endOperationCmd, readyForRdpCommandSocket, rdpFirewallDeletedMessage, rdpShutdownMessage, errorConnectingToServer, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint, runOperationSocketEndpoint, getComputeInstancesEndpoint, sendInstanceOperationEndpoint, sendProjectOperationEndpoint, runPreRDPOperationsEndpoint };

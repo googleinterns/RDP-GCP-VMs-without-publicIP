@@ -1,10 +1,40 @@
-enableRdp: true
-
+instanceOperations:
+  - name: describe-instance
+    operation: >
+      gcloud compute instances describe ${{NAME}} --zone=${{ZONE}} --project=${{PROJECT}} --${{ENV}} --format=json
+    realtime_output: true
+  - name: serial-port-output
+    operation: >
+      gcloud compute instances get-serial-port-output ${{NAME}} --zone=${{ZONE}}
+  - name: connect-serial-port-output
+    operation: >
+      gcloud compute connect-to-serial-port ${{NAME}} --zone=${{ZONE}} --format=json
+    usecommonparams: true
+commonParams:
+  ENV:
+    choices: sandbox,staging,prod,test
+    optional: true
+  RESOURCE_NAME:
+    default: rishabl
+  BUG_REASON:
+    optional: true
+    dependencies:
+      ENV: '*'
+projectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
+validateProjectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
+preRDPOperations:
+  - name: echo hello
+    operation: echo hello
+    dependencies:
+      ENV: test
 operations: 
   - name: echo-vm
     description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
     operation: >
-      echo $EXTENSION_DEV_KEY
+      echo ${{NAME}}
+    params:
+      NAME:
+        optional: true
   - name: echo-vm2
     description: Creates a Gcloud VM
     operation: >
@@ -14,7 +44,6 @@ operations:
         type: string
         default: new-instance
     realtime_output: true
-
   - name: create-vm2
     description: Creates a Gcloud VM
     operation: >
@@ -59,3 +88,7 @@ operations:
       NAME:
       TCP:
       NETWORK:
+# workflows:
+#   - name: instance-unhealthy
+#     description: workflow for unhealthy instances
+#     operations: echo-vm2,create-vm2, bad

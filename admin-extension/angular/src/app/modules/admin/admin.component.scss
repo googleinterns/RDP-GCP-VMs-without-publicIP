@@ -18,14 +18,13 @@ limitations under the License.
     flex: 1 1 auto;
 }
 
-
 .margin-top-2rem {
     margin-top: 2rem;
 }
 
 .param-form {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     column-gap: 2rem;
     row-gap: 1rem;
     margin-bottom: 3rem;
@@ -64,8 +63,15 @@ limitations under the License.
 }
 
 .top {
-    //max-height: 20%;
     overflow-y: auto;
+}
+
+.get-project {
+    padding: 1.5rem;
+}
+
+.spinner {
+    margin: 0 auto;
 }
 
 .middle {
@@ -73,7 +79,7 @@ limitations under the License.
 }
 
 .bottom {
-    flex: 1;
+    margin-top: auto;
     z-index: 100;
 }
 
@@ -87,7 +93,7 @@ limitations under the License.
 }
 
 .toolbar {
-    //min-height: 4rem;
+    min-height: 4rem;
 }
 
 .loaded-operation-card {
@@ -137,6 +143,46 @@ limitations under the License.
     height: 100%;
 }
 
-::ng-deep.mat-tab-label, ::ng-deep.mat-tab-label-active{
-    min-width: 0!important;
+::ng-deep.mat-tab-label,
+::ng-deep.mat-tab-label-active {
+    min-width: 0 !important;
+}
+
+.project-field {
+    margin-top: 1rem;
+}
+.mat-radio-button ~ .mat-radio-button {
+    margin-left: 1rem;
+}
+
+.instances {
+    margin-top: 1rem;
+}
+
+::ng-deep.mat-ink-bar {
+    height: 5px !important;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.reset-button {
+    margin-right: 0.5rem;
+}
+
+.specify-project {
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    .checkbox {
+        margin-right: 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+    mat-hint {
+        margin-left: 1.5rem;
+    }
 }

@@ -79,6 +79,7 @@ interface ConfigParamInterface {
   description: string;
   sample: string
   choices: string[];
+  dependencies: Map<string, string>;
 }
 
 interface ConfigAdminOperationInterface {
@@ -88,11 +89,19 @@ interface ConfigAdminOperationInterface {
   description: string;
 }
 
+interface ConfigWorkFlowInterface {
+  name: string;
+  operations: string[];
+  description: string;
+}
+
 interface ConfigInterface {
   instance_operations: ConfigAdminOperationInterface[];
   operations: ConfigAdminOperationInterface[];
   common_params: Map<string, ConfigParamInterface>;
-  enable_rdp: boolean;
+  pre_rdp_operations: string[];
+  project_operation: string;
+  workflows: ConfigWorkFlowInterface[];
 }
 
 interface AdminOperationInterface {
@@ -115,13 +124,28 @@ class Config implements ConfigInterface {
     this.instance_operations = config.instance_operations;
     this.operations = config.operations;
     this.common_params = config.common_params;
-    this.enable_rdp = config.enable_rdp;
+    this.pre_rdp_operations = config.pre_rdp_operations;
+    this.project_operation = config.project_operation;
+    this.workflows = config.workflows;
   }
 
   instance_operations: ConfigAdminOperationInterface[];
   operations: ConfigAdminOperationInterface[];
   common_params = new Map<string, ConfigParamInterface>();
-  enable_rdp: boolean;
+  pre_rdp_operations: string[];
+  project_operation: string;
+  workflows: ConfigWorkFlowInterface[];
 }
 
-export {Instance, SocketMessageInterface, SocketMessage, SocketCmd, AdminOperationInterface, Config, ConfigInterface, ConfigParamInterface, AdminOperationSocketOutput, ConfigAdminOperationInterface};
+const canDisplayRdpDom = (instance: Instance) => {
+  for (let i = 0; i < instance.disks.length; i++) {
+    for (let j = 0; j < instance.disks[i].guestOsFeatures.length; j++) {
+      if (instance.disks[i].guestOsFeatures[j].type === 'WINDOWS') {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export {Instance, canDisplayRdpDom, SocketMessageInterface, SocketMessage, SocketCmd, AdminOperationInterface, Config, ConfigInterface, ConfigParamInterface, AdminOperationSocketOutput, ConfigAdminOperationInterface};

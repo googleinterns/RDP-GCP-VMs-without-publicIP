@@ -15,7 +15,7 @@ limitations under the License.
 ***/
 
 import { Component } from '@angular/core';
-import { Config, ConfigInterface, Instance } from 'src/classes';
+import { canDisplayRdpDom, Config, ConfigInterface, Instance, ConfigParamInterface } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminService } from './admin.service';
@@ -39,11 +39,19 @@ export class AdminComponent {
   outputTabIndex: number;
   instanceToUpdate: Instance;
   style: {};
+  specifyProject: boolean;
+  project: string;
+  projectToValidate: string;
+  instancesLoading: boolean;
+  instances = [] as Instance[];
+  getProjectError: string;
+  initializeInstances = false;
+  preRdpError: string;
 
-  constructor(private snackbar: MatSnackBar, private adminService: AdminService) {};
+  constructor(private snackbar: MatSnackBar, private adminService: AdminService) { };
 
   ngOnInit() {
-   this.loadConfig();
+    this.loadConfig();
   };
 
   // onResizeEnd(event: ResizeEvent): void {
@@ -56,6 +64,11 @@ export class AdminComponent {
 
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {
+    if (this.config.project_operation) {
+      this.specifyProject = false;
+    } else {
+      this.specifyProject = true;
+    }
     if (this.config.common_params) {
       for (const [name, paramValue] of Object.entries(this.config.common_params)) {
         paramValue.name = name;
@@ -78,12 +91,110 @@ export class AdminComponent {
             params.push(paramValue);
           }
         }
-        this.operations.push({name: operation.name, description: operation.description, params});
-    })
+        this.operations.push({ type: 'single', name: operation.name, description: operation.description, params });
+      })
 
-    console.log(this.operations)
+      console.log(this.operations)
     }
   }
+
+  setWorkFlows() {
+    if (this.config.workflows) {
+      const workflows = [];
+      this.config.workflows.forEach((workflow) => {
+        console.log(workflow);
+        const operations = [];
+
+        workflow.operations.forEach(operation => {
+          for (const operationLoaded of this.operations) {
+            if (operationLoaded.name === operation) {
+              operations.push(operationLoaded);
+            }
+          }
+        });
+        workflows.push({ type: 'workflow', name: workflow.name, description: workflow.description, operations })
+      })
+
+      this.operations = workflows.concat(this.operations);
+    }
+  }
+
+  getProject() {
+    const data = { type: '', project_name: '', variables: {} };
+    if (!this.specifyProject) {
+      data.type = 'get';
+    } else {
+      data.type = 'validate';
+      data.project_name = this.projectToValidate;
+    }
+
+    this.loadCommonParams(data.variables)
+
+    this.adminService.sendProjectOperation(data)
+      .subscribe((response: any) => {
+        console.log(response)
+
+        // If operation returned, set loadedOperation to response
+        if (response.project) {
+          this.project = response.project;
+          console.log(this.project)
+          this.getComputeInstances();
+        }
+
+        // If error returned, set operation.error to error
+        if (response.error) {
+          this.getProjectError = response.error;
+        }
+
+      }, error => {
+        if (error.status === 0) {
+          this.getProjectError = errorConnectingToServer;
+        } else {
+          this.getProjectError = error.error.error;
+        }
+      })
+  }
+
+  getComputeInstances() {
+    this.instancesLoading = true;
+    this.getProjectError = null;
+    const data = { project: this.project }
+    this.adminService.getComputeInstances(data)
+      .subscribe((response: any) => {
+        console.log(response)
+
+        // If error returned, set getInstancesError to error
+        if (response.error) {
+          this.getProjectError = response.error;
+          this.instances = [];
+        } else {
+          const instances = response;
+          instances.forEach((instance) => {
+            instance.project = this.project;
+            instance.zone = instance.zone.split('/').pop();
+            instance.networkInterfaces[0].network = instance.networkInterfaces[0].network.split('/').pop();
+            instance.displayPrivateRdpDom = canDisplayRdpDom(instance);
+          })
+          this.instances = instances;
+          console.log(this.instances);
+          if (instances.length > 0) {
+            this.initializeInstances = true;
+          }
+          this.instancesLoading = false;
+
+        }
+
+      }, error => {
+        if (error.status === 0) {
+          this.getProjectError = errorConnectingToServer;
+          this.instancesLoading = false;
+        } else {
+          this.getProjectError = error.error.error;
+          this.instancesLoading = false;
+        }
+      })
+  }
+
 
   // loadCommonParams adds the commonParams to a variables object.
   loadCommonParams(variables: any) {
@@ -94,37 +205,37 @@ export class AdminComponent {
 
   // sendOperation sends the operation and its params to the server to get an ready operation.
   sendOperation(operation: any) {
-    let variables = {};
+    const variables = {};
     operation.params.forEach(param => {
       variables[param.name] = param.value;
     });
-    const data = {name: operation.name, variables}
+    const data = { name: operation.name, variables }
 
     this.loadCommonParams(data.variables)
 
     this.adminService.sendOperation(data)
-    .subscribe((response: any) => {
-      console.log(response)
+      .subscribe((response: any) => {
+        console.log(response)
 
-      // If operation returned, set loadedOperation to response
-      if (response.operation) {
-        operation.error = '';
-        operation.loadedOperation = response;
-        console.log(operation)
-      }
+        // If operation returned, set loadedOperation to response
+        if (response.operation) {
+          operation.error = '';
+          operation.loadedOperation = response;
+          console.log(operation)
+        }
 
-      // If error returned, set operation.error to error
-      if (response.error) {
-        operation.error = response.error;
-      }
+        // If error returned, set operation.error to error
+        if (response.error) {
+          operation.error = response.error;
+        }
 
-    }, error => {
-      if (error.status === 0) {
-        operation.error = errorConnectingToServer;
-      } else {
-        operation.error = error.error.error;
-      }
-    })
+      }, error => {
+        if (error.status === 0) {
+          operation.error = errorConnectingToServer;
+        } else {
+          operation.error = error.error.error;
+        }
+      })
   }
 
   // clearLoadedOperation is triggered by the clear button, clears the operation
@@ -135,7 +246,7 @@ export class AdminComponent {
   // startLoadedOperation will start the loadedOperation.
   startLoadedOperation(operation: any) {
     const operationFull = operation.name;
-    operation.loadedOperation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');
+    operation.loadedOperation.label = operationFull.substr(0, 20 - 1) + (operationFull.length > 20 ? '...' : '');
     this.operationsRunning.push(operation.loadedOperation)
 
     this.snackbar.open('Started operation', '', { duration: 3000 });
@@ -147,7 +258,7 @@ export class AdminComponent {
   // startLoadedInstanceOperation will start an instance operation from the subrdp component.
   startLoadedInstanceOperation(operation: any) {
     const operationFull = operation.operation;
-    operation.label = operationFull.substr(0,20-1)+(operationFull.length>20?'...':'');
+    operation.label = operationFull.substr(0, 20 - 1) + (operationFull.length > 20 ? '...' : '');
     this.operationsRunning.push(operation)
     this.snackbar.open('Started instance operation', '', { duration: 3000 });
   }
@@ -155,33 +266,34 @@ export class AdminComponent {
   // loadConfig loads the config file from the server and sets up all the variables needed to render page.
   loadConfig() {
     this.adminService.getConfig()
-    .subscribe((response: any) => {
-      console.log(response)
-      if (response.error) {
-        this.configError = response.error;
-      } else {
-        this.config = new Config(response as ConfigInterface)
-        this.setCommonParams();
-        this.setOperations();
+      .subscribe((response: any) => {
+        console.log(response)
+        if (response.error) {
+          this.configError = response.error;
+        } else {
+          this.config = new Config(response as ConfigInterface);
+          this.setCommonParams();
+          this.setOperations();
+          this.setWorkFlows();
 
-        console.log(this.config)
+          console.log(this.config)
 
-        // If no operations defined and rdp not enabled, set a configError
-        if (!this.config.operations && !this.config.enable_rdp) {
-          this.configError = 'Your configuration file is empty.'
+          // If no operations defined and rdp not enabled, set a configError
+          if (!this.config) {
+            this.configError = 'Your configuration file is empty.'
+          }
         }
-      }
 
 
-    }, error => {
-      console.log(error)
-      console.log(error.status)
-      if (error.status === 0) {
-        this.configError = errorConnectingToServer;
-      } else {
-        this.configError = JSON.stringify(error);
-      }
-    })
+      }, error => {
+        console.log(error)
+        console.log(error.status)
+        if (error.status === 0) {
+          this.configError = errorConnectingToServer;
+        } else {
+          this.configError = JSON.stringify(error);
+        }
+      })
 
     this.loading = false;
   }
@@ -194,6 +306,10 @@ export class AdminComponent {
     this.commonParams = [];
     this.loading = true;
     this.operationsRunning = [];
+    this.initializeInstances = false;
+    this.preRdpError = null;
+    this.getProjectError = null;
+    this.project = null;
     this.loadConfig();
   }
 
@@ -218,15 +334,38 @@ export class AdminComponent {
   // instanceEmitted handles cases from the subrdp component including starting and ending the RDP websocket connection.
   instanceEmitted(instance: Instance) {
     if (!instance.rdpRunning) {
-      instance.rdpRunning = true;
-      const operation = {type: 'rdp', label: 'RDP '+instance.name, instance}
-      this.operationsRunning.push(operation);
+      if (this.config.pre_rdp_operations) {
+        const data = { type: 'pre_rdp', project_name: '', variables: {} };
+        this.loadCommonParams(data.variables)
+        this.adminService.runPreRDPOperations(data)
+          .subscribe((response: any) => {
+            console.log(response)
+
+            // If error returned, set getInstancesError to error
+            if (response.error) {
+              this.preRdpError = response.error;
+            } else {
+              this.preRdpError = null;
+              instance.rdpRunning = true;
+              const operation = { type: 'rdp', label: 'RDP ' + instance.name, instance }
+              this.operationsRunning.push(operation);
+            }
+
+          }, error => {
+            if (error.status === 0) {
+              this.preRdpError = errorConnectingToServer;
+            } else {
+              this.preRdpError = error.error.error;
+            }
+          })
+      }
+
     } else {
       this.operationsRunning.forEach((operation => {
         if (operation.instance === instance) {
           operation.rdpClose = true;
 
-          this.snackbar.open('Ending RDP for '+instance.name, '', { duration: 3000 });
+          this.snackbar.open('Ending RDP for ' + instance.name, '', { duration: 3000 });
         }
       }))
     }
