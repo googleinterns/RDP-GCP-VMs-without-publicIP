@@ -15,7 +15,7 @@ limitations under the License.
 ***/
 
 import { Component } from '@angular/core';
-import { canDisplayRdpDom, Config, ConfigInterface, Instance } from 'src/classes';
+import { canDisplayRdpDom, Config, ConfigInterface, Instance, ConfigParamInterface } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminService } from './admin.service';
@@ -64,15 +64,17 @@ export class AdminComponent {
 
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {
-    if (this.config.common_params) {
+    if (this.config.project_operation) {
       this.useCommonParameters = true;
+    } else {
+      this.useCommonParameters = false;
+    }
+    if (this.config.common_params) {
       for (const [name, paramValue] of Object.entries(this.config.common_params)) {
         paramValue.name = name;
         paramValue.value = paramValue.default;
         this.commonParams.push(paramValue);
       }
-    } else {
-      this.useCommonParameters = false;
     }
   }
 
@@ -248,7 +250,7 @@ export class AdminComponent {
       if (response.error) {
         this.configError = response.error;
       } else {
-        this.config = new Config(response as ConfigInterface)
+        this.config = new Config(response as ConfigInterface);
         this.setCommonParams();
         this.setOperations();
 
@@ -345,4 +347,21 @@ export class AdminComponent {
       }))
     }
   }
+
+  // checkRequired(operation: any, param: ConfigParamInterface) {
+  //   console.log(param);
+  //   if (param.optional) {
+  //     for (const [name, paramValue] of Object.entries(param.dependencies)) {
+  //       this.commonParams.forEach((commonParam) => {
+  //         if (commonParam.name == name.toUpperCase() && paramValue == commonParam.value) {
+  //           console.log(commonParam.name)
+  //           return true;
+  //         }
+  //       })
+  //     };
+  //     return false;
+  //   } else {
+  //     return true;
+  //   }
+  // }
 }

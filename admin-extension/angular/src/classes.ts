@@ -79,6 +79,7 @@ interface ConfigParamInterface {
   description: string;
   sample: string
   choices: string[];
+  dependencies: Map<string, string>;
 }
 
 interface ConfigAdminOperationInterface {
@@ -93,6 +94,7 @@ interface ConfigInterface {
   operations: ConfigAdminOperationInterface[];
   common_params: Map<string, ConfigParamInterface>;
   pre_rdp_operations: string[];
+  project_operation: string;
 }
 
 interface AdminOperationInterface {
@@ -116,12 +118,14 @@ class Config implements ConfigInterface {
     this.operations = config.operations;
     this.common_params = config.common_params;
     this.pre_rdp_operations = config.pre_rdp_operations;
+    this.project_operation = config.project_operation;
   }
 
   instance_operations: ConfigAdminOperationInterface[];
   operations: ConfigAdminOperationInterface[];
   common_params = new Map<string, ConfigParamInterface>();
   pre_rdp_operations: string[];
+  project_operation: string;
 }
 
 const canDisplayRdpDom = (instance: Instance) => {

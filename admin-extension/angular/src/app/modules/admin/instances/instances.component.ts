@@ -18,7 +18,7 @@ import { Output, EventEmitter, Component, Input } from '@angular/core';
 import { InstancesService } from './instances.service';
 import { MatTableDataSource } from '@angular/material/table';
 
-import { Instance, ConfigAdminOperationInterface } from 'src/classes';
+import { Instance, ConfigAdminOperationInterface, ConfigParamInterface } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 
 @Component({
@@ -36,6 +36,7 @@ export class InstancesComponent {
 
     @Input() instanceOperations: ConfigAdminOperationInterface[];
     @Input() instances: Instance[];
+    @Input() commonParameters: any[];
 
     @Output() instance = new EventEmitter<Instance>();
     @Output() startOperation = new EventEmitter<any>();
@@ -52,10 +53,18 @@ export class InstancesComponent {
       this.instance.emit(instance);
     }
 
+      // loadCommonParams adds the commonParams to a variables object.
+      loadCommonParams(variables: any) {
+        this.commonParameters.forEach((commonParam) => {
+          variables[commonParam.name] = commonParam.value
+        })
+      }
+
     startInstanceOperation(instance: Instance, instanceOperation: ConfigAdminOperationInterface) {
       console.log(instance)
       console.log(instanceOperation)
-      const data = {name: instanceOperation.name, instance}
+      const data = {name: instanceOperation.name, instance, variables: {}};
+      this.loadCommonParams(data.variables);
 
       this.instancesService.sendOperation(data)
       .subscribe((response: any) => {

@@ -165,13 +165,21 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	operation, err := admin.ReadOperationFromCommonParams(reqBody, loadedConfig.ProjectOperation, loadedConfig)
+	var operation string
+
+	if reqBody.Type == "validate" {
+		operation, _, err = admin.ReadOperationFromCommonParams(reqBody, loadedConfig.ValidateProjectOperation, loadedConfig)
+	} else {
+		operation, _, err = admin.ReadOperationFromCommonParams(reqBody, loadedConfig.ProjectOperation, loadedConfig)
+	}
+
 	if err != nil {
 		json.NewEncoder(w).Encode(newErrorRequest(err))
 		return
 	}
 
 	shell := &shell.CmdShell{}
+	log.Println(operation)
 	output, err := shell.ExecuteCmd(operation)
 
 	if err != nil{
@@ -279,18 +287,32 @@ func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
 
 
 	for _, operation := range loadedConfig.PreRDPOperations {
-		filledOperation, err := admin.ReadOperationFromCommonParams(reqBody, operation, loadedConfig)
+		runOperation := false
+
+		filledOperation, variables, err := admin.ReadOperationFromCommonParams(reqBody, operation.Operation, loadedConfig)
 		if err != nil {
 			json.NewEncoder(w).Encode(newErrorRequest(err))
 			return
 		}
 
-		_, err = shell.ExecuteCmd(filledOperation)
+		for dependency, value := range operation.Dependencies {
+			dependency = strings.ToUpper(dependency)
+			if variables[dependency] == value {
+				runOperation = true
+			}
+		}
 
-		if err != nil{
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(newErrorRequest(err))
-			return
+		log.Println(runOperation)
+
+		if (runOperation) {
+	
+			_, err = shell.ExecuteCmd(filledOperation)
+	
+			if err != nil{
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(newErrorRequest(err))
+				return
+			}
 		}
 	}
 

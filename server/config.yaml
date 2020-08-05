@@ -1,7 +1,7 @@
 instanceOperations:
   - name: describe-instance
     operation: >
-      gcloud compute instances describe ${{NAME}} --zone=${{ZONE}} --project=${{PROJECT}} --format=json
+      gcloud compute instances describe ${{NAME}} --zone=${{ZONE}} --project=${{PROJECT}} --${{ENV}} --format=json
     realtime_output: true
   - name: serial-port-output
     operation: >
@@ -16,10 +16,17 @@ commonParams:
     optional: true
   RESOURCE_NAME:
     default: rishabl
+  BUG_REASON:
+    optional: true
+    dependencies:
+      ENV: prod
 projectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
 validateProjectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
 preRDPOperations:
-  - echo ${{hello}}
+  - name: echo hello
+    operation: echo hello
+    dependencies:
+      ENV: test
 operations: 
   - name: echo-vm
     description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.

@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<div class="container mat-elevation-z1">
-  <mat-table [dataSource]="dataSource">
+<div class="container">
+  <mat-table class="mat-elevation-z1" [dataSource]="dataSource">
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
       <mat-cell *matCellDef="let instance"> {{instance.name}} </mat-cell>
@@ -63,6 +63,7 @@ limitations under the License.
     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
   </mat-table>
 
+  <mat-error class="err" *ngIf="operationError">{{operationError}}</mat-error>
 
   <mat-card class="loaded-operation-card" *ngIf="loadedOperation">
     <mat-card-content class="loaded-operation">{{loadedOperation.operation}}</mat-card-content>

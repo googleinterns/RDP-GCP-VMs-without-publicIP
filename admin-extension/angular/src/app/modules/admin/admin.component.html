@@ -38,7 +38,7 @@ limitations under the License. -->
         </div>
         <div *ngIf="!configError && config" class="container">
             <div class="top">
-                <mat-radio-group aria-label="Select an option" [(ngModel)]="useCommonParameters" [disabled]="!commonParams || initializeInstances">
+                <mat-radio-group aria-label="Select an option" [(ngModel)]="useCommonParameters" [disabled]="!config.project_operation || initializeInstances">
                     <mat-radio-button [value]="true">Get Project from Parameters</mat-radio-button>
                     <mat-radio-button [value]="false">Validate Project</mat-radio-button>
                 </mat-radio-group>
@@ -65,7 +65,7 @@ limitations under the License. -->
                 <button type="button" [disabled]="(!useCommonParameters && !projectToValidate) || initializeInstances" (click)="getProject()" mat-raised-button color="accent">GET INSTANCES</button>
                 <mat-error *ngIf="getProjectError" class="operation-error">{{getProjectError}}</mat-error>
                 <div *ngIf="initializeInstances" class="instances">
-                    <app-instances [instances]="instances" [instanceOperations]="config.instance_operations" (instance)="instanceEmitted($event)" (startOperation)="startLoadedInstanceOperation($event)"></app-instances>
+                    <app-instances [instances]="instances" [instanceOperations]="config.instance_operations" [commonParameters]="commonParams" (instance)="instanceEmitted($event)" (startOperation)="startLoadedInstanceOperation($event)"></app-instances>
                 </div>
                 <mat-error *ngIf="preRdpError" class="operation-error">{{preRdpError}}</mat-error>
             </div>
