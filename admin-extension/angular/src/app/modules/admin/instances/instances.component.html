@@ -15,7 +15,7 @@ limitations under the License.
 -->
 
 <div class="container">
-  <mat-table class="mat-elevation-z1" [dataSource]="dataSource">
+  <mat-table class="mat-elevation-z1 table-container" [dataSource]="dataSource">
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
       <mat-cell *matCellDef="let instance"> {{instance.name}} </mat-cell>
@@ -65,7 +65,7 @@ limitations under the License.
 
   <mat-error class="err" *ngIf="operationError">{{operationError}}</mat-error>
 
-  <mat-card class="loaded-operation-card" *ngIf="loadedOperation">
+  <mat-card class="loaded-operation-card mat-elevation-z2" *ngIf="loadedOperation">
     <mat-card-content class="loaded-operation">{{loadedOperation.operation}}</mat-card-content>
     <mat-card-footer class="loaded-operation-footer">
       <button type="button" (click)="clearLoadedOperation()" mat-raised-button color="warn">CLEAR</button>

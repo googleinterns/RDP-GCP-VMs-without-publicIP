@@ -18,8 +18,7 @@ import { Output, EventEmitter, Component, Input } from '@angular/core';
 import { InstancesService } from './instances.service';
 import { MatTableDataSource } from '@angular/material/table';
 
-import { Instance, ConfigAdminOperationInterface, ConfigParamInterface } from 'src/classes';
-import { errorConnectingToServer } from 'src/constants';
+import { Instance, ConfigAdminOperationInterface } from 'src/classes';
 
 @Component({
   selector: 'app-instances',
@@ -29,44 +28,44 @@ import { errorConnectingToServer } from 'src/constants';
 })
 
 export class InstancesComponent {
-    displayedColumns: string[] = ['name', 'zone', 'networkIp', 'port', 'rdp-button', 'operations'];
-    dataSource: MatTableDataSource<Instance>;
-    operationError: string;
-    loadedOperation: any;
+  displayedColumns: string[] = ['name', 'zone', 'networkIp', 'port', 'rdp-button', 'operations'];
+  dataSource: MatTableDataSource<Instance>;
+  operationError: string;
+  loadedOperation: any;
 
-    @Input() instanceOperations: ConfigAdminOperationInterface[];
-    @Input() instances: Instance[];
-    @Input() commonParameters: any[];
+  @Input() instanceOperations: ConfigAdminOperationInterface[];
+  @Input() instances: Instance[];
+  @Input() commonParameters: any[];
 
-    @Output() instance = new EventEmitter<Instance>();
-    @Output() startOperation = new EventEmitter<any>();
+  @Output() instance = new EventEmitter<Instance>();
+  @Output() startOperation = new EventEmitter<any>();
 
-    constructor(private instancesService: InstancesService) {};
+  constructor(private instancesService: InstancesService) { };
 
-    ngOnInit() {
-      console.log(this.instances)
-      this.dataSource = new MatTableDataSource(this.instances)
-    }
+  ngOnInit() {
+    console.log(this.instances)
+    this.dataSource = new MatTableDataSource(this.instances)
+  }
 
 
-    rdp(instance: Instance) {
-      this.instance.emit(instance);
-    }
+  rdp(instance: Instance) {
+    this.instance.emit(instance);
+  }
 
-      // loadCommonParams adds the commonParams to a variables object.
-      loadCommonParams(variables: any) {
-        this.commonParameters.forEach((commonParam) => {
-          variables[commonParam.name] = commonParam.value
-        })
-      }
+  // loadCommonParams adds the commonParams to a variables object.
+  loadCommonParams(variables: any) {
+    this.commonParameters.forEach((commonParam) => {
+      variables[commonParam.name] = commonParam.value
+    })
+  }
 
-    startInstanceOperation(instance: Instance, instanceOperation: ConfigAdminOperationInterface) {
-      console.log(instance)
-      console.log(instanceOperation)
-      const data = {name: instanceOperation.name, instance, variables: {}};
-      this.loadCommonParams(data.variables);
+  startInstanceOperation(instance: Instance, instanceOperation: ConfigAdminOperationInterface) {
+    console.log(instance)
+    console.log(instanceOperation)
+    const data = { name: instanceOperation.name, instance, variables: {} };
+    this.loadCommonParams(data.variables);
 
-      this.instancesService.sendOperation(data)
+    this.instancesService.sendOperation(data)
       .subscribe((response: any) => {
         console.log(response)
 
@@ -84,15 +83,15 @@ export class InstancesComponent {
       }, error => {
         this.operationError = error;
       })
-    }
+  }
 
-    clearLoadedOperation() {
-      this.loadedOperation = null;
-    }
+  clearLoadedOperation() {
+    this.loadedOperation = null;
+  }
 
-    startLoadedOperation(operation: any) {
-      this.startOperation.emit(operation);
-      this.clearLoadedOperation();
-    }
+  startLoadedOperation(operation: any) {
+    this.startOperation.emit(operation);
+    this.clearLoadedOperation();
+  }
 }
 

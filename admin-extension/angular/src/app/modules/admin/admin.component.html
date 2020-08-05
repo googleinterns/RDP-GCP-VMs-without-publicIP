@@ -15,12 +15,13 @@ limitations under the License. -->
 
 <div class="admin-page">
     <mat-toolbar color="primary" class="toolbar">
-        <span>Admin Console</span>
+        <span>Admin Console <span *ngIf="project">- {{project}}</span></span>
         <span class="example-spacer"></span>
-        <button mat-icon-button class="example-icon" (click)=refreshConfig() aria-label="Example icon-button with share icon">
-          <mat-icon>refresh</mat-icon>
+        <button mat-icon-button class="example-icon" (click)=refreshConfig()
+            aria-label="Example icon-button with share icon">
+            <mat-icon>refresh</mat-icon>
         </button>
-      </mat-toolbar>
+    </mat-toolbar>
 
     <div *ngIf="loading; then loadingBar else adminConsole">
     </div>
@@ -28,17 +29,19 @@ limitations under the License. -->
     <ng-template #loadingBar>
         <div class="spinner-container">
             <h2>Loading instances</h2>
-            <mat-spinner diameter=48 ></mat-spinner>
+            <mat-spinner diameter=48></mat-spinner>
         </div>
     </ng-template>
-    
+
     <ng-template #adminConsole>
         <div *ngIf="configError">
             <h2>{{configError}}</h2>
         </div>
         <div *ngIf="!configError && config" class="container">
             <div class="top">
-                <mat-radio-group aria-label="Select an option" [(ngModel)]="useCommonParameters" [disabled]="!config.project_operation || initializeInstances">
+                <div class="get-project">
+                <mat-radio-group aria-label="Select an option" [(ngModel)]="useCommonParameters"
+                    [disabled]="!config.project_operation || initializeInstances">
                     <mat-radio-button [value]="true">Get Project from Parameters</mat-radio-button>
                     <mat-radio-button [value]="false">Validate Project</mat-radio-button>
                 </mat-radio-group>
@@ -51,21 +54,30 @@ limitations under the License. -->
                     <div *ngIf="commonParams && commonParams.length > 0" class="param-form">
                         <mat-form-field appearance="standard" *ngFor="let param of commonParams">
                             <mat-label>{{param.name}}</mat-label>
-                            <mat-select [disabled]="initializeInstances" *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
+                            <mat-select [disabled]="initializeInstances" *ngIf="param.choices" matNativeControl
+                                [required]="!param.optional" [(ngModel)]="param.value">
                                 <mat-option *ngFor="let choice of param.choices" [value]="choice">
-                                  {{choice}}
+                                    {{choice}}
                                 </mat-option>
-                              </mat-select>
-                            <textarea [disabled]="initializeInstances" *ngIf="!param.choices" matInput [(ngModel)]="param.value" [placeholder]="param.sample" [required]="!param.optional"></textarea>
+                            </mat-select>
+                            <textarea [disabled]="initializeInstances" *ngIf="!param.choices" matInput
+                                [(ngModel)]="param.value" [placeholder]="param.sample"
+                                [required]="!param.optional"></textarea>
                             <mat-hint>{{param.description}}</mat-hint>
                         </mat-form-field>
                     </div>
                 </div>
 
-                <button type="button" [disabled]="(!useCommonParameters && !projectToValidate) || initializeInstances" (click)="getProject()" mat-raised-button color="accent">GET INSTANCES</button>
+                <button type="button" [disabled]="(!useCommonParameters && !projectToValidate) || initializeInstances"
+                    (click)="getProject()" mat-raised-button color="accent">GET INSTANCES</button>
                 <mat-error *ngIf="getProjectError" class="operation-error">{{getProjectError}}</mat-error>
+                </div>
+
+                <mat-spinner *ngIf="instancesLoading" class="spinner" diameter=48></mat-spinner>
                 <div *ngIf="initializeInstances" class="instances">
-                    <app-instances [instances]="instances" [instanceOperations]="config.instance_operations" [commonParameters]="commonParams" (instance)="instanceEmitted($event)" (startOperation)="startLoadedInstanceOperation($event)"></app-instances>
+                    <app-instances [instances]="instances" [instanceOperations]="config.instance_operations"
+                        [commonParameters]="commonParams" (instance)="instanceEmitted($event)"
+                        (startOperation)="startLoadedInstanceOperation($event)"></app-instances>
                 </div>
                 <mat-error *ngIf="preRdpError" class="operation-error">{{preRdpError}}</mat-error>
             </div>
@@ -74,36 +86,41 @@ limitations under the License. -->
                 <mat-tab-group class="operation-tabs" backgroundColor="primary" color="accent" animationDuration="0ms">
 
                     <mat-tab label="{{operation.name}}" *ngFor="let operation of operations">
-                        
+
                         <div class="operation" *ngIf="operation.type=='single'">
-                            <h3 class="description">{{operation.description}}</h3>                            
-                            
-                            <!-- <h3 *ngIf="operation.params && operation.params.length > 0" class="param-title">Operation Parameters:</h3> -->
-                            <div *ngIf="operation.params && operation.params.length > 0" class="param-form">                                
+                            <h3 class="description">{{operation.description}}</h3>
+
+                            <div *ngIf="operation.params && operation.params.length > 0" class="param-form">
                                 <mat-form-field appearance="standard" *ngFor="let param of operation.params">
                                     <mat-label>{{param.name}}</mat-label>
-                                    <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
+                                    <mat-select *ngIf="param.choices" matNativeControl [required]="!param.optional"
+                                        [(ngModel)]="param.value">
                                         <mat-option *ngFor="let choice of param.choices" [value]="choice">
-                                          {{choice}}
+                                            {{choice}}
                                         </mat-option>
-                                      </mat-select>
-                                    <textarea *ngIf="!param.choices" matInput [(ngModel)]="param.value" [placeholder]="param.sample" [required]="!param.optional"></textarea>
+                                    </mat-select>
+                                    <textarea *ngIf="!param.choices" matInput [(ngModel)]="param.value"
+                                        [placeholder]="param.sample" [required]="!param.optional"></textarea>
                                     <mat-hint>{{param.description}}</mat-hint>
                                 </mat-form-field>
                             </div>
-                            
-                            <button type="button" (click)="sendOperation(operation)" mat-raised-button color="accent">START</button>
-                            
+
+                            <button type="button" (click)="sendOperation(operation)" mat-raised-button
+                                color="accent">START</button>
+
                             <mat-error *ngIf="operation.error" class="operation-error">{{operation.error}}</mat-error>
-                            
+
                             <mat-card class="loaded-operation-card" *ngIf="operation.loadedOperation">
-                                <mat-card-content class="loaded-operation">{{operation.loadedOperation.operation}}</mat-card-content>
-                                <mat-card-footer class="loaded-operation-footer">                            
-                                    <button type="button" (click)="clearLoadedOperation(operation)" mat-raised-button color="warn">CLEAR</button>
-                                    <button type="button" (click)="startLoadedOperation(operation)" mat-raised-button color="accent">RUN</button>
+                                <mat-card-content class="loaded-operation">{{operation.loadedOperation.operation}}
+                                </mat-card-content>
+                                <mat-card-footer class="loaded-operation-footer">
+                                    <button type="button" (click)="clearLoadedOperation(operation)" mat-raised-button
+                                        color="warn">CLEAR</button>
+                                    <button type="button" (click)="startLoadedOperation(operation)" mat-raised-button
+                                        color="accent">RUN</button>
                                 </mat-card-footer>
                             </mat-card>
-                        
+
                         </div>
                         <div class="operation" *ngIf="operation.type=='workflow'">
                             <h3 class="description">{{operation.description}}</h3>
@@ -111,56 +128,70 @@ limitations under the License. -->
                                 <mat-step *ngFor="let subOperation of operation.operations" [editable]="false">
                                     <ng-template matStepLabel>{{subOperation.name}}</ng-template>
                                     <h3 class="description">{{subOperation.description}}</h3>
-                                    <div *ngIf="subOperation.params && subOperation.params.length > 0" class="param-form">                                
+                                    <div *ngIf="subOperation.params && subOperation.params.length > 0"
+                                        class="param-form">
                                         <mat-form-field appearance="standard" *ngFor="let param of subOperation.params">
                                             <mat-label>{{param.name}}</mat-label>
-                                            <mat-select *ngIf="param.choices" matNativeControl  [required]="!param.optional" [(ngModel)]="param.value">
+                                            <mat-select *ngIf="param.choices" matNativeControl
+                                                [required]="!param.optional" [(ngModel)]="param.value">
                                                 <mat-option *ngFor="let choice of param.choices" [value]="choice">
-                                                {{choice}}
+                                                    {{choice}}
                                                 </mat-option>
                                             </mat-select>
-                                            <textarea *ngIf="!param.choices" matInput [(ngModel)]="param.value" [placeholder]="param.sample" [required]="!param.optional"></textarea>
+                                            <textarea *ngIf="!param.choices" matInput [(ngModel)]="param.value"
+                                                [placeholder]="param.sample" [required]="!param.optional"></textarea>
                                             <mat-hint>{{param.description}}</mat-hint>
                                         </mat-form-field>
                                     </div>
 
                                     <div class="button-container">
-                                        <button type="button" (click)="sendOperation(subOperation)" mat-raised-button color="accent">START</button>
+                                        <button type="button" (click)="sendOperation(subOperation)" mat-raised-button
+                                            color="accent">START</button>
                                         <div class="step-button-container">
-                                            <button mat-raised-button color="warm" (click)="stepper.reset()">RESET</button>
-                                            <button mat-raised-button color="accent"matStepperNext>NEXT</button>  
+                                            <button mat-raised-button color="warn" class="reset-button"
+                                                (click)="stepper.reset()">RESET</button>
+                                            <button mat-raised-button color="accent" matStepperNext>NEXT</button>
                                         </div>
                                     </div>
 
-                                    <mat-error *ngIf="subOperation.error" class="operation-error">{{subOperation.error}}</mat-error>
+                                    <mat-error *ngIf="subOperation.error" class="operation-error">{{subOperation.error}}
+                                    </mat-error>
 
                                     <mat-card class="loaded-operation-card" *ngIf="subOperation.loadedOperation">
-                                        <mat-card-content class="loaded-operation">{{subOperation.loadedOperation.operation}}</mat-card-content>
-                                        <mat-card-footer class="loaded-operation-footer">                            
-                                            <button type="button" (click)="clearLoadedOperation(subOperation)" mat-raised-button color="warn">CLEAR</button>
-                                            <button type="button" (click)="startLoadedOperation(subOperation)" mat-raised-button color="accent">RUN</button>
+                                        <mat-card-content class="loaded-operation">
+                                            {{subOperation.loadedOperation.operation}}</mat-card-content>
+                                        <mat-card-footer class="loaded-operation-footer">
+                                            <button type="button" (click)="clearLoadedOperation(subOperation)"
+                                                mat-raised-button color="warn">CLEAR</button>
+                                            <button type="button" (click)="startLoadedOperation(subOperation)"
+                                                mat-raised-button color="accent">RUN</button>
                                         </mat-card-footer>
                                     </mat-card>
-                                    
-                    
+
+
                                 </mat-step>
                             </mat-horizontal-stepper>
                         </div>
                     </mat-tab>
 
-                  </mat-tab-group>
+                </mat-tab-group>
             </div>
 
             <div id="output-view" class="bottom" *ngIf="config && config.operations">
-                <mat-tab-group id="tab-group" (selectedTabChange)="tabChanged($event)" [selectedIndex]="operationsRunning.length-1" backgroundColor="primary" color="accent" class="output-tabs" animationDuration="0ms">
-                    <mat-tab class="output" label="{{operation.label}}" *ngFor="let operation of operationsRunning; index as i"> 
-                        <output [close]="operation.close" [closeRdp]="operation.rdpClose" [operationToRun]="operation" (outputClosed)="outputTabClosed(i)"></output>
+                <mat-tab-group id="tab-group" (selectedTabChange)="tabChanged($event)"
+                    [selectedIndex]="operationsRunning.length-1" backgroundColor="primary" color="accent"
+                    class="output-tabs" animationDuration="0ms">
+                    <mat-tab class="output" label="{{operation.label}}"
+                        *ngFor="let operation of operationsRunning; index as i">
+                        <output [close]="operation.close" [closeRdp]="operation.rdpClose" [operationToRun]="operation"
+                            (outputClosed)="outputTabClosed(i)"></output>
                     </mat-tab>
-                  </mat-tab-group>
+                </mat-tab-group>
             </div>
 
         </div>
-        <button (click)="closeOutputTab()" mat-fab color="warn" class="bottom-right" *ngIf="operationsRunning.length > 0">
+        <button (click)="closeOutputTab()" mat-fab color="warn" class="bottom-right"
+            *ngIf="operationsRunning.length > 0">
             <mat-icon>close</mat-icon>
         </button>
     </ng-template>

@@ -26,7 +26,8 @@ limitations under the License.
 }
 
 .table-container {
-    width: 100%;
+    width: 95%;
+    margin: 0 auto 1.5rem auto;
 }
 
 .center {
@@ -34,7 +35,8 @@ limitations under the License.
 }
 
 .loaded-operation-card {
-    margin-top: 2rem;
+    margin: 0 auto 1.5rem auto;
+    width: 90%;
 }
 
 .loaded-operation {
@@ -65,7 +67,8 @@ mat-cell:last-of-type {
     padding-right: 0;
 }
 
-mat-header-cell, mat-cell {
+mat-header-cell,
+mat-cell {
     justify-content: center;
 }
 

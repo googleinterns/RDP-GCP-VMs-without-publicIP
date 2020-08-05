@@ -63,8 +63,15 @@ limitations under the License.
 }
 
 .top {
-    padding: 1.5rem;
     overflow-y: auto;
+}
+
+.get-project {
+    padding: 1.5rem;
+}
+
+.spinner {
+    margin: 0 auto;
 }
 
 .middle {
@@ -86,7 +93,7 @@ limitations under the License.
 }
 
 .toolbar {
-    //min-height: 4rem;
+    min-height: 4rem;
 }
 
 .loaded-operation-card {
@@ -159,4 +166,8 @@ limitations under the License.
 .button-container {
     display: flex;
     justify-content: space-between;
+}
+
+.reset-button {
+    margin-right: 0.5rem;
 }
