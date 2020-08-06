@@ -164,12 +164,13 @@ func (adminExecutor *AdminExecutor) executeOperation(ctx context.Context, ws con
 		return
 	}
 
-	stdoutScanner, stderrScanner := bufio.NewScanner(output[0]), bufio.NewScanner(output[1])
+	combined := io.MultiReader(output[0], output[1])
+
+	outputScanner := bufio.NewScanner(combined)
 
 	var wg sync.WaitGroup
-	wg.Add(2)
-	go sendOutputToConn(ws, stdoutScanner, true, &wg)
-	go sendOutputToConn(ws, stderrScanner, false, &wg)
+	wg.Add(1)
+	go sendOutputToConn(ws, outputScanner, true, &wg)
 
 	done := make(chan bool)
 

@@ -174,8 +174,9 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 	log.Println(fmt.Sprintf("Server received output: %s ", string(output)))
 
 	if err != nil{
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(newErrorRequest(errors.New(string(output))))
+		errOutput := fmt.Errorf("Error: %s, Output: %s", err.Error(), string(output))
+		json.NewEncoder(w).Encode(newErrorRequest(errOutput))
+		return
 	}
 
 	if (reqBody.Type == "validate") {
@@ -415,5 +416,6 @@ func startPrivateRdp(w http.ResponseWriter, r *http.Request) {
 
 	shell := &shell.CmdShell{}
 	gcloudExecutor := gcloud.NewGcloudExecutor(shell)
+	
 	gcloudExecutor.StartPrivateRdp(ws)
 }

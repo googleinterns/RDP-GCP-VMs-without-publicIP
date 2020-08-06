@@ -40321,8 +40321,7 @@ var AdminComponent = /** @class */ (function () {
     };
     // startLoadedInstanceOperation will start an instance operation from the subrdp component.
     AdminComponent.prototype.startLoadedInstanceOperation = function (operation) {
-        console.log(operation);
-        var operationFull = operation.name;
+        var operationFull = operation.instanceName + " - " + operation.name;
         operation.label = operationFull.substr(0, 20 - 1) + (operationFull.length > 20 ? '...' : '');
         this.operationsRunning.push(operation);
         this.snackbar.open('Started instance operation', '', { duration: 3000 });
@@ -41002,6 +41001,7 @@ var InstancesComponent = /** @class */ (function () {
                 _this.operationError = '';
                 _this.loadedOperation = response;
                 _this.loadedOperation.name = instanceOperation.name;
+                _this.loadedOperation.instanceName = instance.name;
             }
             // If error returned, set operation.error to error
             if (response.error) {
