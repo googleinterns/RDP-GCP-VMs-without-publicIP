@@ -40,7 +40,7 @@ func (*mockShell) ExecuteCmdWithContext(ctx context.Context, cmd string) ([]byte
 
 func (*mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
 	if cmd == "output" {
-		return []io.ReadCloser{ioutil.NopCloser(strings.NewReader("stdout")), ioutil.NopCloser(strings.NewReader("stderr"))}, nil, nil
+		return []io.ReadCloser{ioutil.NopCloser(strings.NewReader("stdout")), ioutil.NopCloser(strings.NewReader(""))}, nil, nil
 	}
 	if cmd == testErr {
 		return nil, nil, errors.New(testErr)
@@ -340,20 +340,15 @@ func TestExecuteOperation(t *testing.T) {
 	}
 
 	var expectedStdout bool
-	var expectedStderr bool
 	for _, output := range socketOutput {
+		log.Println(output.Stdout)
 		if output.Stdout == "stdout" {
 			expectedStdout = true
-		} else if output.Stderr == "stderr" {
-			expectedStderr = true
 		}
 	}
 
 	if !expectedStdout {
 		t.Errorf("executeOperation didn't write proper stdout message to socket, expected %v", "stdout")
-	}
-	if !expectedStderr {
-		t.Errorf("executeOperation didn't write proper stderr message to socket, expected %v", "stderr")
 	}
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), operationContextTimeout)
@@ -409,15 +404,12 @@ func TestRunOperation(t *testing.T) {
 
 	var expectedServerMessage bool
 	var expectedStdout bool
-	var expectedStderr bool
 
 	for _, output := range socketOutput {
 		if output.ServerMessage == fmt.Sprintf(serverReceivedOperation, "output") {
 			expectedServerMessage = true
 		} else if output.Stdout == "stdout" {
 			expectedStdout = true
-		} else if output.Stderr == "stderr" {
-			expectedStderr = true
 		}
 	}
 
@@ -429,9 +421,5 @@ func TestRunOperation(t *testing.T) {
 
 	if !expectedStdout {
 		t.Errorf("RunOperation didn't write proper error to socket, expected %v", "stdout")
-	}
-
-	if !expectedStderr {
-		t.Errorf("RunOperation didn't write proper end message to socket, expected %v", "stderr")
 	}
 }

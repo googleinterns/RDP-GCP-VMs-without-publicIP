@@ -128,6 +128,8 @@ export class AdminComponent {
       data.project_name = this.projectToValidate;
     }
 
+    this.initializeInstances = false;
+
     this.loadCommonParams(data.variables)
 
     this.adminService.sendProjectOperation(data)
@@ -257,7 +259,7 @@ export class AdminComponent {
 
   // startLoadedInstanceOperation will start an instance operation from the subrdp component.
   startLoadedInstanceOperation(operation: any) {
-    const operationFull = operation.name;
+    const operationFull = operation.instanceName + " - " + operation.name;
     operation.label = operationFull.substr(0, 20 - 1) + (operationFull.length > 20 ? '...' : '');
     this.operationsRunning.push(operation)
     this.snackbar.open('Started instance operation', '', { duration: 3000 });
@@ -335,7 +337,7 @@ export class AdminComponent {
   instanceEmitted(instance: Instance) {
     if (!instance.rdpRunning) {
       if (this.config.pre_rdp_operations) {
-        const data = { type: 'pre_rdp', project_name: '', variables: {} };
+        const data = { type: 'pre_rdp', project_name: '', variables: {}, instance: instance };
         this.loadCommonParams(data.variables)
         this.adminService.runPreRDPOperations(data)
           .subscribe((response: any) => {

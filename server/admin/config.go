@@ -38,7 +38,7 @@ const (
 	missingParamsError                 string = "Missing parameters defined in config file for this operation: %s"
 	missingDependenciesError           string = "These parameters are required due to the dependencies for this operation: %s"
 	missingInstanceParamsError         string = "Missing parameters in the instance needed for this operation: %s, use Admin Operations instead for this operation"
-	captureParamRegex                  string = `\${{(?s)([A-Z]+_*[A-Z]+)}}(?s)`
+	captureParamRegex                  string = `\${{(?s)([a-z0-9A-Z]+_*[a-z0-9A-Z]+)}}(?s)`
 )
 
 // configParam points to a variable in the config file
@@ -81,6 +81,7 @@ type Config struct {
 	ValidateProjectOperation string                 `json:"validate_project_operation"`
 	PreRDPOperations         []preRdpOperation      `json:"pre_rdp_operations"`
 	Workflows                []configWorkflow       `json:"workflows"`
+	ProjectOperationRegex    string
 }
 
 // OperationToFill is sent by the extension detailing a operation and the variables to be filled

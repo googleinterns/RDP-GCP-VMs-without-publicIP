@@ -26,6 +26,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/admin"
@@ -167,12 +168,15 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println(fmt.Sprintf("Server running project command: %s ", operation))
 	shell := &shell.CmdShell{}
 	output, err := shell.ExecuteCmd(operation)
+	log.Println(fmt.Sprintf("Server received output: %s ", string(output)))
 
 	if err != nil{
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(newErrorRequest(err))
+		errOutput := fmt.Errorf("Error: %s, Output: %s", err.Error(), string(output))
+		json.NewEncoder(w).Encode(newErrorRequest(errOutput))
+		return
 	}
 
 	if (reqBody.Type == "validate") {
@@ -184,7 +188,17 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(response{ProjectName: strings.TrimSuffix(string(output), "\n")})
+	projectOutput := string(output)
+
+	if (loadedConfig.ProjectOperationRegex) != "" {
+		r := regexp.MustCompile(loadedConfig.ProjectOperationRegex)
+		match := r.FindStringSubmatch(projectOutput)
+		if (len(match) > 1) {
+			projectOutput = match[1]
+		}
+	}
+
+	json.NewEncoder(w).Encode(response{ProjectName: strings.TrimSuffix(projectOutput, "\n")})
 }
 
 // validateAdminOperationParams reads requests from the server that fill in the command's variables
@@ -285,14 +299,9 @@ func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if (runOperation) {
-	
-			_, err = shell.ExecuteCmd(filledOperation)
-	
-			if err != nil{
-				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(newErrorRequest(err))
-				return
-			}
+			log.Println(fmt.Sprintf("Server running pre-rdp-operation: %s ", filledOperation))	
+			output, _ := shell.ExecuteCmd(filledOperation)
+			log.Println(fmt.Sprintf("Server received output: %s ", string(output)))
 		}
 	}
 
@@ -407,5 +416,6 @@ func startPrivateRdp(w http.ResponseWriter, r *http.Request) {
 
 	shell := &shell.CmdShell{}
 	gcloudExecutor := gcloud.NewGcloudExecutor(shell)
+	
 	gcloudExecutor.StartPrivateRdp(ws)
 }

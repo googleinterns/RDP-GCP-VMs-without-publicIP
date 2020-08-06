@@ -75,9 +75,10 @@ limitations under the License. -->
                 <button type="button" [disabled]="(specifyProject && !projectToValidate)"
                     (click)="getProject()" mat-raised-button color="accent">GET INSTANCES</button>
                 <mat-error *ngIf="getProjectError" class="operation-error">{{getProjectError}}</mat-error>
-                </div>
-
                 <mat-spinner *ngIf="instancesLoading" class="spinner" diameter=48></mat-spinner>
+    
+            </div>
+
                 <div *ngIf="initializeInstances" class="instances">
                     <app-instances [instances]="instances" [instanceOperations]="config.instance_operations"
                         [commonParameters]="commonParams" (instance)="instanceEmitted($event)"
