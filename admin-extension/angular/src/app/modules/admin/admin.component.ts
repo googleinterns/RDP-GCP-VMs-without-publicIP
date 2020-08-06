@@ -128,6 +128,8 @@ export class AdminComponent {
       data.project_name = this.projectToValidate;
     }
 
+    this.initializeInstances = false;
+
     this.loadCommonParams(data.variables)
 
     this.adminService.sendProjectOperation(data)
@@ -335,7 +337,7 @@ export class AdminComponent {
   instanceEmitted(instance: Instance) {
     if (!instance.rdpRunning) {
       if (this.config.pre_rdp_operations) {
-        const data = { type: 'pre_rdp', project_name: '', variables: {} };
+        const data = { type: 'pre_rdp', project_name: '', variables: {}, instance: instance };
         this.loadCommonParams(data.variables)
         this.adminService.runPreRDPOperations(data)
           .subscribe((response: any) => {
