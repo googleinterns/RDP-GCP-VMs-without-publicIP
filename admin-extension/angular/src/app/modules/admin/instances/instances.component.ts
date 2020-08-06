@@ -73,6 +73,7 @@ export class InstancesComponent {
         if (response.operation) {
           this.operationError = '';
           this.loadedOperation = response;
+          this.loadedOperation.name = instanceOperation.name;
         }
 
         // If error returned, set operation.error to error

@@ -172,7 +172,7 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil{
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(newErrorRequest(err))
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New(string(output))))
 	}
 
 	if (reqBody.Type == "validate") {
@@ -286,13 +286,8 @@ func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
 
 		if (runOperation) {
 	
-			_, err = shell.ExecuteCmd(filledOperation)
-	
-			if err != nil{
-				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(newErrorRequest(err))
-				return
-			}
+			output, _ := shell.ExecuteCmd(filledOperation)
+			log.Println(string(output))
 		}
 	}
 

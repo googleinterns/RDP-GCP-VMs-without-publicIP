@@ -5,7 +5,7 @@ instanceOperations:
     realtime_output: true
   - name: serial-port-output
     operation: >
-      gcloud compute instances get-serial-port-output ${{NAME}} --zone=${{ZONE}}
+      gcloud compute instances get-serial-port-output ${{NAME}} --zone=${{ZONE}} 
   - name: connect-serial-port-output
     operation: >
       gcloud compute connect-to-serial-port ${{NAME}} --zone=${{ZONE}} --format=json
