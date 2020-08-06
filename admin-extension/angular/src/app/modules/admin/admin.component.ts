@@ -257,7 +257,7 @@ export class AdminComponent {
 
   // startLoadedInstanceOperation will start an instance operation from the subrdp component.
   startLoadedInstanceOperation(operation: any) {
-    const operationFull = operation.operation;
+    const operationFull = operation.name;
     operation.label = operationFull.substr(0, 20 - 1) + (operationFull.length > 20 ? '...' : '');
     this.operationsRunning.push(operation)
     this.snackbar.open('Started instance operation', '', { duration: 3000 });

@@ -1,7 +1,7 @@
 instanceOperations:
   - name: describe-instance
     operation: >
-      gcloud compute instances describe ${{NAME}} --zone=${{ZONE}} --project=${{PROJECT}} --${{ENV}} --format=json
+      gcloud compute instances describe --env=${{ENV}} ${{NAME}} --zone=${{ZONE}} --project=${{PROJECT}} --${{ENV}} --format=json
     realtime_output: true
   - name: serial-port-output
     operation: >
@@ -21,7 +21,7 @@ commonParams:
     dependencies:
       ENV: '*'
 projectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
-validateProjectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
+#validateProjectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
 preRDPOperations:
   - name: echo hello
     operation: echo hello

@@ -421,7 +421,13 @@ func captureParamsFromInstanceOperation(operationToFill InstanceOperationToFill,
 	matches := r.FindAllStringSubmatch(*operation, -1)
 	for _, match := range matches {
 		if value, inParams := operationToFill.Params[match[1]]; inParams {
-			*operation = strings.Replace(*operation, "${{"+match[1]+"}}", value, -1)
+			if value == "" {
+				r := regexp.MustCompile(fmt.Sprintf(`((--[^=]+=)*\${{%s}})`, match[1]))
+
+				*operation = r.ReplaceAllString(*operation, "")
+			} else {
+				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", value, -1)
+			}
 		} else {
 			switch match[1] {
 			case "NAME":
