@@ -81,6 +81,7 @@ type Config struct {
 	ValidateProjectOperation string                 `json:"validate_project_operation"`
 	PreRDPOperations         []preRdpOperation      `json:"pre_rdp_operations"`
 	Workflows                []configWorkflow       `json:"workflows"`
+	ProjectOperationRegex    string
 }
 
 // OperationToFill is sent by the extension detailing a operation and the variables to be filled

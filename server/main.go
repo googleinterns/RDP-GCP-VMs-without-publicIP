@@ -26,6 +26,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/admin"
@@ -186,7 +187,17 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(response{ProjectName: strings.TrimSuffix(string(output), "\n")})
+	projectOutput := string(output)
+
+	if (loadedConfig.ProjectOperationRegex) != "" {
+		r := regexp.MustCompile(loadedConfig.ProjectOperationRegex)
+		match := r.FindStringSubmatch(projectOutput)
+		if (len(match) > 1) {
+			projectOutput = match[1]
+		}
+	}
+
+	json.NewEncoder(w).Encode(response{ProjectName: strings.TrimSuffix(projectOutput, "\n")})
 }
 
 // validateAdminOperationParams reads requests from the server that fill in the command's variables

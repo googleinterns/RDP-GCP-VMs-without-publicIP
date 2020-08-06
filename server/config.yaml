@@ -20,7 +20,10 @@ commonParams:
     optional: true
     dependencies:
       ENV: '*'
-projectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
+projectOperation: >
+  ./mock_api_cli
+#  echo '"tenantProjectId": "rishabl-test",'
+projectOperationRegex: '"tenantProjectId":\s"(.+)",'
 #validateProjectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
 preRDPOperations:
   - name: echo hello

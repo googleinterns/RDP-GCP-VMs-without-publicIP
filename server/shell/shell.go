@@ -25,7 +25,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/google/shlex"
@@ -38,7 +37,10 @@ type CmdShell struct{}
 
 // ExecuteCmd runs a shell command and waits for its output before returning the output
 func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
-	parsedCmd := strings.Fields(cmd)
+	parsedCmd, err := shlex.Split(cmd)
+	if err != nil {
+		return []byte("Operation invalid"), err
+	}
 
 	for i := 0; i < len(parsedCmd); i++ {
 		parsedCmd[i] = os.ExpandEnv(parsedCmd[i])
