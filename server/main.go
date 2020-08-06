@@ -167,8 +167,10 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println(fmt.Sprintf("Server running project command: %s ", operation))
 	shell := &shell.CmdShell{}
 	output, err := shell.ExecuteCmd(operation)
+	log.Println(fmt.Sprintf("Server received output: %s ", string(output)))
 
 	if err != nil{
 		w.WriteHeader(http.StatusBadRequest)
@@ -285,9 +287,9 @@ func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if (runOperation) {
-	
+			log.Println(fmt.Sprintf("Server running pre-rdp-operation: %s ", filledOperation))	
 			output, _ := shell.ExecuteCmd(filledOperation)
-			log.Println(string(output))
+			log.Println(fmt.Sprintf("Server received output: %s ", string(output)))
 		}
 	}
 
