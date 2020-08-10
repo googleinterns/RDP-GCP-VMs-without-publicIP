@@ -337,29 +337,11 @@ export class AdminComponent {
   instanceEmitted(instance: Instance) {
     if (!instance.rdpRunning) {
       if (this.config.pre_rdp_operations) {
-        const data = { type: 'pre_rdp', project_name: '', variables: {}, instance: instance };
-        this.loadCommonParams(data.variables)
-        this.adminService.runPreRDPOperations(data)
-          .subscribe((response: any) => {
-            console.log(response)
-
-            // If error returned, set getInstancesError to error
-            if (response.error) {
-              this.preRdpError = response.error;
-            } else {
-              this.preRdpError = null;
-              instance.rdpRunning = true;
-              const operation = { type: 'rdp', label: 'RDP ' + instance.name, instance }
-              this.operationsRunning.push(operation);
-            }
-
-          }, error => {
-            if (error.status === 0) {
-              this.preRdpError = errorConnectingToServer;
-            } else {
-              this.preRdpError = error.error.error;
-            }
-          })
+        instance.rdpRunning = true;
+        const operation = { type: 'rdp', label: 'RDP ' + instance.name, instance }
+        operation.instance.params = {};
+        this.loadCommonParams(operation.instance.params)
+        this.operationsRunning.push(operation);
       }
 
     } else {

@@ -25,7 +25,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
 	"github.com/spf13/viper"
 )
 
@@ -41,6 +40,34 @@ const (
 	captureParamRegex                  string = `\${{(?s)([a-z0-9A-Z]+_*[a-z0-9A-Z]+)}}(?s)`
 )
 
+type osFeatures struct {
+	Type string `json:"type"`
+}
+
+type disk struct {
+	OSFeatures []osFeatures `json:"guestOsFeatures"`
+}
+
+type networkInterfaces struct {
+	Name    string `json:"name"`
+	Network string `json:"network"`
+	IP      string `json:"networkIP"`
+}
+
+// Instance is used as a structure for gcloud compute instances.
+type Instance struct {
+	ID                string              `json:"id"`
+	Name              string              `json:"name"`
+	Status            string              `json:"status"`
+	Description       string              `json:"description"`
+	Zone              string              `json:"zone"`
+	Disk              []disk              `json:"disks"`
+	NetworkInterfaces []networkInterfaces `json:"networkInterfaces"`
+	ProjectName       string              `json:"project"`
+	FirewallNetwork   string              `json:"firewallNetwork"`
+	PreRDPParams      map[string]string   `json:"params"`
+}
+
 // configParam points to a variable in the config file
 type configParam struct {
 	Default      string            `json:"default"`
@@ -52,7 +79,7 @@ type configParam struct {
 }
 
 // configAdminOperation points to a configured admin operation
-type configAdminOperation struct {
+type ConfigAdminOperation struct {
 	Name           string                 `json:"name"`
 	Description    string                 `json:"description"`
 	Operation      string                 `json:"operation"`
@@ -74,8 +101,8 @@ type configWorkflow struct {
 
 // Config is the fully loaded config represented as structures
 type Config struct {
-	InstanceOperations       []configAdminOperation `json:"instance_operations"`
-	Operations               []configAdminOperation `json:"operations"`
+	InstanceOperations       []ConfigAdminOperation `json:"instance_operations"`
+	Operations               []ConfigAdminOperation `json:"operations"`
 	CommonParams             map[string]configParam `json:"common_params"`
 	ProjectOperation         string                 `json:"project_operation"`
 	ValidateProjectOperation string                 `json:"validate_project_operation"`
@@ -99,7 +126,7 @@ type ProjectOperationParams struct {
 
 type InstanceOperationToFill struct {
 	Name     string            `json:"name"`
-	Instance gcloud.Instance   `json:"instance"`
+	Instance Instance          `json:"instance"`
 	Params   map[string]string `json:"variables"`
 }
 
@@ -151,19 +178,29 @@ func checkConfigForMissingParams(config Config) map[string][]string {
 		}
 	}
 
-	for _, operation := range config.PreRDPOperations {
-
+	for _, operation := range config.InstanceOperations {
 		// Get all variables in the operation
 		matches := r.FindAllStringSubmatch(operation.Operation, -1)
+		instanceParams := []string{"NAME", "ZONE", "PROJECT", "NETWORKIP"}
 		for _, match := range matches {
+
+			isInstanceParam := false
+
+			for _, param := range instanceParams {
+				if param == match[1] {
+					isInstanceParam = true
+					break
+				}
+			}
+
 			// Check if variable is defined in common variables
-			if _, inCommonParams := config.CommonParams[match[1]]; !inCommonParams {
+			if _, inCommonParams := config.CommonParams[match[1]]; !inCommonParams && !isInstanceParam {
 				missingParams[operation.Name] = append(missingParams[operation.Name], match[1])
 			}
 		}
 	}
 
-	for _, operation := range config.InstanceOperations {
+	for _, operation := range config.PreRDPOperations {
 		// Get all variables in the operation
 		matches := r.FindAllStringSubmatch(operation.Operation, -1)
 		instanceParams := []string{"NAME", "ZONE", "PROJECT", "NETWORKIP"}
@@ -367,7 +404,7 @@ func ReadOperationFromCommonParams(operation ProjectOperationParams, operationTo
 
 // ReadAdminOperation takes a operationToFill and a config and returns a ready to go operation
 func ReadAdminOperation(operation OperationToFill, config *Config) (OperationToRun, error) {
-	var configuredAdminOperation configAdminOperation
+	var configuredAdminOperation ConfigAdminOperation
 
 	for _, configCommand := range config.Operations {
 		if configCommand.Name == operation.Name {
@@ -415,57 +452,49 @@ func ReadAdminOperation(operation OperationToFill, config *Config) (OperationToR
 	return operationToRun, nil
 }
 
-func captureParamsFromInstanceOperation(operationToFill InstanceOperationToFill, operation *string) []string {
+func captureParamsFromInstanceOperation(variables map[string]string, operationToFill InstanceOperationToFill, operation string) []string {
 	var missingParams []string
 	r := regexp.MustCompile(captureParamRegex)
 	// Get all variables in the operation
-	matches := r.FindAllStringSubmatch(*operation, -1)
+	matches := r.FindAllStringSubmatch(operation, -1)
+
 	for _, match := range matches {
 		if value, inParams := operationToFill.Params[match[1]]; inParams {
-			if value == "" {
-				r := regexp.MustCompile(fmt.Sprintf(`((--[^=]+=)*\${{%s}})`, match[1]))
-
-				*operation = r.ReplaceAllString(*operation, "")
-			} else {
-				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", value, -1)
-			}
+			variables[match[1]] = value
 		} else {
 			switch match[1] {
 			case "NAME":
-				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.Name, -1)
+				variables["NAME"] = operationToFill.Instance.Name
 			case "ZONE":
-				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.Zone, -1)
+				variables["ZONE"] = operationToFill.Instance.Zone
 			case "NETWORKIP":
-				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.NetworkInterfaces[0].IP, -1)
+				variables["NETWORKIP"] = operationToFill.Instance.NetworkInterfaces[0].IP
 			case "PROJECT":
-				*operation = strings.Replace(*operation, "${{"+match[1]+"}}", operationToFill.Instance.ProjectName, -1)
+				variables["PROJECT"] = operationToFill.Instance.ProjectName
 			default:
 				missingParams = append(missingParams, match[1])
 			}
 		}
 	}
-
 	return missingParams
 }
 
-func ReadInstanceOperation(operation InstanceOperationToFill, config *Config) (OperationToRun, error) {
-	var configuredAdminOperation configAdminOperation
-
-	for _, configCommand := range config.InstanceOperations {
-		if configCommand.Name == operation.Name {
-			configuredAdminOperation = configCommand
-			break
-		}
-	}
-
-	if configuredAdminOperation.Name == "" {
-		return OperationToRun{}, fmt.Errorf(operationNotFoundError, operation.Name)
-	}
-
-	missingParams := captureParamsFromInstanceOperation(operation, &configuredAdminOperation.Operation)
+func ReadInstanceOperation(operation InstanceOperationToFill, configuredAdminOperation ConfigAdminOperation) (OperationToRun, error) {
+	variables := make(map[string]string)
+	missingParams := captureParamsFromInstanceOperation(variables, operation, configuredAdminOperation.Operation)
 
 	if len(missingParams) > 0 {
 		return OperationToRun{}, fmt.Errorf(missingInstanceParamsError, strings.Join(missingParams, ", "))
+	}
+
+	for name, value := range variables {
+		if value == "" {
+			r := regexp.MustCompile(fmt.Sprintf(`((--[^=]+=)*\${{%s}})`, name))
+
+			configuredAdminOperation.Operation = r.ReplaceAllString(configuredAdminOperation.Operation, "")
+		} else {
+			configuredAdminOperation.Operation = strings.Replace(configuredAdminOperation.Operation, "${{"+name+"}}", value, -1)
+		}
 	}
 
 	var operationToRun OperationToRun

@@ -27,9 +27,9 @@ const (
 	gcloudAuthError string = "there was a problem refreshing your current auth tokens"
 	projectCmdError string = "failed to find project"
 	// SdkAuthError is returned if there is an gcloud SDK auth error
-	SdkAuthError string = `gCloud SDK authorization is invalid, please login using "gcloud auth login"`
+	SdkAuthError string = `gCloud SDK authorization is invalid, missing or expired, please try relogging using "gcloud auth login" and try again.`
 	// SdkProjectError is returned if the gcloud project given is invalid
-	SdkProjectError   string = "gCloud SDK project is invalid"
+	SdkProjectError   string = "gCloud SDK project is invalid for the current credentials"
 	gcloudErrorOutput string = "ERROR:"
 )
 
@@ -40,7 +40,7 @@ const (
 	firewallRuleExistsCmdOutput     string = "resource 'projects/%s/global/firewalls/admin-extension-private-rdp-%v' already exists"
 	firewallRuleAlreadyExistsOutput string = "Firewall rule already exists for %v"
 	didntCreateFirewallOutput       string = "Could not create firewall for %v"
-	createdFirewallOutput           string = "Created firewall for %v"
+	createdFirewallOutput           string = "Created firewall for %v, will delete in %v"
 	multipleNetworksError           string = "%v has 0 or more than 1 network interface"
 	deleteFirewallAuthError         string = "Couldn't delete IAP firewall rule: admin-extension-private-rdp-%v due to auth error, please delete it manually"
 	deleteFirewallProjectError      string = "Couldn't delete IAP firewall rule: admin-extension-private-rdp-%v due to project error, please delete it manually"
@@ -53,7 +53,7 @@ const (
 	iapTunnelCmd                        string = "gcloud compute start-iap-tunnel %v 3389 --project=%v --local-host-port=localhost:%v --zone=%s --verbosity=debug"
 	tunnelCreatedOutput                 string = "DEBUG: CLOSE"
 	iapTunnelError                      string = "Could not start IAP tunnel for %v"
-	iapTunnelStarted                    string = "Started IAP tunnel for %v on port: %v"
+	iapTunnelStarted                    string = "Started IAP tunnel for %v on port: %v. Will close in %v"
 	receivedEndCmd                      string = "Received end RDP command from connection"
 	receivedStartRdpCmd                 string = "Received command to start RDP program with credentials"
 	endingIapTunnel                     string = "Ending IAP tunnel for %v"
@@ -106,6 +106,7 @@ type Instance struct {
 	NetworkInterfaces []networkInterfaces `json:"networkInterfaces"`
 	ProjectName       string              `json:"project"`
 	FirewallNetwork   string              `json:"firewallNetwork"`
+	PreRDPParams      map[string]string   `json:"params"`
 }
 
 type shell interface {

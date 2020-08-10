@@ -19,6 +19,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -28,6 +29,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/admin"
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
@@ -39,12 +41,13 @@ import (
 )
 
 const (
-	configNotLoaded string = "Unable to load configuration file from server, try refreshing the page."
+	projectContextTimeout time.Duration = 20 * time.Second
+	configNotLoaded       string        = "Unable to load configuration file from server, try refreshing the page."
 )
 
 var (
-	allowedOrigins = []string{"chrome-extension://aibhgfeeenaelgkgefjmlmdiehldgekn"}
-	configPath *string
+	allowedOrigins = []string{"chrome-extension://aibhgfeeenaelgkgefjmlmdiehldgekn", "chrome-extension://oanplklbjoeneghmjkkodflcgkhggldm"}
+	configPath     *string
 	// loadedConfig points to the config currently in use.
 	loadedConfig *admin.Config
 	// operationPool keeps track of all the custom commands that are setup and running
@@ -75,17 +78,16 @@ func main() {
 	router.HandleFunc("/gcloud/start-private-rdp", startPrivateRdp)
 	router.HandleFunc("/admin/get-config", getConfigFileAndSendJson).Methods("GET")
 	router.HandleFunc("/admin/get-project", getProjectFromParameters).Methods("POST")
-	router.HandleFunc("/admin/run-prerdp", runPreRDPOperations).Methods("POST")
 	router.HandleFunc("/admin/operation-to-run", validateAdminOperationParams).Methods("POST")
 	router.HandleFunc("/admin/instance-operation-to-run", validateInstanceOperationParams).Methods("POST")
 	router.HandleFunc("/admin/run-operation", runAdminOperation)
-	
+
 	c := cors.New(cors.Options{
-		AllowedOrigins: allowedOrigins,
+		AllowedOrigins:   allowedOrigins,
 		AllowCredentials: true,
 	})
 
-	handler := c.Handler(router)	
+	handler := c.Handler(router)
 	log.Println("AdminOPs server has started on port 23966")
 	log.Fatal(http.ListenAndServe(":23966", handler))
 }
@@ -125,6 +127,8 @@ func getConfigFileAndSendJson(w http.ResponseWriter, r *http.Request) {
 }
 
 func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), projectContextTimeout)
+
 	type response struct {
 		ProjectName string `json:"project"`
 	}
@@ -170,17 +174,17 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(fmt.Sprintf("Server running project command: %s ", operation))
 	shell := &shell.CmdShell{}
-	output, err := shell.ExecuteCmd(operation)
+	output, err := shell.ExecuteCmdWithContext(ctx, operation)
 	log.Println(fmt.Sprintf("Server received output: %s ", string(output)))
 
-	if err != nil{
+	if err != nil {
 		errOutput := fmt.Errorf("Error: %s, Output: %s", err.Error(), string(output))
 		json.NewEncoder(w).Encode(newErrorRequest(errOutput))
 		return
 	}
 
-	if (reqBody.Type == "validate") {
-		if (strings.Contains(string(output), reqBody.ProjectName)) {
+	if reqBody.Type == "validate" {
+		if strings.Contains(string(output), reqBody.ProjectName) {
 			json.NewEncoder(w).Encode(response{ProjectName: reqBody.ProjectName})
 		} else {
 			json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf("Project %s not found in validateProjectOperation output", reqBody.ProjectName)))
@@ -193,7 +197,7 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 	if (loadedConfig.ProjectOperationRegex) != "" {
 		r := regexp.MustCompile(loadedConfig.ProjectOperationRegex)
 		match := r.FindStringSubmatch(projectOutput)
-		if (len(match) > 1) {
+		if len(match) > 1 {
 			projectOutput = match[1]
 		}
 	}
@@ -249,7 +253,21 @@ func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	operationReady, err := admin.ReadInstanceOperation(reqBody, loadedConfig)
+	var configuredAdminOperation admin.ConfigAdminOperation
+
+	for _, configCommand := range loadedConfig.InstanceOperations {
+		if configCommand.Name == reqBody.Name {
+			configuredAdminOperation = configCommand
+			break
+		}
+	}
+
+	if configuredAdminOperation.Name == "" {
+		json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf("%s operation was not found in the config", reqBody.Name)))
+		return
+	}
+
+	operationReady, err := admin.ReadInstanceOperation(reqBody, configuredAdminOperation)
 	if err != nil {
 		json.NewEncoder(w).Encode(newErrorRequest(err))
 		return
@@ -261,60 +279,9 @@ func validateInstanceOperationParams(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func runPreRDPOperations(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-
-	var reqBody admin.ProjectOperationParams
-	if err := json.Unmarshal(body, &reqBody); err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if loadedConfig == nil {
-		json.NewEncoder(w).Encode(newErrorRequest(errors.New(configNotLoaded)))
-		return
-	}
-
-	shell := &shell.CmdShell{}
-
-
-	for _, operation := range loadedConfig.PreRDPOperations {
-		runOperation := false
-
-		filledOperation, variables, err := admin.ReadOperationFromCommonParams(reqBody, operation.Operation, loadedConfig)
-		if err != nil {
-			json.NewEncoder(w).Encode(newErrorRequest(err))
-			return
-		}
-
-		for dependency, value := range operation.Dependencies {
-			dependency = strings.ToUpper(dependency)
-			if variables[dependency] == value {
-				runOperation = true
-			}
-		}
-
-		if (runOperation) {
-			log.Println(fmt.Sprintf("Server running pre-rdp-operation: %s ", filledOperation))	
-			output, _ := shell.ExecuteCmd(filledOperation)
-			log.Println(fmt.Sprintf("Server received output: %s ", string(output)))
-		}
-	}
-
-	type response struct {
-		Status string `json:"status"`
-	}
-
-	json.NewEncoder(w).Encode(response{Status: "ready"})
-}
-
 func runAdminOperation(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
-	upgrader.CheckOrigin = func(r *http.Request) bool { 
+	upgrader.CheckOrigin = func(r *http.Request) bool {
 		if origin := r.Header.Get("Origin"); origin != "" {
 			log.Println(origin)
 			for _, allowedOrigin := range allowedOrigins {
@@ -393,7 +360,7 @@ func getComputeInstances(w http.ResponseWriter, r *http.Request) {
 
 func startPrivateRdp(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{}
-	upgrader.CheckOrigin = func(r *http.Request) bool { 
+	upgrader.CheckOrigin = func(r *http.Request) bool {
 		if origin := r.Header.Get("Origin"); origin != "" {
 			log.Println(origin)
 			for _, allowedOrigin := range allowedOrigins {
@@ -416,6 +383,6 @@ func startPrivateRdp(w http.ResponseWriter, r *http.Request) {
 
 	shell := &shell.CmdShell{}
 	gcloudExecutor := gcloud.NewGcloudExecutor(shell)
-	
-	gcloudExecutor.StartPrivateRdp(ws)
+
+	gcloudExecutor.StartPrivateRdp(ws, loadedConfig)
 }

@@ -89,7 +89,7 @@ func (gcloudExecutor *GcloudExecutor) createFirewall(ws conn, instance *Instance
 			returnErr = err
 		}
 	} else {
-		output = fmt.Sprintf(createdFirewallOutput, instance.Name)
+		output = fmt.Sprintf(createdFirewallOutput, instance.Name, firewallContextTimeout)
 		returnErr = nil
 	}
 	log.Println(output)
@@ -164,7 +164,7 @@ func (gcloudExecutor *GcloudExecutor) startIapTunnel(ctx context.Context, ws con
 			iapResult.err = err
 		}
 	} else {
-		if err := writeToSocket(ws, fmt.Sprintf(iapTunnelStarted, instance.Name, port), nil); err != nil {
+		if err := writeToSocket(ws, fmt.Sprintf(iapTunnelStarted, instance.Name, port, rdpContextTimeout), nil); err != nil {
 			iapResult.err = err
 		}
 	}

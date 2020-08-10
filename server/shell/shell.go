@@ -20,6 +20,7 @@ package shell
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -46,7 +47,15 @@ func (*CmdShell) ExecuteCmd(cmd string) ([]byte, error) {
 		parsedCmd[i] = os.ExpandEnv(parsedCmd[i])
 	}
 
-	out, err := exec.Command(parsedCmd[0], parsedCmd[1:]...).CombinedOutput()
+	var out []byte
+	if len(parsedCmd) == 0 {
+		return []byte("Operation invalid"), errors.New("Invalid operation")
+	}
+	if len(parsedCmd) == 1 {
+		out, err = exec.Command(parsedCmd[0]).CombinedOutput()
+	} else {
+		out, err = exec.Command(parsedCmd[0], parsedCmd[1:]...).CombinedOutput()
+	}
 	return out, err
 }
 

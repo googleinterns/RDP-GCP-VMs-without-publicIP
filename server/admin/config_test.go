@@ -22,8 +22,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/gcloud"
 )
 
 var validComputeInstance = []byte(
@@ -71,13 +69,13 @@ func buildTestConfig() Config {
 	operationParams := make(map[string]configParam)
 	operationParams["TEST_COMMAND"] = param
 
-	configOperation := configAdminOperation{Name: "test-cmd", Operation: "${{TEST_COMMON}} ${{TEST_COMMAND}}", Params: operationParams}
+	configOperation := ConfigAdminOperation{Name: "test-cmd", Operation: "${{TEST_COMMON}} ${{TEST_COMMAND}}", Params: operationParams}
 
-	configInstanceOperation := configAdminOperation{Name: "test-instance", Operation: "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}}"}
+	configInstanceOperation := ConfigAdminOperation{Name: "test-instance", Operation: "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}}"}
 
 	configPreRDPOperation := preRdpOperation{Name: "test-rdp", Operation: "hello"}
 
-	return Config{Operations: []configAdminOperation{configOperation}, CommonParams: commonParams, InstanceOperations: []configAdminOperation{configInstanceOperation}, PreRDPOperations: []preRdpOperation{configPreRDPOperation}}
+	return Config{Operations: []ConfigAdminOperation{configOperation}, CommonParams: commonParams, InstanceOperations: []ConfigAdminOperation{configInstanceOperation}, PreRDPOperations: []preRdpOperation{configPreRDPOperation}}
 }
 
 func TestCheckConfigForMissingParams(t *testing.T) {
@@ -245,7 +243,7 @@ func TestReadAdminOperation(t *testing.T) {
 }
 
 func TestCaptureParamsFromInstanceOperation(t *testing.T) {
-	var instance gcloud.Instance
+	var instance Instance
 
 	json.Unmarshal(validComputeInstance, &instance)
 
@@ -254,22 +252,29 @@ func TestCaptureParamsFromInstanceOperation(t *testing.T) {
 
 	instanceOperation := InstanceOperationToFill{Instance: instance, Params: params}
 
-	expected := fmt.Sprintf("%s %s %s %s %s", instance.Name, instance.Zone, instance.NetworkInterfaces[0].IP, instance.ProjectName, "COMMON")
-
 	successOperation := "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}} ${{COMMON}}"
 
-	missingParams := captureParamsFromInstanceOperation(instanceOperation, &successOperation)
+	variables := make(map[string]string)
+
+	successVariables := make(map[string]string)
+	successVariables["NAME"] = instance.Name
+	successVariables["ZONE"] = instance.Zone
+	successVariables["NETWORKIP"] = instance.NetworkInterfaces[0].IP
+	successVariables["PROJECT"] = instance.ProjectName
+	successVariables["COMMON"] = "COMMON"
+
+	missingParams := captureParamsFromInstanceOperation(variables, instanceOperation, successOperation)
 	if len(missingParams) != 0 {
 		t.Errorf("captureParamsFromInstanceOperation had missingParams for a proper operation: %s", strings.Join(missingParams, ", "))
 	}
 
-	if successOperation != expected {
-		t.Errorf("captureParamsFromInstanceOperation didn't set operation properly, got %s, expected %s", successOperation, expected)
+	if !reflect.DeepEqual(variables, successVariables) {
+		t.Errorf("captureParamsFromInstanceOperation didn't set variables properly, got %s, expected %s", variables, successVariables)
 	}
 
 	missingParamInOperation := "${{NAME}} ${{ZONE}} ${{NETWORKIP}} ${{PROJECT}} ${{MISSING}}"
 
-	missingParams = captureParamsFromInstanceOperation(instanceOperation, &missingParamInOperation)
+	missingParams = captureParamsFromInstanceOperation(variables, instanceOperation, missingParamInOperation)
 	if len(missingParams) != 1 {
 		t.Errorf("captureParamsFromInstanceOperation didn't had correct number missingParams for a proper operation: %s", strings.Join(missingParams, ", "))
 	}
@@ -278,32 +283,26 @@ func TestCaptureParamsFromInstanceOperation(t *testing.T) {
 		t.Errorf("captureParamsFromInstanceOperation didn't set missing parameter properly, got %v, expected %v", missingParams[0], "MISSING")
 	}
 
-	if successOperation != expected {
-		t.Errorf("captureParamsFromInstanceOperation didn't set operation properly, got %s, expected %s", successOperation, expected)
-	}
 }
 
 func TestReadInstanceOperation(t *testing.T) {
 	config := buildTestConfig()
 
-	var instance gcloud.Instance
+	var instance Instance
 	json.Unmarshal(validComputeInstance, &instance)
 
 	expectedOperation := fmt.Sprintf("%s %s %s %s", instance.Name, instance.Zone, instance.NetworkInterfaces[0].IP, instance.ProjectName)
 
 	operation := InstanceOperationToFill{Name: "COMMAND_NOT_FOUND", Instance: instance}
 
-	if _, err := ReadInstanceOperation(operation, &config); err.Error() != fmt.Sprintf(operationNotFoundError, operation.Name) {
-		t.Errorf("ReadInstanceOperation didn't error out on invalid operation, got %v, expected %v", err, fmt.Errorf(operationNotFoundError, operation.Name))
-	}
-
+	instanceOperation := config.InstanceOperations[0]
 	operation.Name = "test-instance"
-	if operationToRun, err := ReadInstanceOperation(operation, &config); operationToRun.Operation != expectedOperation || err != nil {
+	if operationToRun, err := ReadInstanceOperation(operation, instanceOperation); operationToRun.Operation != expectedOperation || err != nil {
 		t.Errorf("ReadInstanceOperation didn't set operation properly, got %v, expected %v", operationToRun.Operation, expectedOperation)
 	}
 
 	config.InstanceOperations[0].Operation = "${{MISSING}}"
-	if _, err := ReadInstanceOperation(operation, &config); err.Error() != fmt.Sprintf(missingInstanceParamsError, "MISSING") {
+	if _, err := ReadInstanceOperation(operation, config.InstanceOperations[0]); err.Error() != fmt.Sprintf(missingInstanceParamsError, "MISSING") {
 		t.Errorf("ReadInstanceOperation didn't set error properly, got %v, expected %v", err.Error(), fmt.Sprintf(missingInstanceParamsError, "MISSING"))
 	}
 }

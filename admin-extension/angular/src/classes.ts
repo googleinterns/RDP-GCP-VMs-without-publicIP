@@ -47,6 +47,7 @@ class Instance {
   rdpStatus: string;
   rdpError: string;
   firewallNetwork: string;
+  params: object;
 }
 
 interface SocketMessageInterface {
