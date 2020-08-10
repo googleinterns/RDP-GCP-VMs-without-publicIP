@@ -97,6 +97,7 @@ func (*CmdShell) ExecuteCmdWithContext(endContext context.Context, cmd string) (
 	go func() {
 		// Wait for context to be done
 		<-endContext.Done()
+		returnErr = errors.New("Operation timed out")
 		cancel()
 		done <- true
 	}()

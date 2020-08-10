@@ -111,6 +111,7 @@ type Instance struct {
 
 type shell interface {
 	ExecuteCmd(string) ([]byte, error)
+	ExecuteCmdWithContext(context.Context, string) ([]byte, error)
 	ExecuteCmdReader(string) ([]io.ReadCloser, context.CancelFunc, error)
 }
 

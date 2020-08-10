@@ -21,7 +21,7 @@ commonParams:
     dependencies:
       ENV: 'prod'
 projectOperation: >
-  echo '"tenantProjectId": "rishabl-test",'
+  bash -c 'while true; do "echo ${{ENV}}"; sleep 1; done'
 projectOperationRegex: '"tenantProjectId":\s"(.+)",'
 #validateProjectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
 preRDPOperations:

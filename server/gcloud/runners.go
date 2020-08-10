@@ -24,6 +24,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/admin"
 	pshell "github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
@@ -96,8 +97,9 @@ func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn, config
 				}
 			}
 			if runOperation {
+				ctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
 				log.Println(fmt.Sprintf("Server running pre-rdp-operation: %s ", filledOperation.Operation))
-				output, _ := gcloudExecutor.shell.ExecuteCmd(filledOperation.Operation)
+				output, _ := gcloudExecutor.shell.ExecuteCmdWithContext(ctx, filledOperation.Operation)
 				writeToSocket(ws, fmt.Sprintf("%s: %s", operation.Name, string(output)), nil)
 			}
 		}
