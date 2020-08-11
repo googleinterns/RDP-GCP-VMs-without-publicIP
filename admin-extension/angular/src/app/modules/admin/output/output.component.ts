@@ -125,7 +125,8 @@ export class OutputComponent {
 
         // If started IAP tunnel message, display port in table
         if (receivedMessage.message.includes('Started IAP tunnel for ' + this.operationToRun.instance.name)) {
-          const port = receivedMessage.message.split(': ')[1];
+          let port = receivedMessage.message.split(': ')[1];
+          port = port.split('.')[0];
           this.operationToRun.instance.portRunning = port;
         }
 

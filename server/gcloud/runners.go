@@ -23,7 +23,10 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
+	"time"
 
+	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/admin"
 	pshell "github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 	"github.com/gorilla/websocket"
 )
@@ -49,7 +52,7 @@ func writeToSocket(ws conn, message string, err error) error {
 }
 
 // StartPrivateRdp is a task runner that runs all the individual functions for automated RDP.
-func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn) {
+func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn, config *admin.Config) {
 	ctx, cancel := context.WithTimeout(context.Background(), rdpContextTimeout)
 	firewallCtx, firewallCancel := context.WithTimeout(context.Background(), firewallContextTimeout)
 	iapOutputChan := make(chan iapResult)
@@ -67,6 +70,40 @@ func (gcloudExecutor *GcloudExecutor) StartPrivateRdp(ws *websocket.Conn) {
 	}
 
 	log.Println("Got instance", instanceToConn.Name)
+
+	if config != nil {
+		log.Println("using config")
+		for _, operation := range config.PreRDPOperations {
+			runOperation := true
+
+			tmp, _ := json.Marshal(*instanceToConn)
+			var adminInstance admin.Instance
+			json.Unmarshal(tmp, &adminInstance)
+
+			operationToFill := admin.InstanceOperationToFill{Instance: adminInstance, Params: instanceToConn.PreRDPParams}
+
+			configOperation := admin.ConfigAdminOperation{Name: operation.Name, Operation: operation.Operation}
+			filledOperation, err := admin.ReadInstanceOperation(operationToFill, configOperation)
+			if err != nil {
+				writeToSocket(ws, "", fmt.Errorf("Could not fill params of pre RDP operation %v", operation.Name))
+				runOperation = false
+			}
+
+			for dependency, value := range operation.Dependencies {
+				dependency = strings.ToUpper(dependency)
+				if instanceToConn.PreRDPParams[dependency] != value {
+					writeToSocket(ws, fmt.Sprintf("Not running %v due to dependency %v", operation.Name, dependency), nil)
+					runOperation = false
+				}
+			}
+			if runOperation {
+				ctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
+				log.Println(fmt.Sprintf("Server running pre-rdp-operation: %s ", filledOperation.Operation))
+				output, _ := gcloudExecutor.shell.ExecuteCmdWithContext(ctx, filledOperation.Operation)
+				writeToSocket(ws, fmt.Sprintf("%s: %s", operation.Name, string(output)), nil)
+			}
+		}
+	}
 
 	if err := gcloudExecutor.createFirewall(ws, instanceToConn); err != nil {
 		gcloudExecutor.cleanUpRdp(ws, instanceToConn, false, false, cancel)

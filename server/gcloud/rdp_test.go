@@ -281,7 +281,7 @@ func TestCreateFirewall(t *testing.T) {
 
 	instanceToUse.ProjectName = "valid"
 	err = g.createFirewall(ws, &instanceToUse)
-	if expected := fmt.Sprintf(createdFirewallOutput, instanceToUse.Name); socketOutput.Message != expected {
+	if expected := fmt.Sprintf(createdFirewallOutput, instanceToUse.Name, firewallContextTimeout); socketOutput.Message != expected {
 		t.Errorf("createIapFirewall didn't send message to socket about creating firewall, got %v, expected %v", socketOutput.Message, expected)
 	}
 	if err != nil {
@@ -340,7 +340,7 @@ func TestStartIapTunnel(t *testing.T) {
 	if expected := []string{tunnelCreatedOutput}; !reflect.DeepEqual(output.cmdOutput, expected) {
 		t.Errorf("startIapTunnel output chan cmdoutput not equal to output from cmd, got %v, expected %v", socketOutput.Message, expected)
 	}
-	if expected := fmt.Sprintf(iapTunnelStarted, instanceToUse.Name, 9999); socketOutput.Message != expected {
+	if expected := fmt.Sprintf(iapTunnelStarted, instanceToUse.Name, 9999, rdpContextTimeout); socketOutput.Message != expected {
 		t.Errorf("startIapTunnel didn't write iapTunnelStarted to socket, got %v, expected %v", socketOutput.Message, expected)
 	}
 

@@ -147,6 +147,10 @@ func (*mockShell) ExecuteCmd(cmd string) ([]byte, error) {
 	return nil, nil
 }
 
+func (*mockShell) ExecuteCmdWithContext(_ context.Context, _ string) ([]byte, error) {
+	return nil, nil
+}
+
 func (*mockShell) ExecuteCmdReader(cmd string) ([]io.ReadCloser, context.CancelFunc, error) {
 	var instanceToUse Instance
 	json.Unmarshal(instance, &instanceToUse)

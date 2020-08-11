@@ -19,21 +19,23 @@ commonParams:
   BUG_REASON:
     optional: true
     dependencies:
-      ENV: '*'
+      ENV: 'prod'
 projectOperation: >
-  echo '"tenantProjectId": "rishabl-test",'
+  bash -c 'while true; do "echo ${{ENV}}"; sleep 1; done'
 projectOperationRegex: '"tenantProjectId":\s"(.+)",'
 #validateProjectOperation: echo ${{RESOURCE_NAME}}-${{ENV}}
 preRDPOperations:
   - name: echo hello
-    operation: echo hello
+    operation: echo ${{NAME}} ${{RESOURCE_NAME}}
     dependencies:
-      ENV: test
+      ENV: 'test'
 operations: 
   - name: echo-vm
     description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
     operation: >
-      echo ${{NAME}}
+      echo ${{NAME}} ${{RESOURCE_NAME}}
+    dependencies:
+      ENV: 'test'
     params:
       NAME:
         optional: true

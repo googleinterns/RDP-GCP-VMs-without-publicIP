@@ -23,6 +23,7 @@ limitations under the License.
 
 .err {
     color: #ba000d;
+    white-space: pre-wrap;
 }
 
 .table-container {
@@ -74,4 +75,8 @@ mat-cell {
 
 .loading {
     margin: 1rem 0;
+}
+
+mat-error {
+    white-space: pre-wrap;
 }
