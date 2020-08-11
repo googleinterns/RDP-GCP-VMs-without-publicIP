@@ -46,7 +46,7 @@ const (
 )
 
 var (
-	allowedOrigins = []string{"chrome-extension://aibhgfeeenaelgkgefjmlmdiehldgekn", "chrome-extension://oanplklbjoeneghmjkkodflcgkhggldm"}
+	allowedOrigins = []string{"chrome-extension://aibhgfeeenaelgkgefjmlmdiehldgekn"}
 	configPath     *string
 	// loadedConfig points to the config currently in use.
 	loadedConfig *admin.Config
