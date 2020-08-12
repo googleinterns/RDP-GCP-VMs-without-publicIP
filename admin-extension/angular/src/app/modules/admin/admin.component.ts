@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { Component } from '@angular/core';
+import { Component, NgZone } from '@angular/core';
 import { canDisplayRdpDom, Config, ConfigInterface, Instance, ConfigParamInterface } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -47,21 +47,37 @@ export class AdminComponent {
   getProjectError: string;
   initializeInstances = false;
   preRdpError: string;
+  authenticated = false;
+  authError: string;
 
-  constructor(private snackbar: MatSnackBar, private adminService: AdminService) { };
+  constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) { };
 
-  ngOnInit() {
-    this.loadConfig();
-  };
-
-  // onResizeEnd(event: ResizeEvent): void {
-  //   this.style = {
-  //     position: 'fixed',
-  //     top: `${event.rectangle.top}px`,
-  //     height: `${event.rectangle.height}px`,
-  //   };
-  // }
-
+  authenticate() {
+    chrome.identity.getAuthToken({interactive: true}, (token) => {
+      const data = {token: token}
+      console.log(data)
+      this.adminService.verifyToken(data)
+      .subscribe((response: any) => {
+        console.log(response)
+        if (response && response.error) {
+          this.zone.run(() => {
+            this.authError = response.error;
+          })
+        } else {
+          this.zone.run(() => {
+            this.authenticated = true;
+            this.loadConfig();
+          })
+        }
+      }, error => {
+        if (error.status === 0) {
+          this.authError = errorConnectingToServer;
+        } else {
+          this.authError = error.error.error;
+        }
+    })
+    })
+  }
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {
     if (this.config.project_operation) {
@@ -171,6 +187,7 @@ export class AdminComponent {
           this.instances = [];
         } else {
           const instances = response;
+          console.log(response)
           instances.forEach((instance) => {
             instance.project = this.project;
             instance.zone = instance.zone.split('/').pop();

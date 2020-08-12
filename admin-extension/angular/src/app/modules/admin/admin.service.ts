@@ -15,31 +15,40 @@ limitations under the License.
 ***/
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { getConfigEndpoint, getComputeInstancesEndpoint, sendOperationEndpoint, sendProjectOperationEndpoint, runPreRDPOperationsEndpoint } from 'src/constants';
+import { verifyTokenEndpoint, getConfigEndpoint, getComputeInstancesEndpoint, sendOperationEndpoint, sendProjectOperationEndpoint, runPreRDPOperationsEndpoint } from 'src/constants';
+
+const httpOptions = {
+    headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+    withCredentials: true, //this is required so that Angular returns the Cookies received from the server. The server sends cookies in Set-Cookie header. Without this, Angular will ignore the Set-Cookie header
+};
 
 @Injectable()
 export class AdminService {
     constructor(private http: HttpClient){}
 
     getConfig (): Observable<object> {
-        return this.http.get(getConfigEndpoint)
+        return this.http.get(getConfigEndpoint, httpOptions)
+    }
+
+    verifyToken (data: object): Observable<object> {
+        return this.http.post(verifyTokenEndpoint, data, httpOptions);
     }
 
     getComputeInstances (data: object): Observable<object> {
-        return this.http.post(getComputeInstancesEndpoint, data)
+        return this.http.post(getComputeInstancesEndpoint, data, httpOptions)
     }
 
     sendOperation (data: object): Observable<object> {
-        return this.http.post(sendOperationEndpoint, data)
+        return this.http.post(sendOperationEndpoint, data, httpOptions)
     }
 
     sendProjectOperation(data: object): Observable<object> {
-        return this.http.post(sendProjectOperationEndpoint, data)
+        return this.http.post(sendProjectOperationEndpoint, data, httpOptions)
     }
 
     runPreRDPOperations(data: object): Observable<object> {
-        return this.http.post(runPreRDPOperationsEndpoint, data)
+        return this.http.post(runPreRDPOperationsEndpoint, data, httpOptions)
     }
 }

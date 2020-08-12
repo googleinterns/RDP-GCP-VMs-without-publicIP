@@ -27,6 +27,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -36,6 +37,7 @@ import (
 	"github.com/googleinterns/RDP-GCP-VMs-without-publicIP/server/shell"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
 )
@@ -43,10 +45,11 @@ import (
 const (
 	projectContextTimeout time.Duration = 20 * time.Second
 	configNotLoaded       string        = "Unable to load configuration file from server, try refreshing the page."
+	authError             string        = "Error authorizing user using Google oAuth, reason: %s. \n The extension uses the account signed in to Chrome to authenticate."
 )
 
 var (
-	allowedOrigins = []string{"chrome-extension://aibhgfeeenaelgkgefjmlmdiehldgekn"}
+	allowedOrigins = []string{"chrome-extension://oanplklbjoeneghmjkkodflcgkhggldm"}
 	configPath     *string
 	// loadedConfig points to the config currently in use.
 	loadedConfig *admin.Config
@@ -62,6 +65,8 @@ func newErrorRequest(err error) errorRequest {
 	return errorRequest{Error: err.Error()}
 }
 
+var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+
 // main defines the routes of the HTTP server and starts listening on port 23966
 func main() {
 	configPath = flag.String("path", ".", "Path of the config file")
@@ -74,13 +79,14 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
-	router.HandleFunc("/gcloud/compute-instances", getComputeInstances).Methods("POST")
-	router.HandleFunc("/gcloud/start-private-rdp", startPrivateRdp)
-	router.HandleFunc("/admin/get-config", getConfigFileAndSendJson).Methods("GET")
-	router.HandleFunc("/admin/get-project", getProjectFromParameters).Methods("POST")
-	router.HandleFunc("/admin/operation-to-run", validateAdminOperationParams).Methods("POST")
-	router.HandleFunc("/admin/instance-operation-to-run", validateInstanceOperationParams).Methods("POST")
-	router.HandleFunc("/admin/run-operation", runAdminOperation)
+	router.HandleFunc("/verifyidtoken", verifyIdToken).Methods("POST")
+	router.HandleFunc("/gcloud/compute-instances", sessionMiddleware(getComputeInstances)).Methods("POST")
+	router.HandleFunc("/gcloud/start-private-rdp", sessionMiddleware(startPrivateRdp))
+	router.HandleFunc("/admin/get-config", sessionMiddleware(getConfigFileAndSendJson)).Methods("GET")
+	router.HandleFunc("/admin/get-project", sessionMiddleware(getProjectFromParameters)).Methods("POST")
+	router.HandleFunc("/admin/operation-to-run", sessionMiddleware(validateAdminOperationParams)).Methods("POST")
+	router.HandleFunc("/admin/instance-operation-to-run", sessionMiddleware(validateInstanceOperationParams)).Methods("POST")
+	router.HandleFunc("/admin/run-operation", sessionMiddleware(runAdminOperation))
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   allowedOrigins,
@@ -89,7 +95,24 @@ func main() {
 
 	handler := c.Handler(router)
 	log.Println("AdminOPs server has started on port 23966")
-	log.Fatal(http.ListenAndServe(":23966", handler))
+	log.Fatal(http.ListenAndServeTLS(":23966", "localhost.pem", "localhost-key.pem", handler))
+}
+
+func sessionMiddleware(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, err := store.Get(r, "adminops")
+		if err != nil {
+			json.NewEncoder(w).Encode(newErrorRequest(errors.New("auth error")))
+			return
+		}
+
+		if val, inSession := session.Values["auth"]; !inSession || val != true {
+			json.NewEncoder(w).Encode(newErrorRequest(errors.New("auth error")))
+			return
+		}
+
+		h(w, r)
+	}
 }
 
 // health is a HTTP route that prints a simple string to check if the server is running.
@@ -102,6 +125,61 @@ func health(w http.ResponseWriter, _ *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+func verifyIdToken(w http.ResponseWriter, r *http.Request) {
+	type request struct {
+		Token string `json:"token"`
+	}
+
+	type token struct {
+		Email string `json:"email"`
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	var reqBody request
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var tokenInfo token
+
+	resp, err := http.Get(fmt.Sprintf("https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=%s", reqBody.Token))
+	if err != nil {
+		json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf(authError, "Error verifying access token")))
+		return
+	}
+
+	defer resp.Body.Close()
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf(authError, "Error verifying access token")))
+		return
+	}
+
+	json.Unmarshal(body, &tokenInfo)
+
+	if tokenInfo.Email == "" || tokenInfo == (token{}) {
+		json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf(authError, "Didn't receive valid email in verification from Google")))
+		return
+	}
+
+	if !strings.Contains(tokenInfo.Email, "@google.com") {
+		json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf(authError, "You need a @google.com email to use this application")))
+		return
+	}
+
+	session, _ := store.Get(r, "adminops")
+	session.Options = &sessions.Options{SameSite: http.SameSiteNoneMode, Secure: true}
+	session.Values["auth"] = true
+	session.Save(r, w)
+	return
 }
 
 // getConfigFileAndSendJson calls the functions to load the config file and set loadedConfig to it
