@@ -147,8 +147,15 @@ func verifyIdToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(reqBody.Token)
-	ctx := context.Background()
+	if strings.TrimSpace(reqBody.Token) == "" {
+		json.NewEncoder(w).Encode(newErrorRequest(errors.New("auth error")))
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Duration(3*time.Second))
+	defer cancel()
 	oauth2Service, err := oauth2.NewService(ctx)
 	tokenInfoCall := oauth2Service.Tokeninfo().AccessToken(reqBody.Token)
 	tokenInfo, err := tokenInfoCall.Do()
@@ -157,7 +164,7 @@ func verifyIdToken(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(newErrorRequest(errors.New("auth error")))
 		return
 	}
-
+	log.Println(tokenInfo)
 	if !strings.Contains(tokenInfo.Email, "@google.com") {
 		json.NewEncoder(w).Encode(newErrorRequest(errors.New("auth error")))
 		return
@@ -175,6 +182,7 @@ func verifyIdToken(w http.ResponseWriter, r *http.Request) {
 
 	resp := response{Status: "server is running"}
 	json.NewEncoder(w).Encode(resp)
+	return
 }
 
 // getConfigFileAndSendJson calls the functions to load the config file and set loadedConfig to it

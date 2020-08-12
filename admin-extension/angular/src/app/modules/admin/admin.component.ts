@@ -65,22 +65,18 @@ export class AdminComponent {
 
 
   authenticate() {
-    let authToken;
     chrome.identity.getAuthToken({interactive: true}, (token) => {
-      console.log(token);
-      authToken = token;
-    })
-
-    const data = {token: authToken}
+      const data = {token: token}
+      console.log(data)
       this.adminService.verifyToken(data)
       .subscribe((response: any) => {
         console.log(response)
-        console.log(response.headers)
 
         this.authenticated = true;
         this.instancesLoading = true;
         this.loadConfig();
         this.instancesLoading = false;
+        //chrome.identity.removeCachedAuthToken(data)
         // If error returned, set operation.error to error
 
       }, error => {
@@ -89,6 +85,7 @@ export class AdminComponent {
         } else {
           this.getProjectError = error.error.error;
         }
+    })
     })
   }
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
