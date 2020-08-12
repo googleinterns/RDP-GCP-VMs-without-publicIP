@@ -116,16 +116,12 @@ func sessionMiddleware(h http.HandlerFunc) http.HandlerFunc {
 }
 
 // health is a HTTP route that prints a simple string to check if the server is running.
-func health(w http.ResponseWriter, r *http.Request) {
+func health(w http.ResponseWriter, _ *http.Request) {
 	type response struct {
 		Status string `json:"status"`
 	}
 
 	resp := response{Status: "server is running"}
-
-	session, _ := store.Get(r, "adminops")
-	session.Values["auth"] = true
-	session.Save(r, w)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
