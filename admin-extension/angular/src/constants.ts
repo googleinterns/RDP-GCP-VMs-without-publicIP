@@ -25,15 +25,16 @@ const rdpFirewallDeletedMessage = 'Deleting firewall for ';
 // Need to change in Chrome Extension constants as well.
 const errorConnectingToServer = 'Error connecting to server, are you sure the companion server is running?';
 
-const statusUrl = 'http://localhost:23966/health'
-const getConfigEndpoint = 'http://localhost:23966/admin/get-config'
-const rdpSocketEndpoint = 'ws://localhost:23966/gcloud/start-private-rdp';
-const sendOperationEndpoint = 'http://localhost:23966/admin/operation-to-run';
-const runOperationSocketEndpoint = 'ws://localhost:23966/admin/run-operation';
-const getComputeInstancesEndpoint = 'http://localhost:23966/gcloud/compute-instances';
-const sendInstanceOperationEndpoint = 'http://localhost:23966/admin/instance-operation-to-run';
-const sendProjectOperationEndpoint = 'http://localhost:23966/admin/get-project';
-const runPreRDPOperationsEndpoint = 'http://localhost:23966/admin/run-prerdp';
+const statusUrl = 'https://localhost:23966/health'
+const getConfigEndpoint = 'https://localhost:23966/admin/get-config'
+const rdpSocketEndpoint = 'wss://localhost:23966/gcloud/start-private-rdp';
+const sendOperationEndpoint = 'https://localhost:23966/admin/operation-to-run';
+const runOperationSocketEndpoint = 'wss://localhost:23966/admin/run-operation';
+const getComputeInstancesEndpoint = 'https://localhost:23966/gcloud/compute-instances';
+const sendInstanceOperationEndpoint = 'https://localhost:23966/admin/instance-operation-to-run';
+const sendProjectOperationEndpoint = 'https://localhost:23966/admin/get-project';
+const runPreRDPOperationsEndpoint = 'https://localhost:23966/admin/run-prerdp';
+const verifyTokenEndpoint = 'https://localhost:23966/verifyidtoken'
 
 
-export {endRdpCmd, loginRdpCmd, endOperationCmd, readyForRdpCommandSocket, rdpFirewallDeletedMessage, rdpShutdownMessage, errorConnectingToServer, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint, runOperationSocketEndpoint, getComputeInstancesEndpoint, sendInstanceOperationEndpoint, sendProjectOperationEndpoint, runPreRDPOperationsEndpoint };
+export {verifyTokenEndpoint, endRdpCmd, loginRdpCmd, endOperationCmd, readyForRdpCommandSocket, rdpFirewallDeletedMessage, rdpShutdownMessage, errorConnectingToServer, rdpSocketEndpoint, statusUrl, getConfigEndpoint, sendOperationEndpoint, runOperationSocketEndpoint, getComputeInstancesEndpoint, sendInstanceOperationEndpoint, sendProjectOperationEndpoint, runPreRDPOperationsEndpoint };

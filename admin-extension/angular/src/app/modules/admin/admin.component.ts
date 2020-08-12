@@ -47,11 +47,12 @@ export class AdminComponent {
   getProjectError: string;
   initializeInstances = false;
   preRdpError: string;
+  authenticated = false;
 
   constructor(private snackbar: MatSnackBar, private adminService: AdminService) { };
 
   ngOnInit() {
-    this.loadConfig();
+    //this.authenticate();
   };
 
   // onResizeEnd(event: ResizeEvent): void {
@@ -62,6 +63,34 @@ export class AdminComponent {
   //   };
   // }
 
+
+  authenticate() {
+    let authToken;
+    chrome.identity.getAuthToken({interactive: true}, (token) => {
+      console.log(token);
+      authToken = token;
+    })
+
+    const data = {token: authToken}
+      this.adminService.verifyToken(data)
+      .subscribe((response: any) => {
+        console.log(response)
+        console.log(response.headers)
+
+        this.authenticated = true;
+        this.instancesLoading = true;
+        this.loadConfig();
+        this.instancesLoading = false;
+        // If error returned, set operation.error to error
+
+      }, error => {
+        if (error.status === 0) {
+          this.getProjectError = errorConnectingToServer;
+        } else {
+          this.getProjectError = error.error.error;
+        }
+    })
+  }
   // setCommonParams sets up a commonParams array consisting of name-value pairs using the configuration common params.
   setCommonParams() {
     if (this.config.project_operation) {
@@ -171,6 +200,7 @@ export class AdminComponent {
           this.instances = [];
         } else {
           const instances = response;
+          console.log(response)
           instances.forEach((instance) => {
             instance.project = this.project;
             instance.zone = instance.zone.split('/').pop();

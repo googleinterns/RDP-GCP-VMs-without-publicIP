@@ -23,19 +23,23 @@ limitations under the License. -->
         </button>
     </mat-toolbar>
 
-    <div *ngIf="loading; then loadingBar else adminConsole">
+    <div *ngIf="!authenticated; then authenticateView else adminConsole">
+
     </div>
 
-    <ng-template #loadingBar>
-        <div class="spinner-container">
-            <h2>Loading instances</h2>
-            <mat-spinner diameter=48></mat-spinner>
+    <ng-template #authenticateView>
+        <div class="container">
+            <button type="button" (click)="authenticate()" mat-raised-button
+            color="accent">Authenticate with server</button>
         </div>
     </ng-template>
 
     <ng-template #adminConsole>
         <div *ngIf="configError">
             <h2>{{configError}}</h2>
+        </div>
+        <div *ngIf="!configError && !config" class="container">
+            <mat-spinner class="spinner" diameter=48></mat-spinner>
         </div>
         <div *ngIf="!configError && config" class="container">
             <div class="top">
