@@ -28,18 +28,16 @@ limitations under the License. -->
     </div>
 
     <ng-template #authenticateView>
-        <div class="container">
+        <div class="auth-container">
             <button type="button" (click)="authenticate()" mat-raised-button
             color="accent">Authenticate with server</button>
+            <mat-error>{{authError}}</mat-error>
         </div>
     </ng-template>
 
     <ng-template #adminConsole>
         <div *ngIf="configError">
             <h2>{{configError}}</h2>
-        </div>
-        <div *ngIf="!configError && !config" class="container">
-            <mat-spinner class="spinner" diameter=48></mat-spinner>
         </div>
         <div *ngIf="!configError && config" class="container">
             <div class="top">

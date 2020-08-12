@@ -190,3 +190,15 @@ limitations under the License.
 mat-error {
     white-space: pre-wrap;
 }
+
+.auth-container {
+    padding: 3rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    button {
+        width: 30%;
+        margin-bottom: 2rem;
+    }
+}

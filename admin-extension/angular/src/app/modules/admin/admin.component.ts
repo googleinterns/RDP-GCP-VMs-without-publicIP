@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ***/
 
-import { Component } from '@angular/core';
+import { Component, NgZone } from '@angular/core';
 import { canDisplayRdpDom, Config, ConfigInterface, Instance, ConfigParamInterface } from 'src/classes';
 import { errorConnectingToServer } from 'src/constants';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -48,21 +48,9 @@ export class AdminComponent {
   initializeInstances = false;
   preRdpError: string;
   authenticated = false;
+  authError: string;
 
-  constructor(private snackbar: MatSnackBar, private adminService: AdminService) { };
-
-  ngOnInit() {
-    //this.authenticate();
-  };
-
-  // onResizeEnd(event: ResizeEvent): void {
-  //   this.style = {
-  //     position: 'fixed',
-  //     top: `${event.rectangle.top}px`,
-  //     height: `${event.rectangle.height}px`,
-  //   };
-  // }
-
+  constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) { };
 
   authenticate() {
     chrome.identity.getAuthToken({interactive: true}, (token) => {
@@ -71,19 +59,21 @@ export class AdminComponent {
       this.adminService.verifyToken(data)
       .subscribe((response: any) => {
         console.log(response)
-
-        this.authenticated = true;
-        this.instancesLoading = true;
-        this.loadConfig();
-        this.instancesLoading = false;
-        //chrome.identity.removeCachedAuthToken(data)
-        // If error returned, set operation.error to error
-
+        if (response && response.error) {
+          this.zone.run(() => {
+            this.authError = response.error;
+          })
+        } else {
+          this.zone.run(() => {
+            this.authenticated = true;
+            this.loadConfig();
+          })
+        }
       }, error => {
         if (error.status === 0) {
-          this.getProjectError = errorConnectingToServer;
+          this.authError = errorConnectingToServer;
         } else {
-          this.getProjectError = error.error.error;
+          this.authError = error.error.error;
         }
     })
     })

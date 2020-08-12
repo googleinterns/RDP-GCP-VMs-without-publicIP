@@ -40,12 +40,12 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
-	"google.golang.org/api/oauth2/v2"
 )
 
 const (
 	projectContextTimeout time.Duration = 20 * time.Second
 	configNotLoaded       string        = "Unable to load configuration file from server, try refreshing the page."
+	authError             string        = "Error authorizing user using Google oAuth, reason: %s. \n The extension uses the account signed in to Chrome to authenticate."
 )
 
 var (
@@ -136,6 +136,10 @@ func verifyIdToken(w http.ResponseWriter, r *http.Request) {
 		Token string `json:"token"`
 	}
 
+	type token struct {
+		Email string `json:"email"`
+	}
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -147,26 +151,31 @@ func verifyIdToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.TrimSpace(reqBody.Token) == "" {
-		json.NewEncoder(w).Encode(newErrorRequest(errors.New("auth error")))
+	var tokenInfo token
+
+	resp, err := http.Get(fmt.Sprintf("https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=%s", reqBody.Token))
+	if err != nil {
+		json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf(authError, "Error verifying access token")))
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
-		time.Duration(3*time.Second))
-	defer cancel()
-	oauth2Service, err := oauth2.NewService(ctx)
-	tokenInfoCall := oauth2Service.Tokeninfo().AccessToken(reqBody.Token)
-	tokenInfo, err := tokenInfoCall.Do()
+	defer resp.Body.Close()
+
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
-		json.NewEncoder(w).Encode(newErrorRequest(errors.New("auth error")))
+		json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf(authError, "Error verifying access token")))
 		return
 	}
-	log.Println(tokenInfo)
+
+	json.Unmarshal(body, &tokenInfo)
+
+	if tokenInfo.Email == "" || tokenInfo == (token{}) {
+		json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf(authError, "Didn't receive valid email in verification from Google")))
+		return
+	}
+
 	if !strings.Contains(tokenInfo.Email, "@google.com") {
-		json.NewEncoder(w).Encode(newErrorRequest(errors.New("auth error")))
+		json.NewEncoder(w).Encode(newErrorRequest(fmt.Errorf(authError, "You need a @google.com email to use this application")))
 		return
 	}
 
@@ -174,14 +183,6 @@ func verifyIdToken(w http.ResponseWriter, r *http.Request) {
 	session.Options = &sessions.Options{SameSite: http.SameSiteNoneMode, Secure: true}
 	session.Values["auth"] = true
 	session.Save(r, w)
-
-	log.Println(tokenInfo.Email)
-	type response struct {
-		Status string `json:"status"`
-	}
-
-	resp := response{Status: "server is running"}
-	json.NewEncoder(w).Encode(resp)
 	return
 }
 
