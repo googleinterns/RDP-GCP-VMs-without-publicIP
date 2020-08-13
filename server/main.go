@@ -51,6 +51,8 @@ const (
 var (
 	allowedOrigins = []string{"chrome-extension://oanplklbjoeneghmjkkodflcgkhggldm"}
 	configPath     *string
+	certFile       *string
+	keyFile        *string
 	// loadedConfig points to the config currently in use.
 	loadedConfig *admin.Config
 	// operationPool keeps track of all the custom commands that are setup and running
@@ -69,8 +71,10 @@ var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 
 // main defines the routes of the HTTP server and starts listening on port 23966
 func main() {
-	configPath = flag.String("path", ".", "Path of the config file")
+	configPath = flag.String("configPath", ".", "Path of the config file")
 	enableLogs := flag.Bool("v", false, "Enable logging")
+	certFile = flag.String("certFile", "./localhost.pem", "Full name of certificate file")
+	keyFile = flag.String("keyFile", "./localhost-key.pem", "Full name of key file")
 	flag.Parse()
 
 	if !*enableLogs {
@@ -95,7 +99,7 @@ func main() {
 
 	handler := c.Handler(router)
 	log.Println("AdminOPs server has started on port 23966")
-	log.Fatal(http.ListenAndServeTLS(":23966", "localhost.pem", "localhost-key.pem", handler))
+	log.Fatal(http.ListenAndServeTLS(":23966", *certFile, *keyFile, handler))
 }
 
 func sessionMiddleware(h http.HandlerFunc) http.HandlerFunc {
