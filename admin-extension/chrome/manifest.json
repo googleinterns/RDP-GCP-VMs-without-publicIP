@@ -1,0 +1,30 @@
+{
+    "name":"AdminOps Extension",
+    "version":"2.0.0",
+    "description":"Standardizes the debugging workflow on GCP by automating administration operations and private RDP. Requires a local server to function",
+    "permissions":[
+       "tabs",
+       "identity"
+    ],
+    "key":"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAio+xrAXPa9jClrC3gWEhk8OF0sDcq9Kg/69Sg8toDJVziPVM/xIKEJG3JGPnpp5+Yu9uOnNyk4kJg+bMNiMt0dAsEIlCym982exxT/xz19QwGU4EYxRZ0205hREDaowfzKNj/Vuq7NoxojVECFO4BOVkxNq5SNEmGuGadj1r6L476nMyaft2RvSxuUE3ipKo9K7NDyVEBBXiuVL6nTTcDWI4QaVTuinqEB+/kI2DWmQEiZ5Whe9ULdr6Qg01fxzGfkJk4vwuToohio8hxetZzPsTMt5ri3yretjExNLF9oYMrI74z5UTqnFgm6LirnFVt8/rVd9Yzv3ziOw9CxAfywIDAQAB",
+    "background":{
+       "scripts":[
+          "background.js"
+       ]
+    },
+    "browser_action":{
+       "default_title":"AdminOps Extension"
+    },
+    "oauth2":{
+       "client_id":"OAUTH CLIENT ID",
+       "scopes":[
+          "https://www.googleapis.com/auth/userinfo.email"
+       ]
+    },
+    "icons":{
+       "16":"icon_16.png",
+       "48":"icon_48.png",
+       "128":"icon_128.png"
+    },
+    "manifest_version":2
+ }
