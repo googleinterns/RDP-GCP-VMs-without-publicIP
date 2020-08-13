@@ -74,7 +74,7 @@ limitations under the License. -->
                     </div>
                 </div>
 
-                <button type="button" [disabled]="(specifyProject && !projectToValidate)"
+                <button type="button" [disabled]="(specifyProject && !projectToValidate) || disableGetInstances"
                     (click)="getProject()" mat-raised-button color="accent">GET INSTANCES</button>
                 <mat-error *ngIf="getProjectError" class="operation-error">{{getProjectError}}</mat-error>
                 <mat-spinner *ngIf="instancesLoading" class="spinner" diameter=48></mat-spinner>

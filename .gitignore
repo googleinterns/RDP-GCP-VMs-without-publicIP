@@ -15,6 +15,7 @@
 admin-extension/npm-debug.log
 admin-extension/yarn-error.log
 admin-extension/node_modules/
+admin-extension/dist/
 admin-extension/tmp/
 admin-extension/coverage/
 gcloud-private-rdp/npm-debug.log
@@ -23,4 +24,7 @@ gcloud-private-rdp/node_modules/
 gcloud-private-rdp/dist/
 gcloud-private-rdp/tmp/
 gcloud-private-rdp/coverage/
+server/localhost-key.pem
+server/localhost.pem
+mkcert
 /.idea/
