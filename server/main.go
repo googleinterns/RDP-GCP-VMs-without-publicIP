@@ -77,10 +77,6 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), projectContextTimeout)
-	shell := &shell.CmdShell{}
-	shell.ExecuteCmdWithContext(ctx, "./mkcert localhost")
-
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
 	router.HandleFunc("/verifyidtoken", verifyIdToken).Methods("POST")
