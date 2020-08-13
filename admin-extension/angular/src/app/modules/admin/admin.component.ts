@@ -43,6 +43,7 @@ export class AdminComponent {
   project: string;
   projectToValidate: string;
   instancesLoading: boolean;
+  disableGetInstances = false;
   instances = [] as Instance[];
   getProjectError: string;
   initializeInstances = false;
@@ -136,41 +137,52 @@ export class AdminComponent {
   }
 
   getProject() {
-    const data = { type: '', project_name: '', variables: {} };
-    if (!this.specifyProject) {
-      data.type = 'get';
-    } else {
-      data.type = 'validate';
-      data.project_name = this.projectToValidate;
-    }
-
     this.initializeInstances = false;
 
-    this.loadCommonParams(data.variables)
+    if (this.project && this.project != '') {
+      this.disableGetInstances = true;
 
-    this.adminService.sendProjectOperation(data)
-      .subscribe((response: any) => {
-        console.log(response)
+      this.getComputeInstances();
+    } else {
+      const data = { type: '', project_name: '', variables: {} };
+      if (!this.specifyProject) {
+        data.type = 'get';
+      } else {
+        data.type = 'validate';
+        data.project_name = this.projectToValidate;
+      }
 
-        // If operation returned, set loadedOperation to response
-        if (response.project) {
-          this.project = response.project;
-          console.log(this.project)
-          this.getComputeInstances();
-        }
-
-        // If error returned, set operation.error to error
-        if (response.error) {
-          this.getProjectError = response.error;
-        }
-
-      }, error => {
-        if (error.status === 0) {
-          this.getProjectError = errorConnectingToServer;
-        } else {
-          this.getProjectError = error.error.error;
-        }
-      })
+      this.disableGetInstances = true;
+  
+      this.loadCommonParams(data.variables)
+      console.log("send project")
+      this.adminService.sendProjectOperation(data)
+        .subscribe((response: any) => {
+          console.log(response)
+  
+          // If operation returned, set loadedOperation to response
+          if (response.project) {
+            this.project = response.project;
+            console.log(this.project)
+            this.getComputeInstances();
+          }
+  
+          // If error returned, set operation.error to error
+          if (response.error) {
+            this.getProjectError = response.error;
+            this.disableGetInstances = false;
+          }
+  
+        }, error => {
+          if (error.status === 0) {
+            this.getProjectError = errorConnectingToServer;
+            this.disableGetInstances = false;
+          } else {
+            this.getProjectError = error.error.error;
+            this.disableGetInstances = false;
+          }
+        })
+    }
   }
 
   getComputeInstances() {
@@ -200,16 +212,18 @@ export class AdminComponent {
             this.initializeInstances = true;
           }
           this.instancesLoading = false;
-
         }
 
+        this.disableGetInstances = false;
       }, error => {
         if (error.status === 0) {
+          this.disableGetInstances = false;
           this.getProjectError = errorConnectingToServer;
           this.instancesLoading = false;
         } else {
           this.getProjectError = error.error.error;
           this.instancesLoading = false;
+          this.disableGetInstances = false;
         }
       })
   }

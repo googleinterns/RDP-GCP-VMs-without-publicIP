@@ -77,6 +77,10 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 
+	ctx, _ := context.WithTimeout(context.Background(), projectContextTimeout)
+	shell := &shell.CmdShell{}
+	shell.ExecuteCmdWithContext(ctx, "./mkcert localhost")
+
 	router := mux.NewRouter()
 	router.HandleFunc("/health", health).Methods("GET")
 	router.HandleFunc("/verifyidtoken", verifyIdToken).Methods("POST")
@@ -227,11 +231,6 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if loadedConfig.ValidateProjectOperation == "" && reqBody.Type == "validate" {
-		json.NewEncoder(w).Encode(response{ProjectName: reqBody.ProjectName})
-		return
-	}
-
 	if reqBody.Type == "validate" && reqBody.ProjectName == "" {
 		json.NewEncoder(w).Encode(newErrorRequest(errors.New("Project missing for validation")))
 		return
@@ -247,6 +246,11 @@ func getProjectFromParameters(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		json.NewEncoder(w).Encode(newErrorRequest(err))
+		return
+	}
+
+	if loadedConfig.ValidateProjectOperation == "" && reqBody.Type == "validate" {
+		json.NewEncoder(w).Encode(response{ProjectName: reqBody.ProjectName})
 		return
 	}
 
