@@ -72,9 +72,13 @@ export class AdminComponent {
         }
       }, error => {
         if (error.status === 0) {
-          this.authError = errorConnectingToServer;
+          this.zone.run(() => {
+            this.authError = errorConnectingToServer;
+          })
         } else {
-          this.authError = error.error.error;
+          this.zone.run(() => {
+            this.authError = error.error.error;
+          })
         }
     })
     })
