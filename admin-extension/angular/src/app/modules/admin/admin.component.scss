@@ -91,6 +91,14 @@ limitations under the License.
     position: fixed !important;
     z-index: 9999 !important;
 }
+.bottom-right-2 {
+    top: auto !important;
+    right: 1.5rem !important;
+    bottom: 10rem !important;
+    left: auto !important;
+    position: fixed !important;
+    z-index: 9999 !important;
+}
 
 .toolbar {
     min-height: 4rem;
@@ -200,5 +208,16 @@ mat-error {
     button {
         width: 30%;
         margin-bottom: 2rem;
+    }
+}
+
+.full-output {
+    height: 100%;
+    position: absolute;
+    div {
+        height: 100% !important;
+    }
+    .container {
+        height: 100%;
     }
 }

@@ -33,6 +33,7 @@ export class OutputComponent {
   rdpFirewallDeleted = false;
 
   @Input() operationToRun: AdminOperationInterface;
+  @Input() fullOutput: boolean;
 
   // Close input from the red close button
   @Input() set close(close: boolean) {
