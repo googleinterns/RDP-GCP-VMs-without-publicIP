@@ -50,6 +50,7 @@ export class AdminComponent {
   preRdpError: string;
   authenticated = false;
   authError: string;
+  fullOutput = false;
 
   constructor(private zone: NgZone, private snackbar: MatSnackBar, private adminService: AdminService) { };
 

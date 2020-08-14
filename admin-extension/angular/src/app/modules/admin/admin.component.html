@@ -184,13 +184,13 @@ limitations under the License. -->
                 </mat-tab-group>
             </div>
 
-            <div id="output-view" class="bottom" *ngIf="config && config.operations">
+            <div id="output-view" class="bottom" *ngIf="config && config.operations" [ngClass]="fullOutput ? 'full-output' : ''">
                 <mat-tab-group id="tab-group" (selectedTabChange)="tabChanged($event)"
                     [selectedIndex]="operationsRunning.length-1" backgroundColor="primary" color="accent"
                     class="output-tabs" animationDuration="0ms">
                     <mat-tab class="output" label="{{operation.label}}"
                         *ngFor="let operation of operationsRunning; index as i">
-                        <output [close]="operation.close" [closeRdp]="operation.rdpClose" [operationToRun]="operation"
+                        <output [fullOutput]="fullOutput" [close]="operation.close" [closeRdp]="operation.rdpClose" [operationToRun]="operation"
                             (outputClosed)="outputTabClosed(i)"></output>
                     </mat-tab>
                 </mat-tab-group>
@@ -201,5 +201,9 @@ limitations under the License. -->
             *ngIf="operationsRunning.length > 0">
             <mat-icon>close</mat-icon>
         </button>
+        <button (click)="fullOutput = !fullOutput" mat-fab color="accent" class="bottom-right-2"
+         *ngIf="operationsRunning.length > 0">
+        <mat-icon>aspect_ratio</mat-icon>
+    </button>
     </ng-template>
 </div>
